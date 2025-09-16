@@ -7,14 +7,16 @@ import { Link } from 'react-router-dom'; // Add this import at the top
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [showVerificationSection, setShowVerificationSection] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate login process
+        // Simulate sending verification code
         setTimeout(() => {
             setIsLoading(false);
-            console.log("Login attempt:", { email, });
+            setShowVerificationSection(true);
+            console.log("Verification code sent to:", { email });
         }, 2000);
     };
 
@@ -95,7 +97,7 @@ const ForgotPassword: React.FC = () => {
                                 {isLoading ? (
                                     <div className="flex items-center justify-center space-x-2">
                                         <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Signing in...</span>
+                                        <span>Sending...</span>
                                     </div>
                                 ) : (
                                     "Send Verification code"
@@ -108,8 +110,15 @@ const ForgotPassword: React.FC = () => {
                             <p className="text-center text-gray-400 text-sm sm:text-sm ">
                                 We'll email you code that expires in 10 minutes.
                             </p>
-                            {/* 6-Digit Verification Code Input */}
-                            <div className="space-y-3">
+
+                            {/* 6-Digit Verification Code Input - Conditionally rendered with animation */}
+                            <div 
+                                className={`space-y-3 transition-all duration-500 ease-out transform ${
+                                    showVerificationSection 
+                                        ? 'opacity-100 translate-y-0 max-h-96' 
+                                        : 'opacity-0 translate-y-4 max-h-0 overflow-hidden'
+                                }`}
+                            >
                                 <p className="text-center text-white text-sm font-medium">Enter code</p>
                                 <div className="flex justify-between">
                                     {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -151,6 +160,7 @@ const ForgotPassword: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+
                             {/* Sign up and Forgot Password Links */}
                             <div className="flex flex-col sm:flex-row justify-between items-center mt-4 sm:mt-6 space-y-2 sm:space-y-0">
                                 <Link
