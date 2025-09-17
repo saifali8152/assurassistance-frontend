@@ -6,6 +6,11 @@ export interface LoginRequest {
   
   export interface LoginResponse {
     token: string;
-    role: string; // "admin" | "user"
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      role: "admin" | "user";
+      force_password_change?: boolean;
+    };
   }
-  

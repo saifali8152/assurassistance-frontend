@@ -23,7 +23,7 @@ const Login: React.FC = () => {
       const res = await loginApi({ email, password });
       login(res);
   
-      if (res.role === "admin") {
+      if (res.user.role && res.user.role.toLowerCase() === "admin") {
         navigate("/AdminDashboard");
       } else {
         navigate("/UserDashboard");
