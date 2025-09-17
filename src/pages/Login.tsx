@@ -1,25 +1,40 @@
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import InputField from "../components/InputFields";
+import { useNavigate } from "react-router-dom";
+import { loginApi } from "../api/authApi";
+import { useAuth } from "../context/AuthContext";
 import { Link } from 'react-router-dom'; // Add this import at the top
-
-
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login process
-    setTimeout(() => {
+    setError("");
+  
+    try {
+      const res = await loginApi({ email, password });
+      login(res);
+  
+      if (res.role === "admin") {
+        navigate("/AdminDashboard");
+      } else {
+        navigate("/UserDashboard");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
       setIsLoading(false);
-      console.log("Login attempt:", { email, password });
-    }, 2000);
+    }
   };
-
+  
   return (
     <div className="w-full h-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Animated Background Elements */}
