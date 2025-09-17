@@ -23,9 +23,14 @@ const Login: React.FC = () => {
       const res = await loginApi({ email, password });
       login(res);
   
+      // Check role & password change
       if (res.user.role && res.user.role.toLowerCase() === "admin") {
         navigate("/AdminDashboard");
-      } else {
+      } 
+      else if (res.user.force_password_change) {
+        navigate("/ChangePassword");  // <-- redirect if password change needed
+      } 
+      else {
         navigate("/UserDashboard");
       }
     } catch (err: any) {
@@ -34,6 +39,7 @@ const Login: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
   
   return (
     <div className="w-full h-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">

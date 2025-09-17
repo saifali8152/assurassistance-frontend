@@ -8,7 +8,28 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Generic helpers for all methods
+// Attach token automatically to every request
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+  
+  // Handle 401 Unauthorized responses globally
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login"; // Redirect to login if token expired
+      }
+      return Promise.reject(error);
+    }
+  );
+
+//  helpers for all methods
 export const apiGet = async <T>(url: string): Promise<T> => {
   const res = await api.get<T>(url);
   return res.data;

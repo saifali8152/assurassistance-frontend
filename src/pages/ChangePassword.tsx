@@ -3,11 +3,19 @@ import { Link } from 'react-router-dom';
 import { LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'; 
 import InputField from "../components/InputFields";
 
+import { useNavigate } from "react-router-dom";
+import { changePasswordApi } from "../api/authApi";
+import { useAuth } from "../context/AuthContext";
+
 const ChangePassword: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
 
   const toggleCurrentPasswordVisibility = () => {
     setShowCurrentPassword(!showCurrentPassword);
@@ -24,11 +32,24 @@ const ChangePassword: React.FC = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    console.log('Form submitted!');    
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await changePasswordApi({ oldPassword: currentPassword, newPassword });
+      alert("Password changed successfully. Please login again.");
+      logout();  // force user to re-login
+      navigate("/login");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to change password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
