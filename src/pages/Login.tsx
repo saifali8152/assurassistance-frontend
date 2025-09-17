@@ -14,31 +14,34 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-  
-    try {
-      const res = await loginApi({ email, password });
-      login(res);
-  
-      // Check role & password change
-      if (res.user.role && res.user.role.toLowerCase() === "admin") {
-        navigate("/AdminDashboard");
-      } 
-      else if (res.user.force_password_change) {
-        navigate("/ChangePassword");  // <-- redirect if password change needed
-      } 
-      else {
-        navigate("/UserDashboard");
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setIsLoading(false);
+// Login.tsx
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
+
+  try {
+    const res = await loginApi({ email, password });
+    login(res);
+
+    // Force password change check FIRST
+    if (res.user.force_password_change) {
+      navigate("/ChangePassword");
+    } 
+    // Then role-based navigation
+    else if (res.user.role && res.user.role.toLowerCase() === "admin") {
+      navigate("/AdminDashboard");
+    } 
+    else {
+      navigate("/UserDashboard");
     }
-  };
+  } catch (err: any) {
+    setError(err.response?.data?.message || "Login failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   
   
   return (
