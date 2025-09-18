@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import ChangePassword from './pages/ChangePassword'
-import UserDashboard from './pages/UserDashboard'
 
 // Layout and Pages that use the Layout
 import Layout from './components/Layout'
@@ -26,7 +25,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route path="/ChangePassword" element={<ChangePassword />} />
-        <Route path="/UserDashboard" element={<UserDashboard />} />
 
         {/* Routes that ARE nested inside the Layout component */}
         <Route path="/" element={<Layout />}>
