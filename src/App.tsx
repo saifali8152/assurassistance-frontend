@@ -4,7 +4,7 @@ import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import ChangePassword from './pages/ChangePassword'
 import AdminDashboard from './pages/AdminDashboard'
-import ProtectedRoute from "./components/ProtectedRoute";
+//import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
