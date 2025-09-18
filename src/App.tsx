@@ -1,6 +1,6 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
+import { Toaster } from "react-hot-toast";
 // Standalone Pages
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
@@ -21,6 +21,8 @@ const SettingsPage = () => <div className="p-6"><h1 className="text-white text-2
 
 function App() {
   return (
+    <>
+    <Toaster position="top-right" toastOptions={{ duration: 3000 }} />  
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -55,12 +57,13 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<CreateUser />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
+          <Route path="settings" element={<SettingsPage />} />  
+        </Route>  
       </Routes>
 
 
     </Router>
+    </>
   )
 }
 

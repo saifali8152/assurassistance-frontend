@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Edit3, Check, Clock, User as UserIcon, Mail, Lock } from "lucide-react";
 import InputField from "../components/InputFields";
+import { createAgentApi } from "../api/agentApi";
+import { toast } from "react-hot-toast";
 
 type User = {
   id: string;
@@ -43,27 +45,42 @@ const CreateUser: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = () => {
-    if (editingUser) {
-      if (formData.firstName && formData.lastName && formData.email) {
-        setUsers(prev => prev.map(user => user.id === editingUser.id ? { ...user, ...formData } : user));
-      }
-    } else { 
-       if (formData.firstName && formData.lastName && formData.email && formData.temporaryPassword) {
-        const newUser: User = {
-          id: Date.now().toString(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          status: 'pending',
-          avatar: `https://ui-avatars.com/api/?name=${formData.firstName}+${formData.lastName}&background=random`
-        };
-        setUsers(prev => [newUser, ...prev]);
-      }
+const handleFormSubmit = async () => {
+  if (!formData.firstName || !formData.lastName || !formData.email) {
+    toast.error("All fields are required!");
+    return;
+  }
+
+  try {
+    const name = `${formData.firstName} ${formData.lastName}`;
+    const res = await createAgentApi({ name, email: formData.email });
+
+    console.log("API Response:", res); // Debug here
+
+    if (res.tempPassword) {
+      toast.success(`Agent created! Temp password: ${res.tempPassword}`);
+    } else {
+      toast.error("Temp password not found in response");
     }
+
+    setUsers(prev => [
+      {
+        id: String(res.id),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        status: "pending",
+        avatar: `https://ui-avatars.com/api/?name=${formData.firstName}+${formData.lastName}&background=random`
+      },
+      ...prev
+    ]);
+
     resetForm();
-  };
-  
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Failed to create agent");
+  }
+};
+
   const handleEditClick = (user: User) => {
     setEditingUser(user);
     setFormData({ firstName: user.firstName, lastName: user.lastName, email: user.email, temporaryPassword: '' });
@@ -123,15 +140,7 @@ const CreateUser: React.FC = () => {
                 onChange={(value) => handleInputChange('email', value)}
                 icon={<Mail />}
               />
-              <InputField
-                type={showPassword ? 'text' : 'password'}
-                placeholder={editingUser ? 'New Password (optional)' : 'Temporary Password'}
-                value={formData.temporaryPassword}
-                onChange={(value) => handleInputChange('temporaryPassword', value)}
-                icon={<Lock />}
-                rightIcon={showPassword ? <EyeOff /> : <Eye />}
-                onRightIconClick={() => setShowPassword(prev => !prev)}
-              />
+
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
