@@ -12,12 +12,12 @@ import AdminDashboard from './pages/AdminDashboard'
 //import ProtectedRoute from "./components/ProtectedRoute";
 import CreateUser from './pages/CreateUser'
 
+// User Layout and Pages
+import UserLayout from './components/UserLayout'
+import UserDashboard from './pages/UserDashboard'
 
 // Placeholder pages for demonstration
 const AnalyticsPage = () => <div className="p-6"><h1 className="text-white text-2xl">Analytics Page</h1></div>;
-const SettingsPage = () => <div className="p-6"><h1 className="text-white text-2xl">Settings Page</h1></div>;
-
-
 
 function App() {
   return (
@@ -44,9 +44,6 @@ function App() {
             //</ProtectedRoute>
           }
         />
-
-       {/* <Route path="/unauthorized" element={<h2>Unauthorized Access</h2>} />   */}
-
         {/* Standalone routes that DO NOT use the Layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
@@ -57,11 +54,13 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<CreateUser />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="settings" element={<SettingsPage />} />  
+        </Route>
+
+        {/* USER ROUTES - Add UserDashboard here */}
+        <Route path="/user" element={<UserLayout />}>
+          <Route index element={<UserDashboard />} />  
         </Route>  
       </Routes>
-
-
     </Router>
     </>
   )
