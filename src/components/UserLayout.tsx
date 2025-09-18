@@ -5,22 +5,23 @@ import {
   Search,
   Menu,
   X,
-  BarChart3,
-  Users,
-  Settings,
   Grid3X3,
   ChevronDown,
   User,
   Lock,
   LogOut,
-  Activity,
+  BarChart3,
+  Users,
+  Calendar,
+  CreditCard,
+  Settings,
 } from "lucide-react";
 
-const Layout: React.FC = () => {
+const UserLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const location = useLocation(); // Hook to get the current URL path
+  const location = useLocation();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -35,7 +36,6 @@ const Layout: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close mobile sidebar on navigation
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
@@ -45,11 +45,10 @@ const Layout: React.FC = () => {
     return (
       <Link
         to={to}
-        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors w-full text-left ${
-          isActive
-            ? 'bg-blue-500/20 text-white'
-            : 'hover:bg-white/10 text-white/80 hover:text-white'
-        }`}
+        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors w-full text-left ${isActive
+          ? 'bg-blue-500/20 text-white'
+          : 'hover:bg-white/10 text-white/80 hover:text-white'
+          }`}
       >
         <Icon className="w-5 h-5" />
         <span className="font-medium">{children}</span>
@@ -128,17 +127,24 @@ const Layout: React.FC = () => {
             </button>
 
             <div ref={dropdownRef} className="relative">
-               <button
+              <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
               >
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" alt="Profile" className="w-8 h-8 rounded-full" />
+                <img
+                  src="https://i.pravatar.cc/32?img=5"
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full"
+                />
                 <div className="hidden sm:block">
-                  <p className="text-white text-sm font-medium">Sam Carter</p>
-                  <p className="text-white/60 text-xs">sam@travelsafe.io</p>
+                  <p className="text-white text-sm font-medium">Emma Johnson</p>
+                  <p className="text-white/60 text-xs">emma@travelagency.com</p>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-4 h-4 text-white/60 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
+
 
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-[#1E2A3A]/90 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
@@ -165,8 +171,9 @@ const Layout: React.FC = () => {
             </div>
             <nav className="space-y-2">
               <NavLink to="/" icon={BarChart3}>Dashboard</NavLink>
-              <NavLink to="/analytics" icon={Activity}>Analytics</NavLink>
-              <NavLink to="/users" icon={Users}>Users</NavLink>
+              <NavLink to="/bookings" icon={Calendar}>My Bookings</NavLink>
+              <NavLink to="/clients" icon={Users}>My Clients</NavLink>
+              <NavLink to="/payments" icon={CreditCard}>Payments</NavLink>
               <NavLink to="/settings" icon={Settings}>Settings</NavLink>
             </nav>
           </div>
@@ -195,4 +202,4 @@ const Layout: React.FC = () => {
   );
 };
 
-export default Layout;
+export default UserLayout;

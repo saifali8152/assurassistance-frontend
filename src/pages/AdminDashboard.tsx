@@ -1,5 +1,3 @@
-// src/pages/AdminDashboard.tsx
-
 import {
   Users,
   TrendingUp,
