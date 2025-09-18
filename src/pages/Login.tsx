@@ -34,7 +34,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       navigate("/");
     } 
     else {
-      navigate("/UserDashboard");
+      navigate("/user");
     }
   } catch (err: any) {
     setError(err.response?.data?.message || "Login failed");

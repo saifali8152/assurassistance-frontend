@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Edit3, Check, Clock, User as UserIcon, Mail } from "lucide-react";
 import InputField from "../components/InputFields";
-import { createAgentApi, listAgentsApi } from "../api/agentApi";
+import { createAgentApi, listAgentsApi , updateUserStatusApi} from "../api/agentApi";
 import { toast } from "react-hot-toast";
 
 type User = {
@@ -92,11 +92,24 @@ const CreateUser: React.FC = () => {
     setIsFormVisible(false);
   };
 
-  const toggleUserStatus = (userId: string) => {
+const toggleUserStatus = async (userId: string) => {
+  const user = users.find((u) => u.id === userId);
+  if (!user) return;
+
+  const newStatus = user.status === "active" ? "inactive" : "active";
+  try {
+    await updateUserStatusApi(userId, newStatus);
     setUsers((prev) =>
-      prev.map((user) => (user.id === userId ? { ...user, status: user.status === "active" ? "inactive" : "active" } : user))
+      prev.map((u) =>
+        u.id === userId ? { ...u, status: newStatus } : u
+      )
     );
-  };
+    toast.success(`User status updated to ${newStatus}`);
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Failed to update status");
+  }
+};
+
 
 
   return (

@@ -51,4 +51,10 @@ export const apiDelete = async <T>(url: string): Promise<T> => {
   return res.data;
 };
 
+export const apiPatch = async <T>(url: string, data: any): Promise<T> => {
+  const res = await api.patch<T>(url, data);
+  return res.data;
+};
+
+
 export default api;
