@@ -103,8 +103,9 @@ const handleSubmit = async (e: React.FormEvent) => {
             <div className="space-y-4 sm:space-y-6">
               {/* // Email field */}
               <InputField
+                label="Email"
                 type="email"
-                placeholder="Email"
+                placeholder="Your Email"
                 icon={<Mail />}
                 value={email}
                 onChange={setEmail}
@@ -112,8 +113,9 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
               {/* Password Field */}
               <InputField
+                label="Password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Your Password"
                 icon={<Lock />}
                 rightIcon={showPassword ? <EyeOff /> : <Eye />}
                 onRightIconClick={() => setShowPassword(!showPassword)}
