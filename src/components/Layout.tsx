@@ -13,6 +13,7 @@ import {
   User,
   Lock,
   LogOut,
+  FilePlus,
   Activity,
 } from "lucide-react";
 
@@ -167,6 +168,7 @@ const Layout: React.FC = () => {
               <NavLink to="/" icon={BarChart3}>Dashboard</NavLink>
               <NavLink to="/analytics" icon={Activity}>Analytics</NavLink>
               <NavLink to="/users" icon={Users}>Users</NavLink>
+              <NavLink to="/createCase" icon={FilePlus}>Create Case</NavLink>
               <NavLink to="/settings" icon={Settings}>Settings</NavLink>
             </nav>
           </div>
