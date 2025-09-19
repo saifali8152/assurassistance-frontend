@@ -1,7 +1,7 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from "react-hot-toast";
 
-// Standalone Pages
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import ChangePassword from './pages/ChangePassword'
@@ -9,7 +9,7 @@ import ChangePassword from './pages/ChangePassword'
 // Layout and Pages that use the Layout
 import Layout from './components/Layout'
 import AdminDashboard from './pages/AdminDashboard'
-import ProtectedRoute from "./components/ProtectedRoute";
+//import ProtectedRoute from "./components/ProtectedRoute";
 import CreateUser from './pages/CreateUser'
 import CreateCase from './pages/CreateCase'
 
@@ -22,6 +22,8 @@ const AnalyticsPage = () => <div className="p-6"><h1 className="text-white text-
 
 function App() {
   return (
+    <>
+    <Toaster position="top-right" toastOptions={{ duration: 3000 }} />  
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -56,8 +58,11 @@ function App() {
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<UserDashboard />} />
         </Route>
+          <Route index element={<UserDashboard />} />  
+        </Route>  
       </Routes>
     </Router>
+    </>
   )
 }
 

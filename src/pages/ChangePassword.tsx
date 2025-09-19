@@ -1,10 +1,7 @@
-//change password componnet
 import React, { useState } from "react";
-import { Link } from 'react-router-dom'; 
+import { Link, useNavigate } from "react-router-dom"; 
 import { LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'; 
 import InputField from "../components/InputFields";
-
-import { useNavigate } from "react-router-dom";
 import { changePasswordApi } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,26 +14,34 @@ const ChangePassword: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-
-  const toggleCurrentPasswordVisibility = () => {
-    setShowCurrentPassword(!showCurrentPassword);
-  };
-  
-  const toggleNewPasswordVisibility = () => {
-    setShowNewPassword(!showNewPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const toggleCurrentPasswordVisibility = () => setShowCurrentPassword(!showCurrentPassword);
+  const toggleNewPasswordVisibility = () => setShowNewPassword(!showNewPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
+
+  // Password Strength Checker
+  const isStrongPassword = (password: string) => {
+    // At least 8 chars, one uppercase, one lowercase, one number, one special char
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return strongPasswordRegex.test(password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      setError(
+        "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character."
+      );
       return;
     }
 
@@ -44,7 +49,7 @@ const ChangePassword: React.FC = () => {
       setIsLoading(true);
       await changePasswordApi({ oldPassword: currentPassword, newPassword });
       alert("Password changed successfully. Please login again.");
-      logout();  // force user to re-login
+      logout();
       navigate("/login");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to change password");
@@ -52,7 +57,6 @@ const ChangePassword: React.FC = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="w-full h-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Animated Background Elements */}
@@ -97,17 +101,19 @@ const ChangePassword: React.FC = () => {
       </div>
 
       {/* Main Login Card - Full responsive container */}
+
       <div className="w-full h-full flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl">
-          {/* Glassmorphism Card - Responsive padding and sizing */}
           <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
-            {/* Welcome Header */}
             <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">Change Password</h2>
-              <p className="text-gray-300 text-sm sm:text-base">Keep your account protected by choosing a strong password.</p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+                Change Password
+              </h2>
+              <p className="text-gray-300 text-sm sm:text-base">
+                Keep your account protected by choosing a strong password.
+              </p>
             </div>
 
-            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <InputField
                 type={showCurrentPassword ? 'text' : 'password'}
@@ -130,6 +136,11 @@ const ChangePassword: React.FC = () => {
                 rightIcon={showNewPassword ? <EyeSlashIcon /> : <EyeIcon />}
                 onRightIconClick={toggleNewPasswordVisibility}
               />
+              {newPassword && !isStrongPassword(newPassword) && (
+                <p className="text-red-400 text-xs mt-1">
+                  Password must have 8+ chars, uppercase, lowercase, number & special char.
+                </p>
+              )}
 
               <InputField
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -142,42 +153,32 @@ const ChangePassword: React.FC = () => {
                 onRightIconClick={toggleConfirmPasswordVisibility}
               />
 
-              {/* Change Password Button */}
+              {error && <p className="text-red-400 text-sm">{error}</p>}
+
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full cursor-pointer py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-sm sm:text-base"
+                className="w-full cursor-pointer py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Changing...</span>
-                  </div>
-                ) : (
-                  "Change Password"
-                )}
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 hover:opacity-20 transition-opacity duration-200 rounded-xl"></div>
+                {isLoading ? "Changing..." : "Change Password"}
               </button>
             </form>
 
-              {/* Secure Access Message */}
-              <p className="text-center text-gray-400 text-xs sm:text-sm mt-3 sm:mt-4">
-                Secure access to your next adventure.
-              </p>
+            <p className="text-center text-gray-400 text-xs sm:text-sm mt-3 sm:mt-4">
+              Secure access to your next adventure.
+            </p>
 
-              {/* Sign up and Forgot Password Links */}
-              <div className="flex flex-col sm:flex-row justify-between items-center mt-4 sm:mt-6 space-y-2 sm:space-y-0">
-                <Link
-                  to="/ForgotPassword"
-                  className="text-blue-400 hover:text-blue-300 text-xs sm:text-sm font-medium transition-colors w-full sm:w-auto text-center sm:text-right"
-                >
-                  Forgot Password
-                </Link>
-              </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-4 sm:mt-6">
+              <Link
+                to="/ForgotPassword"
+                className="text-blue-400 hover:text-blue-300 text-xs sm:text-sm font-medium transition-colors"
+              >
+                Forgot Password
+              </Link>
             </div>
           </div>
         </div>
+      </div>
 
       <style>{`
         @keyframes fly {
