@@ -1,0 +1,283 @@
+import React, { useState } from "react";
+import InputField from "../components/InputFields";
+import { User as UserIcon, Mail, Contact, IdCard, Badge, Home } from "lucide-react";
+
+interface Tab {
+    id: string;
+    label: string;
+    content: React.ReactNode;
+}
+
+const CreateCase: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<string>("traveller");
+    const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [passportId, setPassportId] = useState('');
+    const [Id, setId] = useState('');
+    const [address, setAddress] = useState('');
+    // Tab configuration - easy to add more tabs here
+    const tabs: Tab[] = [
+        {
+            id: "traveller",
+            label: "Traveller",
+            content: (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <InputField
+                                type="text"
+                                placeholder="Full Name"
+                                icon={<UserIcon />}
+                                value={fullName}
+                                onChange={setFullName}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputField
+                                type="text"
+                                placeholder="Email"
+                                icon={<Mail />}
+                                value={email}
+                                onChange={setEmail}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputField
+                                type="number"
+                                placeholder="Phone Number"
+                                icon={<Contact />}
+                                value={phoneNumber}
+                                onChange={setPhoneNumber}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputField
+                                type="text"
+                                placeholder="Passport ID"
+                                icon={<IdCard />}
+                                value={passportId}
+                                onChange={setPassportId}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputField
+                                type="text"
+                                placeholder="Your ID"
+                                icon={<Badge />}
+                                value={Id}
+                                onChange={setId}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputField
+                                type="text"
+                                placeholder="Address"
+                                icon={<Home />}
+                                value={address}
+                                onChange={setAddress}
+                                required
+                            />
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            id: "case",
+            label: "Case",
+            content: (
+                <div className="space-y-6">
+                    <h2 className="text-xl font-medium text-white mb-4">Case Details</h2>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Case Type
+                            </label>
+                            <select className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent">
+                                <option value="">Select case type</option>
+                                <option value="visa">Visa Application</option>
+                                <option value="passport">Passport Renewal</option>
+                                <option value="emergency">Emergency Travel</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Priority Level
+                            </label>
+                            <div className="flex space-x-4">
+                                {["Normal", "Urgent", "Emergency"].map((priority) => (
+                                    <label key={priority} className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="priority"
+                                            value={priority.toLowerCase()}
+                                            className="w-4 h-4 text-blue-400 bg-white/10 border-white/20 focus:ring-blue-400/50"
+                                        />
+                                        <span className="text-white/80 text-sm">{priority}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Description
+                            </label>
+                            <textarea
+                                rows={4}
+                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent resize-none"
+                                placeholder="Describe your case details..."
+                            />
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            id: "certificate",
+            label: "Certificate",
+            content: (
+                <div className="space-y-6">
+                    <h2 className="text-xl font-medium text-white mb-4">Certificate Requirements</h2>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Certificate Type
+                            </label>
+                            <select className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent">
+                                <option value="">Select certificate type</option>
+                                <option value="birth">Birth Certificate</option>
+                                <option value="marriage">Marriage Certificate</option>
+                                <option value="education">Education Certificate</option>
+                                <option value="employment">Employment Certificate</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Required Documents
+                            </label>
+                            <div className="space-y-2">
+                                {["Original Document", "Translated Copy", "Notarized Copy", "Apostille"].map((doc) => (
+                                    <label key={doc} className="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 text-blue-400 bg-white/10 border-white/20 rounded focus:ring-blue-400/50"
+                                        />
+                                        <span className="text-white/80 text-sm">{doc}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-white/80 text-sm font-medium mb-2">
+                                Upload Documents
+                            </label>
+                            <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-white/40 transition-colors cursor-pointer">
+                                <div className="text-white/60 mb-2">
+                                    <svg className="mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                </div>
+                                <p className="text-white/60 text-sm">
+                                    Click to upload or drag and drop files here
+                                </p>
+                                <p className="text-white/40 text-xs mt-1">
+                                    PDF, DOC, JPG up to 10MB
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+    ];
+
+    const currentTab = tabs.find(tab => tab.id === activeTab);
+
+    return (
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
+            <h1 className="text-2xl font-semibold text-white mb-8">Create Case</h1>
+
+            {/* Tab Navigation */}
+            <div className="flex space-x-1 mb-8 bg-white/5 p-1 rounded-2xl">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === tab.id
+                            ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                            : "text-white/70 hover:text-white hover:bg-white/10"
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="min-h-[400px]">
+                {currentTab && (
+                    <div className="animate-fadeIn">
+                        {currentTab.content}
+                    </div>
+                )}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
+                <button
+                    onClick={() => {
+                        const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+                        if (currentIndex > 0) {
+                            setActiveTab(tabs[currentIndex - 1].id);
+                        }
+                    }}
+                    disabled={activeTab === tabs[0].id}
+                    className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Previous
+                </button>
+                <div className="flex space-x-3">
+                    <button className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors">
+                        Save Draft
+                    </button>
+                    <button
+                        onClick={() => {
+                            const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+                            if (currentIndex < tabs.length - 1) {
+                                setActiveTab(tabs[currentIndex + 1].id);
+                            }
+                        }}
+                        className="cursor-pointer px-6 py-3 bg-blue-500/20 border border-blue-400/30 rounded-xl text-white hover:bg-blue-500/30 transition-colors"
+                    >
+                        {activeTab === tabs[tabs.length - 1].id ? "Submit Case" : "Next"}
+                    </button>
+                </div>
+            </div>
+
+            <style>{`
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+        </div>
+    );
+};
+
+export default CreateCase;

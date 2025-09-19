@@ -11,6 +11,7 @@ import Layout from './components/Layout'
 import AdminDashboard from './pages/AdminDashboard'
 //import ProtectedRoute from "./components/ProtectedRoute";
 import CreateUser from './pages/CreateUser'
+import CreateCase from './pages/CreateCase'
 
 // User Layout and Pages
 import UserLayout from './components/UserLayout'
@@ -30,18 +31,14 @@ function App() {
         <Route
           path="/ChangePassword"
           element={
-           // <ProtectedRoute role="user">
               <ChangePassword />
-          //  </ProtectedRoute>
           }
         />
 
         <Route
           path="/AdminDashboard"
           element={
-           // <ProtectedRoute role="admin">
               <AdminDashboard />
-            //</ProtectedRoute>
           }
         />
         {/* Standalone routes that DO NOT use the Layout */}
@@ -54,10 +51,13 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<CreateUser />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="createCase" element={<CreateCase />} />
         </Route>
 
         {/* USER ROUTES - Add UserDashboard here */}
         <Route path="/user" element={<UserLayout />}>
+          <Route index element={<UserDashboard />} />
+        </Route>
           <Route index element={<UserDashboard />} />  
         </Route>  
       </Routes>
