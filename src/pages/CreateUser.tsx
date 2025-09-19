@@ -1,21 +1,22 @@
-import React, { useState } from "react";
-import { Eye, EyeOff, Edit3, Check, Clock, User as UserIcon, Mail, Lock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Eye, Edit3, Check, Clock, User as UserIcon, Mail } from "lucide-react";
 import InputField from "../components/InputFields";
+import { createAgentApi, listAgentsApi , updateUserStatusApi} from "../api/agentApi";
+import { toast } from "react-hot-toast";
 
 type User = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  status: 'active' | 'pending' | 'inactive';
-  avatar: string;
+  status: "active" | "pending" | "inactive";
 };
 
-const StatusBadge = ({ status }: { status: User['status'] }) => {
+const StatusBadge = ({ status }: { status: User["status"] }) => {
   const statusConfig = {
-    active: { icon: Check, text: 'Active', bgClass: 'bg-green-500/20', textClass: 'text-green-400', iconClass: 'text-green-400' },
-    pending: { icon: Clock, text: 'Pending', bgClass: 'bg-yellow-500/20', textClass: 'text-yellow-400', iconClass: 'text-yellow-400' },
-    inactive: { icon: Clock, text: 'Inactive', bgClass: 'bg-red-500/20', textClass: 'text-red-400', iconClass: 'text-red-400' }
+    active: { icon: Check, text: "Active", bgClass: "bg-green-500/20", textClass: "text-green-400", iconClass: "text-green-400" },
+    pending: { icon: Clock, text: "Pending", bgClass: "bg-yellow-500/20", textClass: "text-yellow-400", iconClass: "text-yellow-400" },
+    inactive: { icon: Clock, text: "Inactive", bgClass: "bg-red-500/20", textClass: "text-red-400", iconClass: "text-red-400" },
   };
   const config = statusConfig[status];
   const IconComponent = config.icon;
@@ -28,59 +29,88 @@ const StatusBadge = ({ status }: { status: User['status'] }) => {
 };
 
 const CreateUser: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([
-    { id: '1', firstName: 'Alex', lastName: 'Morgan', email: 'alex@travelsafe.io', status: 'active', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
-    { id: '2', firstName: 'Priya', lastName: 'Shah', email: 'priya@travelsafe.io', status: 'pending', avatar: 'https://unsplash.com/photos/a-woman-with-her-arm-up-kb6pDT5ft0s' },
-    { id: '3', firstName: 'Diego', lastName: 'Lopez', email: 'diego@travelsafe.io', status: 'active', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' }
-  ]);
-
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', temporaryPassword: '' });
+  const [users, setUsers] = useState<User[]>([]);
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+
+  // ✅ Load real users from backend
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await listAgentsApi();
+      const mappedUsers = res.map((u: any) => {
+        const [firstName, ...rest] = u.name.split(" ");
+        return {
+          id: String(u.id),
+          firstName,
+          lastName: rest.join(" ") || "",
+          email: u.email,
+          status: u.status || "pending",
+        };
+      });
+      setUsers(mappedUsers);
+    } catch (err) {
+      toast.error("Failed to fetch users");
+    }
+  };
 
   const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = () => {
-    if (editingUser) {
-      if (formData.firstName && formData.lastName && formData.email) {
-        setUsers(prev => prev.map(user => user.id === editingUser.id ? { ...user, ...formData } : user));
-      }
-    } else { 
-       if (formData.firstName && formData.lastName && formData.email && formData.temporaryPassword) {
-        const newUser: User = {
-          id: Date.now().toString(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          status: 'pending',
-          avatar: `https://ui-avatars.com/api/?name=${formData.firstName}+${formData.lastName}&background=random`
-        };
-        setUsers(prev => [newUser, ...prev]);
-      }
+  const handleFormSubmit = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      toast.error("All fields are required!");
+      return;
     }
-    resetForm();
+
+    try {
+      const name = `${formData.firstName} ${formData.lastName}`;
+      const res = await createAgentApi({ name, email: formData.email });
+
+      toast.success(`Agent created! Temp password: ${res.tempPassword}`);
+      await fetchUsers(); // reload users after creation
+      resetForm();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to create agent");
+    }
   };
-  
+
   const handleEditClick = (user: User) => {
     setEditingUser(user);
-    setFormData({ firstName: user.firstName, lastName: user.lastName, email: user.email, temporaryPassword: '' });
+    setFormData({ firstName: user.firstName, lastName: user.lastName, email: user.email, temporaryPassword: "" });
     setIsFormVisible(true);
   };
-  
+
   const resetForm = () => {
-    setFormData({ firstName: '', lastName: '', email: '', temporaryPassword: '' });
+    setFormData({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
     setEditingUser(null);
     setIsFormVisible(false);
   };
 
-  const toggleUserStatus = (userId: string) => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' } : user
-    ));
-  };
+const toggleUserStatus = async (userId: string) => {
+  const user = users.find((u) => u.id === userId);
+  if (!user) return;
+
+  const newStatus = user.status === "active" ? "inactive" : "active";
+  try {
+    await updateUserStatusApi(userId, newStatus);
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId ? { ...u, status: newStatus } : u
+      )
+    );
+    toast.success(`User status updated to ${newStatus}`);
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Failed to update status");
+  }
+};
+
+
 
   return (
     <div className="space-y-8">
@@ -123,15 +153,7 @@ const CreateUser: React.FC = () => {
                 onChange={(value) => handleInputChange('email', value)}
                 icon={<Mail />}
               />
-              <InputField
-                type={showPassword ? 'text' : 'password'}
-                placeholder={editingUser ? 'New Password (optional)' : 'Temporary Password'}
-                value={formData.temporaryPassword}
-                onChange={(value) => handleInputChange('temporaryPassword', value)}
-                icon={<Lock />}
-                rightIcon={showPassword ? <EyeOff /> : <Eye />}
-                onRightIconClick={() => setShowPassword(prev => !prev)}
-              />
+
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
@@ -160,7 +182,6 @@ const CreateUser: React.FC = () => {
                 <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="py-4 px-2">
                     <div className="flex items-center gap-3">
-                      <img src={user.avatar} alt={user.firstName} className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
                       <span className="text-white font-medium">{user.firstName} {user.lastName}</span>
                     </div>
                   </td>
@@ -180,6 +201,7 @@ const CreateUser: React.FC = () => {
           </table>
         </div>
       </div>
+
     </div>
   );
 };

@@ -1,3 +1,4 @@
+//login component
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import InputField from "../components/InputFields";
@@ -30,10 +31,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     } 
     // Then role-based navigation
     else if (res.user.role && res.user.role.toLowerCase() === "admin") {
-      navigate("/AdminDashboard");
+      navigate("/");
     } 
     else {
-      navigate("/UserDashboard");
+      navigate("/user");
     }
   } catch (err: any) {
     setError(err.response?.data?.message || "Login failed");

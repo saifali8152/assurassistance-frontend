@@ -8,6 +8,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+
 // Attach token automatically to every request
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
@@ -49,5 +50,11 @@ export const apiDelete = async <T>(url: string): Promise<T> => {
   const res = await api.delete<T>(url);
   return res.data;
 };
+
+export const apiPatch = async <T>(url: string, data: any): Promise<T> => {
+  const res = await api.patch<T>(url, data);
+  return res.data;
+};
+
 
 export default api;
