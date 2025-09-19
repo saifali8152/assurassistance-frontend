@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import InputField from "../components/InputFields";
-import { User as UserIcon, Mail, Contact, IdCard, Badge, Home } from "lucide-react";
+import { User as UserIcon, Mail, Contact, IdCard, Badge, Home, Plane, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
+import SelectField from "../components/SelectField";
 
 interface Tab {
     id: string;
@@ -16,6 +17,11 @@ const CreateCase: React.FC = () => {
     const [passportId, setPassportId] = useState('');
     const [Id, setId] = useState('');
     const [address, setAddress] = useState('');
+    const [destination, setDestination] = useState("");
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [durationDays, setDurationDays] = useState('');
+    const [status, setStatus] = useState('');
     // Tab configuration - easy to add more tabs here
     const tabs: Tab[] = [
         {
@@ -26,8 +32,9 @@ const CreateCase: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <InputField
+                                label="Full Name"
                                 type="text"
-                                placeholder="Full Name"
+                                placeholder="Sam Carter"
                                 icon={<UserIcon />}
                                 value={fullName}
                                 onChange={setFullName}
@@ -36,8 +43,9 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
+                                label="Email"
                                 type="text"
-                                placeholder="Email"
+                                placeholder="Your Email"
                                 icon={<Mail />}
                                 value={email}
                                 onChange={setEmail}
@@ -46,6 +54,7 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
+                                label="Number"
                                 type="number"
                                 placeholder="Phone Number"
                                 icon={<Contact />}
@@ -56,6 +65,7 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
+                                label="Passport"
                                 type="text"
                                 placeholder="Passport ID"
                                 icon={<IdCard />}
@@ -66,6 +76,7 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
+                                label="Your ID"
                                 type="text"
                                 placeholder="Your ID"
                                 icon={<Badge />}
@@ -76,8 +87,9 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
+                                label="Address"
                                 type="text"
-                                placeholder="Address"
+                                placeholder="Your Address"
                                 icon={<Home />}
                                 value={address}
                                 onChange={setAddress}
@@ -93,47 +105,71 @@ const CreateCase: React.FC = () => {
             label: "Case",
             content: (
                 <div className="space-y-6">
-                    <h2 className="text-xl font-medium text-white mb-4">Case Details</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Case Type
-                            </label>
-                            <select className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent">
-                                <option value="">Select case type</option>
-                                <option value="visa">Visa Application</option>
-                                <option value="passport">Passport Renewal</option>
-                                <option value="emergency">Emergency Travel</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Priority Level
-                            </label>
-                            <div className="flex space-x-4">
-                                {["Normal", "Urgent", "Emergency"].map((priority) => (
-                                    <label key={priority} className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="priority"
-                                            value={priority.toLowerCase()}
-                                            className="w-4 h-4 text-blue-400 bg-white/10 border-white/20 focus:ring-blue-400/50"
-                                        />
-                                        <span className="text-white/80 text-sm">{priority}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Description
-                            </label>
-                            <textarea
-                                rows={4}
-                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent resize-none"
-                                placeholder="Describe your case details..."
-                            />
-                        </div>
+                    <div className="grid grid-cols-2 gap-8">
+                        <InputField
+                            label="ID"
+                            type="text"
+                            placeholder="Your ID"
+                            icon={<Badge />}
+                            value={Id}
+                            onChange={setId}
+                            required
+                        />
+                        <InputField
+                            label="Traveller ID"
+                            type="text"
+                            placeholder="Traveller ID"
+                            icon={<Plane />}
+                            value={Id}
+                            onChange={setId}
+                            required
+                        />
+
+                        <SelectField
+                            label="Destination"
+                            options={["Paris", "Dubai", "New York", "Tokyo", "London"]}
+                            placeholder="Travel Destination"
+                            icon={<Globe2 />}
+                            value={destination}
+                            onChange={setDestination}
+                            required
+                        />
+                        <InputField
+                            label="Start Date"
+                            type="date"
+                            placeholder="Start Date"
+                            icon={<CalendarIcon />}
+                            value={startDate}
+                            onChange={setStartDate}
+                            required
+                        />
+                        <InputField
+                            label="End Date"
+                            type="date"
+                            placeholder="End Date"
+                            icon={<CalendarIcon />}
+                            value={endDate}
+                            onChange={setEndDate}
+                            required
+                        />
+                        <InputField
+                            label="Duration Days"
+                            type="number"
+                            placeholder="Duration (days)"
+                            icon={<ClockIcon />}
+                            value={durationDays}
+                            onChange={setDurationDays}
+                            required
+                        />
+                        <SelectField
+                            label="Status"
+                            options={["Draft", "Confirmed", "Cancelled",]}
+                            placeholder="Status"
+                            icon={<CircleDot />}
+                            value={status}
+                            onChange={setStatus}
+                            required
+                        />
                     </div>
                 </div>
             ),
