@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard'
 //import ProtectedRoute from "./components/ProtectedRoute";
 import CreateUser from './pages/CreateUser'
 import CreateCase from './pages/CreateCase'
+import CreatePlan from './pages/CreatePlan'
 
 // User Layout and Pages
 import UserLayout from './components/UserLayout'
@@ -52,6 +53,7 @@ function App() {
           <Route path="users" element={<CreateUser />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="createCase" element={<CreateCase />} />
+          <Route path="CreatePlan" element={<CreatePlan/>} />
         </Route>
 
         {/* USER ROUTES - Add UserDashboard here */}
