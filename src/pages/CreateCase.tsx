@@ -76,17 +76,6 @@ const CreateCase: React.FC = () => {
                         </div>
                         <div>
                             <InputField
-                                label="Your ID"
-                                type="text"
-                                placeholder="Your ID"
-                                icon={<Badge />}
-                                value={Id}
-                                onChange={setId}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <InputField
                                 label="Address"
                                 type="text"
                                 placeholder="Your Address"
