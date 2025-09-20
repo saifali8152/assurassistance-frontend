@@ -31,7 +31,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     } 
     // Then role-based navigation
     else if (res.user.role && res.user.role.toLowerCase() === "admin") {
-      navigate("/");
+      navigate("/admin");
     } 
     else {
       navigate("/user");
