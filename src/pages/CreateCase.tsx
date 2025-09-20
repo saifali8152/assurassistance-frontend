@@ -180,54 +180,7 @@ const CreateCase: React.FC = () => {
             content: (
                 <div className="space-y-6">
                     <h2 className="text-xl font-medium text-white mb-4">Certificate Requirements</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Certificate Type
-                            </label>
-                            <select className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent">
-                                <option value="">Select certificate type</option>
-                                <option value="birth">Birth Certificate</option>
-                                <option value="marriage">Marriage Certificate</option>
-                                <option value="education">Education Certificate</option>
-                                <option value="employment">Employment Certificate</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Required Documents
-                            </label>
-                            <div className="space-y-2">
-                                {["Original Document", "Translated Copy", "Notarized Copy", "Apostille"].map((doc) => (
-                                    <label key={doc} className="flex items-center space-x-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="w-4 h-4 text-blue-400 bg-white/10 border-white/20 rounded focus:ring-blue-400/50"
-                                        />
-                                        <span className="text-white/80 text-sm">{doc}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-white/80 text-sm font-medium mb-2">
-                                Upload Documents
-                            </label>
-                            <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-white/40 transition-colors cursor-pointer">
-                                <div className="text-white/60 mb-2">
-                                    <svg className="mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                </div>
-                                <p className="text-white/60 text-sm">
-                                    Click to upload or drag and drop files here
-                                </p>
-                                <p className="text-white/40 text-xs mt-1">
-                                    PDF, DOC, JPG up to 10MB
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                   
                 </div>
             ),
         },

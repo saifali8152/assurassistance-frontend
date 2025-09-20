@@ -116,6 +116,7 @@ const ChangePassword: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <InputField
+                label="Current Password"
                 type={showCurrentPassword ? 'text' : 'password'}
                 placeholder="Current Password"
                 icon={<LockClosedIcon />}
@@ -127,6 +128,7 @@ const ChangePassword: React.FC = () => {
               />
 
               <InputField
+                label="New Password"
                 type={showNewPassword ? 'text' : 'password'}
                 placeholder="New Password"
                 icon={<LockClosedIcon />}
@@ -143,6 +145,7 @@ const ChangePassword: React.FC = () => {
               )}
 
               <InputField
+                label="Confirm Password"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm Password"
                 icon={<LockClosedIcon />}
