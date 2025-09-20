@@ -166,12 +166,12 @@ const Layout: React.FC = () => {
               <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-white/20 transition-colors"><X className="w-5 h-5 text-white" /></button>
             </div>
             <nav className="space-y-2">
-              <NavLink to="/" icon={BarChart3}>Dashboard</NavLink>
-              <NavLink to="/analytics" icon={Activity}>Analytics</NavLink>
-              <NavLink to="/users" icon={Users}>Users</NavLink>
-              <NavLink to="/createCase" icon={Layers}>Create Case</NavLink>
-              <NavLink to="/createPlan" icon={FilePlus}>Create Plan</NavLink>
-              <NavLink to="/settings" icon={Settings}>Settings</NavLink>
+              <NavLink to="/admin" icon={BarChart3}>Dashboard</NavLink>
+              <NavLink to="/admin/analytics" icon={Activity}>Analytics</NavLink>
+              <NavLink to="/admin/users" icon={Users}>Users</NavLink>
+              <NavLink to="/admin/createCase" icon={Layers}>Create Case</NavLink>
+              <NavLink to="/admin/createPlan" icon={FilePlus}>Create Plan</NavLink>
+              <NavLink to="/admin/settings" icon={Settings}>Settings</NavLink>
             </nav>
           </div>
         </aside>
