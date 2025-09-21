@@ -89,6 +89,24 @@ const CreateCase: React.FC = () => {
                 </div>
             ),
         },
+        
+        {
+            id: "choosePlan",
+            label: "Choose Plan",
+            content: (
+                <div className="space-y-6">
+                    <h2 className="text-xl font-medium text-white mb-4">Choose Plan</h2>
+                    {/* Here we neeed to show the plans */}
+
+
+
+
+                   
+                </div>
+            ),
+        },
+
+
         {
             id: "case",
             label: "Case",
@@ -242,7 +260,6 @@ const CreateCase: React.FC = () => {
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-in-out;
         }
-        
         @keyframes fadeIn {
           from {
             opacity: 0;
