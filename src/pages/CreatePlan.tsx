@@ -5,6 +5,14 @@ import {
   createCatalogueApi,
   updateCatalogueApi,
   deleteCatalogueApi
+
+import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff } from "lucide-react";
+import { 
+  getAllCataloguesApi, 
+  createCatalogueApi, 
+  updateCatalogueApi, 
+  deleteCatalogueApi 
+
 } from "../api/catalogueApi";
 import { toast } from "react-hot-toast"; // for notifications
 
