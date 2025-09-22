@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   Bell,
   Search,
@@ -20,6 +21,7 @@ import {
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { user } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation(); // Hook to get the current URL path
@@ -110,7 +112,7 @@ const Layout: React.FC = () => {
             </div>
           </div>
 
-          {/* Center - Search Bar */}
+          {/* Center - Search Bar 
           <div className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
@@ -120,7 +122,7 @@ const Layout: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
               />
             </div>
-          </div>
+          </div>  */}
 
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-3">
@@ -130,17 +132,25 @@ const Layout: React.FC = () => {
             </button>
 
             <div ref={dropdownRef} className="relative">
-               <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
-              >
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" alt="Profile" className="w-8 h-8 rounded-full" />
-                <div className="hidden sm:block">
-                  <p className="text-white text-sm font-medium">Sam Carter</p>
-                  <p className="text-white/60 text-xs">sam@travelsafe.io</p>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
+      <button
+        onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+        className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
+      >
+     {/*   <img
+          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
+          alt="Profile"
+          className="w-8 h-8 rounded-full"
+        />  */}
+        <div className="hidden sm:block">
+          <p className="text-white text-sm font-medium">{user?.name || "Loading..."}</p>
+          <p className="text-white/60 text-xs">{user?.email || "Loading..."}</p>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-white/60 transition-transform duration-200 ${
+            profileDropdownOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
 
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-[#1E2A3A]/90 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">

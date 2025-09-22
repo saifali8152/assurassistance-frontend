@@ -1,4 +1,4 @@
-//login component
+//login page
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import InputField from "../components/InputFields";
@@ -43,8 +43,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
-  
-  
   return (
     <div className="w-full h-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Animated Background Elements */}
