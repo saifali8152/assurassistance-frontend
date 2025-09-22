@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff, Info } from "lucide-react";
+import {
+  getAllCataloguesApi,
+  createCatalogueApi,
+  updateCatalogueApi,
+  deleteCatalogueApi
+
 import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff } from "lucide-react";
 import { 
   getAllCataloguesApi, 
   createCatalogueApi, 
   updateCatalogueApi, 
   deleteCatalogueApi 
+
 } from "../api/catalogueApi";
 import { toast } from "react-hot-toast"; // for notifications
 
@@ -45,17 +53,17 @@ const CreatePlan: React.FC = () => {
     active: true
   });
   const [previewData, setPreviewData] = useState<Partial<FormData>>({});
-  
+
   // Dropdown states
   //const [showProductTypeDropdown, setShowProductTypeDropdown] = useState(false);
   //const [showDestinationsDropdown, setShowDestinationsDropdown] = useState(false);
-  
+
   // Input states for adding new items
   const [destinationInput, setDestinationInput] = useState("");
   const [durationInput, setDurationInput] = useState("");
   //const [pricingRuleInput, setPricingRuleInput] = useState("");
 
-  const productTypes = ["Travel", "Blank","Health Evacuation","Travel Inbound"];
+  const productTypes = ["Travel", "Blank", "Health Evacuation", "Travel Inbound"];
   {/*const availableDestinations = [
     "USA", "Canada", "Mexico", "UK", "France", "Germany", "Italy", "Spain", 
     "Japan", "China", "Australia", "India", "Brazil", "Argentina", "Egypt", 
@@ -83,6 +91,7 @@ const CreatePlan: React.FC = () => {
     'terms',
     'active'
   ];
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
 
   // Add loading state
   const [loading, setLoading] = useState(false);
@@ -186,7 +195,7 @@ const CreatePlan: React.FC = () => {
       coverage: formData.coverage.trim(),
       eligible_destinations: formData.eligibleDestinations.join(","),
       durations: formData.durations.join(","),
-      pricing_rules: [], // send empty array for now
+      pricing_rules: [], 
       flat_price: formData.flatPrice || null,
       terms: formData.terms.trim(),
       active: formData.active,
@@ -376,8 +385,8 @@ const CreatePlan: React.FC = () => {
                   <button
                     onClick={handleToggleActive}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${formData.active
-                        ? 'bg-green-500/20 border-green-400/30 text-green-300'
-                        : 'bg-red-500/20 border-red-400/30 text-red-300'
+                      ? 'bg-green-500/20 border-green-400/30 text-green-300'
+                      : 'bg-red-500/20 border-red-400/30 text-red-300'
                       }`}
                   >
                     {formData.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -516,130 +525,131 @@ const CreatePlan: React.FC = () => {
         <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-2xl font-semibold text-white mb-6">Saved Plans ({plans.length})</h2>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 animate-fadeIn"
+                className="relative backdrop-blur-sm bg-white/5 border border-white/20 rounded-xl p-5 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fadeIn h-fit"
               >
-                {/* Header Section */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                      <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                      <div className="flex gap-2">
-                        <span className="self-start inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 border border-indigo-400/30">
-                          {plan.productType}
-                        </span>
-                        <span className={`self-start inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${plan.active
-                            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-400/30'
-                            : 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-400/30'
-                          }`}>
-                          {plan.active ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                          {plan.active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-white/90 text-base leading-relaxed">{plan.coverage}</p>
+                {/* Header with Info Icon */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-white truncate mb-2">{plan.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${plan.active
+                        ? 'bg-green-500/20 text-green-300 border border-green-400/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-400/30'
+                        }`}>
+                        {plan.active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                        {plan.active ? 'Active' : 'Inactive'}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleEditPlan(plan)}
-                      className="px-4 py-2.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-blue-300 rounded-xl transition-all duration-300 flex items-center gap-2 border border-blue-400/20 hover:border-blue-400/40"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeletePlan(plan.id)}
-                      className="px-4 py-2.5 bg-gradient-to-r from-red-500/20 to-rose-500/20 hover:from-red-500/30 hover:to-rose-500/30 text-red-300 rounded-xl transition-all duration-300 flex items-center gap-2 border border-red-400/20 hover:border-red-400/40"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Delete</span>
-                    </button>
+                  <button
+                    onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
+                    title="View details"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Default View - Plan Name, Status, Price */}
+                <div className="flex flex-col gap-4 mb-4">
+                  <div>
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Coverage</span>
+                    <p className="text-white/90 text-sm mt-1 leading-relaxed">{plan.coverage}</p>
+                  </div>
+                  <div className="grid grid-cols-2">
+                    <div>
+                      <span className="text-white/60 text-sm">Product Type</span>
+                      <p className="text-white text-sm">{plan.productType}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-white/60 text-sm">Price</span>
+                      <p className="text-white font-medium">
+                        {plan.flatPrice !== undefined ? `$${plan.flatPrice}` : 'Not specified'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Left Column */}
-                  <div className="space-y-4">
-                    {/* Destinations */}
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                        <span className="text-blue-300 font-semibold text-sm uppercase tracking-wide">Eligible Destinations</span>
-                      </div>
-                      {plan.eligibleDestinations.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {plan.eligibleDestinations.map((dest, i) => (
+                {/* Expanded Details */}
+                {expandedPlan === plan.id && (
+                  <div className="border-t border-white/10 pt-4 space-y-3 animate-fadeIn">
+
+
+                    {plan.eligibleDestinations.length > 0 && (
+                      <div>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">Destinations</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {plan.eligibleDestinations.slice(0, 3).map((dest, i) => (
                             <span
                               key={i}
-                              className="px-3 py-1.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-300 rounded-lg text-sm font-medium border border-blue-400/20"
+                              className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs border border-blue-400/20"
                             >
                               {dest}
                             </span>
                           ))}
+                          {plan.eligibleDestinations.length > 3 && (
+                            <span className="px-2 py-1 bg-white/10 text-white/60 rounded text-xs">
+                              +{plan.eligibleDestinations.length - 3} more
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <span className="text-white/50 text-sm italic">No destinations specified</span>
-                      )}
-                    </div>
-
-                    {/* Durations */}
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                        <span className="text-purple-300 font-semibold text-sm uppercase tracking-wide">Duration Options</span>
                       </div>
-                      {plan.durations.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {plan.durations.map((duration, i) => (
+                    )}
+
+                    {plan.durations.length > 0 && (
+                      <div>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">Durations</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {plan.durations.slice(0, 3).map((duration, i) => (
                             <span
                               key={i}
-                              className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-violet-500/20 text-purple-300 rounded-lg text-sm font-medium border border-purple-400/20"
+                              className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs border border-purple-400/20"
                             >
                               {duration}
                             </span>
                           ))}
+                          {plan.durations.length > 3 && (
+                            <span className="px-2 py-1 bg-white/10 text-white/60 rounded text-xs">
+                              +{plan.durations.length - 3} more
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <span className="text-white/50 text-sm italic">No durations specified</span>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    )}
 
-                  {/* Right Column */}
-                  <div className="space-y-4">
-                    {/* Flat Price */}
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                        <span className="text-green-300 font-semibold text-sm uppercase tracking-wide">Flat Price</span>
+                    {plan.terms && (
+                      <div>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">Terms</span>
+                        <p className="text-white/80 text-xs mt-1 leading-relaxed line-clamp-3">
+                          {plan.terms}
+                        </p>
                       </div>
-                      {plan.flatPrice !== undefined ? (
-                        <span className="px-3 py-1.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 rounded-lg text-sm font-medium border border-green-400/20">
-                          {plan.flatPrice}
-                        </span>
-                      ) : (
-                        <span className="text-white/50 text-sm italic">No flat price specified</span>
-                      )}
-                    </div>
-
-                    {/* Terms */}
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-3 h-3 bg-amber-400 rounded-full"></div>
-                        <span className="text-amber-300 font-semibold text-sm uppercase tracking-wide">Terms & Conditions</span>
-                      </div>
-                      <div className="text-white/90 text-sm leading-relaxed line-clamp-4">
-                        {plan.terms || <span className="text-white/50 italic">No terms specified</span>}
-                      </div>
-                    </div>
+                    )}
                   </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-4 pt-3 border-t border-white/10">
+                  <button
+                    onClick={() => handleEditPlan(plan)}
+                    className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-blue-400/20"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePlan(plan.id)}
+                    className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-red-400/20"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
