@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputField from "../components/InputFields";
-import { User as UserIcon, Mail, Contact, IdCard, Badge, Home, Plane, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
+import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
 import SelectField from "../components/SelectField";
+import PlanCard from "../components/Plans";
 
 interface Tab {
     id: string;
@@ -15,14 +16,80 @@ const CreateCase: React.FC = () => {
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [passportId, setPassportId] = useState('');
-    const [Id, setId] = useState('');
     const [address, setAddress] = useState('');
     const [destination, setDestination] = useState("");
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [durationDays, setDurationDays] = useState('');
     const [status, setStatus] = useState('');
-    // Tab configuration - easy to add more tabs here
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    interface Plan {
+        id: string;
+        name: string;
+        productType: string;
+        coverage: string;
+        flatPrice: number;
+        eligibleDestinations: string[];
+        durations: string[];
+        terms: string;
+        active: boolean;
+    }
+    useEffect(() => {
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (end >= start) {
+                const diffTime = end.getTime() - start.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                setDurationDays(diffDays.toString());
+            } else {
+                setDurationDays('');
+            }
+        } else {
+            setDurationDays('');
+        }
+    }, [startDate, endDate]);
+
+
+    const dummyPlans: Plan[] = [
+
+        {
+            id: "1",
+            name: "Basic Travel Plan",
+            productType: "Travel",
+            coverage: "Covers emergency medical up to $50,000",
+            flatPrice: 200,
+            eligibleDestinations: ["USA", "Canada"],
+            durations: ["7 days", "14 days"],
+            terms: "No pre-existing conditions covered",
+            active: true,
+        },
+        {
+            id: "2",
+            name: "Premium Health Plan",
+            productType: "Health",
+            coverage: "Full coverage worldwide",
+            flatPrice: 500,
+            eligibleDestinations: ["Global"],
+            durations: ["1 month", "3 months"],
+            terms: "Includes evacuation services",
+            active: false,
+        },
+        {
+            id: "3",
+            name: "Premium Health Plan",
+            productType: "Health",
+            coverage: "Full coverage worldwide",
+            flatPrice: 500,
+            eligibleDestinations: ["Global"],
+            durations: ["1 month", "3 months"],
+            terms: "Includes evacuation services",
+            active: false,
+        },
+    ];
+
+    // Tab configuration
     const tabs: Tab[] = [
         {
             id: "traveller",
@@ -89,7 +156,7 @@ const CreateCase: React.FC = () => {
                 </div>
             ),
         },
-        
+
         {
             id: "choosePlan",
             label: "Choose Plan",
@@ -97,41 +164,38 @@ const CreateCase: React.FC = () => {
                 <div className="space-y-6">
                     <h2 className="text-xl font-medium text-white mb-4">Choose Plan</h2>
                     {/* Here we neeed to show the plans */}
-
-
-
-
-                   
+                    <div className="grid grid-cols-3 gap-8">
+                        {dummyPlans.map((plan) => (
+                            <div key={plan.id} className="relative ">
+                                <div
+                                    className={`cursor-pointer transition-all duration-200 ${selectedPlan === plan.id ? '' : ''
+                                        }`}
+                                    onClick={() => setSelectedPlan(plan.id)}
+                                >
+                                    <PlanCard plan={plan} />
+                                </div>
+                                {/* Radio button */}
+                                <div className="absolute top-3 right-3">
+                                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-200 ${selectedPlan === plan.id
+                                        }`}>
+                                        {selectedPlan === plan.id && (
+                                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             ),
         },
 
-
         {
             id: "case",
-            label: "Case",
+            label: "Case Details",
             content: (
                 <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-8">
-                        <InputField
-                            label="ID"
-                            type="text"
-                            placeholder="Your ID"
-                            icon={<Badge />}
-                            value={Id}
-                            onChange={setId}
-                            required
-                        />
-                        <InputField
-                            label="Traveller ID"
-                            type="text"
-                            placeholder="Traveller ID"
-                            icon={<Plane />}
-                            value={Id}
-                            onChange={setId}
-                            required
-                        />
-
                         <SelectField
                             label="Destination"
                             options={["Paris", "Dubai", "New York", "Tokyo", "London"]}
@@ -165,8 +229,9 @@ const CreateCase: React.FC = () => {
                             placeholder="Duration (days)"
                             icon={<ClockIcon />}
                             value={durationDays}
-                            onChange={setDurationDays}
+                            onChange={() => { }}
                             required
+                            readOnly
                         />
                         <SelectField
                             label="Status"
@@ -178,16 +243,6 @@ const CreateCase: React.FC = () => {
                             required
                         />
                     </div>
-                </div>
-            ),
-        },
-        {
-            id: "certificate",
-            label: "Certificate",
-            content: (
-                <div className="space-y-6">
-                    <h2 className="text-xl font-medium text-white mb-4">Certificate Requirements</h2>
-                   
                 </div>
             ),
         },
@@ -239,9 +294,11 @@ const CreateCase: React.FC = () => {
                     Previous
                 </button>
                 <div className="flex space-x-3">
-                    <button className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors">
-                        Save Draft
-                    </button>
+                    {activeTab !== tabs[tabs.length - 1].id && (
+                        <button className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors">
+                            Save Draft
+                        </button>
+                    )}
                     <button
                         onClick={() => {
                             const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
@@ -255,22 +312,6 @@ const CreateCase: React.FC = () => {
                     </button>
                 </div>
             </div>
-
-            <style>{`
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
         </div>
     );
 };

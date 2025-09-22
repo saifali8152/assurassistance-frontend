@@ -12,6 +12,7 @@ interface InputFieldProps {
   className?: string;
   label?: string;
   id?: string;
+  readOnly?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
