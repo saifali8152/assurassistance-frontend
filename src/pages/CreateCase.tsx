@@ -3,11 +3,26 @@ import InputField from "../components/InputFields";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
 import SelectField from "../components/SelectField";
 import PlanCard from "../components/Plans";
+import { getAllCataloguesApi } from "../api/catalogueApi";
+import { createCaseApi } from "../api/caseApi";
+import { toast } from "react-hot-toast";
 
 interface Tab {
     id: string;
     label: string;
     content: React.ReactNode;
+}
+
+interface Plan {
+    id: string;
+    name: string;
+    productType: string;
+    coverage: string;
+    flatPrice: number;
+    eligibleDestinations: string[];
+    durations: string[];
+    terms: string;
+    active: boolean;
 }
 
 const CreateCase: React.FC = () => {
@@ -23,17 +38,9 @@ const CreateCase: React.FC = () => {
     const [durationDays, setDurationDays] = useState('');
     const [status, setStatus] = useState('');
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    interface Plan {
-        id: string;
-        name: string;
-        productType: string;
-        coverage: string;
-        flatPrice: number;
-        eligibleDestinations: string[];
-        durations: string[];
-        terms: string;
-        active: boolean;
-    }
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [loadingPlans, setLoadingPlans] = useState(false);
+
     useEffect(() => {
         if (startDate && endDate) {
             const start = new Date(startDate);
@@ -51,44 +58,44 @@ const CreateCase: React.FC = () => {
         }
     }, [startDate, endDate]);
 
+    useEffect(() => {
+        const fetchPlans = async () => {
+            setLoadingPlans(true);
+            try {
+                const res = await getAllCataloguesApi();
+                // Only use active plans and parse eligibleDestinations correctly
+                const activePlans = res.data
+                    .filter((plan: any) => !!plan.active)
+                    .map((plan: any) => ({
+                        id: String(plan.id),
+                        name: plan.name,
+                        productType: plan.product_type,
+                        coverage: plan.coverage,
+                        flatPrice: plan.flat_price,
+                        eligibleDestinations: typeof plan.eligible_destinations === "string"
+                            ? plan.eligible_destinations.split(",").map((d: string) => d.trim()).filter((d: string) => d)
+                            : [],
+                        durations: typeof plan.durations === "string"
+                            ? plan.durations.split(",").map((d: string) => d.trim()).filter((d: string) => d)
+                            : [],
+                        terms: plan.terms,
+                        active: !!plan.active,
+                    }));
+                setPlans(activePlans);
+            } catch (err) {
+                toast.error("Failed to load plans");
+            } finally {
+                setLoadingPlans(false);
+            }
+        };
+        fetchPlans();
+    }, []);
 
-    const dummyPlans: Plan[] = [
+// Find selected plan first
+const selectedPlanObj = plans.find(p => p.id === selectedPlan);
 
-        {
-            id: "1",
-            name: "Basic Travel Plan",
-            productType: "Travel",
-            coverage: "Covers emergency medical up to $50,000",
-            flatPrice: 200,
-            eligibleDestinations: ["USA", "Canada"],
-            durations: ["7 days", "14 days"],
-            terms: "No pre-existing conditions covered",
-            active: true,
-        },
-        {
-            id: "2",
-            name: "Premium Health Plan",
-            productType: "Health",
-            coverage: "Full coverage worldwide",
-            flatPrice: 500,
-            eligibleDestinations: ["Global"],
-            durations: ["1 month", "3 months"],
-            terms: "Includes evacuation services",
-            active: false,
-        },
-        {
-            id: "3",
-            name: "Premium Health Plan",
-            productType: "Health",
-            coverage: "Full coverage worldwide",
-            flatPrice: 500,
-            eligibleDestinations: ["Global"],
-            durations: ["1 month", "3 months"],
-            terms: "Includes evacuation services",
-            active: false,
-        },
-    ];
-
+// Move eligibleDestinations ABOVE tabs
+const eligibleDestinations = selectedPlanObj?.eligibleDestinations || [];
     // Tab configuration
     const tabs: Tab[] = [
         {
@@ -163,23 +170,19 @@ const CreateCase: React.FC = () => {
             content: (
                 <div className="space-y-6">
                     <h2 className="text-xl font-medium text-white mb-4">Choose Plan</h2>
-                    {/* Here we neeed to show the plans */}
                     <div className="grid grid-cols-3 gap-8">
-                        {dummyPlans.map((plan) => (
+                        {plans.map((plan) => (
                             <div key={plan.id} className="relative ">
                                 <div
-                                    className={`cursor-pointer transition-all duration-200 ${selectedPlan === plan.id ? '' : ''
-                                        }`}
+                                    className={`cursor-pointer transition-all duration-200 ${selectedPlan === plan.id ? 'ring-2 ring-blue-400' : ''}`}
                                     onClick={() => setSelectedPlan(plan.id)}
                                 >
                                     <PlanCard plan={plan} />
                                 </div>
-                                {/* Radio button */}
                                 <div className="absolute top-3 right-3">
-                                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-200 ${selectedPlan === plan.id
-                                        }`}>
+                                    <div className={`w-5 h-5 rounded-full border-2 border-blue-400 transition-all duration-200 flex items-center justify-center ${selectedPlan === plan.id ? 'bg-blue-400' : 'bg-transparent'}`}>
                                         {selectedPlan === plan.id && (
-                                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                            <div className="w-3 h-3 rounded-full bg-white"></div>
                                         )}
                                     </div>
                                 </div>
@@ -198,7 +201,7 @@ const CreateCase: React.FC = () => {
                     <div className="grid grid-cols-2 gap-8">
                         <SelectField
                             label="Destination"
-                            options={["Paris", "Dubai", "New York", "Tokyo", "London"]}
+                            options={eligibleDestinations}
                             placeholder="Travel Destination"
                             icon={<Globe2 />}
                             value={destination}
@@ -235,7 +238,7 @@ const CreateCase: React.FC = () => {
                         />
                         <SelectField
                             label="Status"
-                            options={["Draft", "Confirmed", "Cancelled",]}
+                            options={["Draft", "Confirmed", "Cancelled"]}
                             placeholder="Status"
                             icon={<CircleDot />}
                             value={status}
@@ -249,6 +252,43 @@ const CreateCase: React.FC = () => {
     ];
 
     const currentTab = tabs.find(tab => tab.id === activeTab);
+
+    const handleSubmitCase = async () => {
+        if (!selectedPlan || !destination || !fullName || !email || !phoneNumber || !passportId || !address || !startDate || !endDate) {
+            toast.error("Please fill all required fields");
+            return;
+        }
+        try {
+            // Prepare payload to match backend expectations
+            const payload = {
+                traveller: {
+                    full_name: fullName,
+                    passport_or_id: passportId,
+                    phone: phoneNumber,
+                    email,
+                    address,
+                },
+                caseData: {
+                    destination,
+                    start_date: startDate,
+                    end_date: endDate,
+                    selected_plan_id: Number(selectedPlan),
+                    status,
+                }
+            };
+const res = await createCaseApi(payload);
+
+if (res.caseId) {
+  toast.success("Case created successfully!");
+} else {
+  toast.error("Failed to create case");
+}
+
+
+        } catch (err) {
+            toast.error("Server error");
+        }
+    };
 
     return (
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
@@ -300,7 +340,7 @@ const CreateCase: React.FC = () => {
                         </button>
                     )}
                     <button
-                        onClick={() => {
+                        onClick={activeTab === tabs[tabs.length - 1].id ? handleSubmitCase : () => {
                             const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
                             if (currentIndex < tabs.length - 1) {
                                 setActiveTab(tabs[currentIndex + 1].id);

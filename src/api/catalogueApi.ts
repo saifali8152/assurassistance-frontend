@@ -1,4 +1,5 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
+//src/api/catalogueApi.ts
+import api, { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 
 export const getAllCataloguesApi = () => apiGet("/catalogue");
 export const createCatalogueApi = (data: any) => apiPost("/catalogue", data);

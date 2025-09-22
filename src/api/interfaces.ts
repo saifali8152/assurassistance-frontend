@@ -14,3 +14,8 @@ export interface LoginRequest {
       force_password_change?: boolean;
     };
   }
+
+ export interface CreateCaseResponse {
+  message: string;
+  caseId: number;
+}
