@@ -14,8 +14,33 @@ export interface LoginRequest {
       force_password_change?: boolean;
     };
   }
+export interface CreateSaleRequest {
+  case_id: number;
+  premium_amount: number;
+  tax?: number;
+  total: number;
+}
 
- export interface CreateCaseResponse {
+export interface CreateSaleResponse {
   message: string;
-  caseId: number;
+  saleId: number;
+  policyNumber: string;
+  certificateNumber: string;
+}
+
+export interface GenerateInvoiceRequest {
+  saleId: number;
+}
+
+export interface GenerateCertificateRequest {
+  saleId: number;
+  productType: "Travel" | "Bank" | "Health Evacuation" | "Travel Inbound";
+}
+
+export interface GenerateInvoiceResponse {
+  url: string;
+}
+
+export interface GenerateCertificateResponse {
+  url: string;
 }

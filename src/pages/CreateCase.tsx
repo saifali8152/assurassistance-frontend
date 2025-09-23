@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import InputField from "../components/InputFields";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
 import SelectField from "../components/SelectField";
+import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { createCaseApi } from "../api/caseApi";
@@ -40,6 +41,7 @@ const CreateCase: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loadingPlans, setLoadingPlans] = useState(false);
+    const [createdCaseId, setCreatedCaseId] = useState<number | null>(null);
 
     useEffect(() => {
         if (startDate && endDate) {
@@ -290,6 +292,39 @@ if (res.caseId) {
         }
     };
 
+const handleConvertToSale = async (caseId: number) => {
+  try {
+    const payload = {
+      case_id: caseId,
+      premium_amount: 200,
+      tax: 20,
+      total: 220,
+    };
+
+    const res = await createSaleApi(payload);
+
+    if (res.saleId) {
+      toast.success("Sale created successfully!");
+
+      // Generate and open invoice
+      const invoice = await generateInvoiceApi({ saleId: res.saleId });
+      window.open(invoice.url, "_blank");
+
+      // Generate and open certificate (pass product type dynamically)
+      const certificate = await generateCertificateApi({
+        saleId: res.saleId,
+        productType: "Travel",
+      });
+      window.open(certificate.url, "_blank");
+    } else {
+      toast.error("Failed to create sale");
+    }
+  } catch (err) {
+    toast.error("Server error");
+  }
+};
+
+
     return (
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
             <h1 className="text-2xl font-semibold text-white mb-8">Create Case</h1>
@@ -321,37 +356,71 @@ if (res.caseId) {
 
             {/* Navigation Buttons */}
             <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
-                <button
-                    onClick={() => {
-                        const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-                        if (currentIndex > 0) {
-                            setActiveTab(tabs[currentIndex - 1].id);
-                        }
-                    }}
-                    disabled={activeTab === tabs[0].id}
-                    className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Previous
-                </button>
-                <div className="flex space-x-3">
-                    {activeTab !== tabs[tabs.length - 1].id && (
-                        <button className="cursor-pointer px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors">
-                            Save Draft
-                        </button>
-                    )}
-                    <button
-                        onClick={activeTab === tabs[tabs.length - 1].id ? handleSubmitCase : () => {
-                            const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-                            if (currentIndex < tabs.length - 1) {
-                                setActiveTab(tabs[currentIndex + 1].id);
-                            }
-                        }}
-                        className="cursor-pointer px-6 py-3 bg-blue-500/20 border border-blue-400/30 rounded-xl text-white hover:bg-blue-500/30 transition-colors"
-                    >
-                        {activeTab === tabs[tabs.length - 1].id ? "Submit Case" : "Next"}
-                    </button>
-                </div>
-            </div>
+  {/* Previous Button */}
+  <button
+    onClick={() => {
+      const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+      if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1].id);
+    }}
+    disabled={activeTab === tabs[0].id}
+    className="px-6 py-3 rounded-xl text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    style={{
+      backgroundColor: "#0f172b",
+      border: "1px solid rgba(255,255,255,0.2)"
+    }}
+  >
+    Previous
+  </button>
+
+  <div className="flex space-x-3">
+    {/* Save Draft */}
+    {activeTab !== tabs[tabs.length - 1].id && (
+      <button
+        className="px-6 py-3 rounded-xl text-white transition-colors"
+        style={{
+          backgroundColor: "transparent",
+          border: "1px solid rgba(255,255,255,0.2)"
+        }}
+      >
+        Save Draft
+      </button>
+    )}
+
+    {/* Next / Submit */}
+    <button
+      onClick={
+        activeTab === tabs[tabs.length - 1].id
+          ? handleSubmitCase
+          : () => {
+              const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+              if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1].id);
+            }
+      }
+      className="px-6 py-3 rounded-xl text-white transition-colors"
+      style={{
+        backgroundColor: "#1c398e",
+        border: "1px solid rgba(28,57,142,0.3)"
+      }}
+    >
+      {activeTab === tabs[tabs.length - 1].id ? "Submit Case" : "Next"}
+    </button>
+
+    {/* Convert to Sale */}
+    {createdCaseId && (
+      <button
+        onClick={() => handleConvertToSale(createdCaseId)}
+        className="px-6 py-3 rounded-xl text-white transition-colors"
+        style={{
+          backgroundColor: "#16a34a",
+          border: "1px solid #16a34a"
+        }}
+      >
+        Convert to Sale
+      </button>
+    )}
+  </div>
+</div>
+
         </div>
     );
 };
