@@ -353,14 +353,13 @@ const handleConfirmSale = async () => {
 const handleGenerateInvoice = async () => {
   if (!createdSaleId) return;
   const res = await generateInvoiceApi(createdSaleId);
-  window.open(res.pdfUrl, "_blank"); // <-- Full URL now
+  window.open(res.url, "_blank"); // <-- Use res.url
 };
-
 
 const handleGenerateCertificate = async () => {
   if (!createdSaleId) return;
-  const res = await generateInvoiceApi(createdSaleId);
-  window.open(res.pdfUrl, "_blank"); // <-- Full URL now
+  const res = await generateCertificateApi(createdSaleId); // <-- Use correct API
+  window.open(res.url, "_blank"); // <-- Use res.url
 };
 
 
