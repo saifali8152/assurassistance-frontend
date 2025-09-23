@@ -1,25 +1,19 @@
-import { apiPost } from "../lib/api";
+//src/api/salesApi.ts
+import { apiPost ,apiGet} from "../lib/api";
 import type {
   CreateSaleRequest,
   CreateSaleResponse,
-  GenerateInvoiceRequest,
-  GenerateCertificateRequest,
-  GenerateInvoiceResponse,
-  GenerateCertificateResponse
+    DownloadResponse,
 } from "./interfaces";
 
 export const createSaleApi = async (data: CreateSaleRequest): Promise<CreateSaleResponse> => {
   return apiPost<CreateSaleResponse>("/sales", data);
 };
 
-export const generateInvoiceApi = async (
-  data: GenerateInvoiceRequest
-): Promise<GenerateInvoiceResponse> => {
-  return apiPost<GenerateInvoiceResponse>("/sales/generate-invoice", data);
+export const generateInvoiceApi = async (saleId: number): Promise<DownloadResponse> => {
+  return apiGet<DownloadResponse>(`/sales/${saleId}/invoice`);
 };
 
-export const generateCertificateApi = async (
-  data: GenerateCertificateRequest
-): Promise<GenerateCertificateResponse> => {
-  return apiPost<GenerateCertificateResponse>("/sales/generate-certificate", data);
+export const generateCertificateApi = async (saleId: number): Promise<DownloadResponse> => {
+  return apiGet<DownloadResponse>(`/sales/${saleId}/certificate`);
 };

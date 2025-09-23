@@ -42,6 +42,7 @@ const CreateCase: React.FC = () => {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loadingPlans, setLoadingPlans] = useState(false);
     const [createdCaseId, setCreatedCaseId] = useState<number | null>(null);
+const [createdSaleId, setCreatedSaleId] = useState<number | null>(null);
 
     useEffect(() => {
         if (startDate && endDate) {
@@ -281,6 +282,7 @@ const eligibleDestinations = selectedPlanObj?.eligibleDestinations || [];
 const res = await createCaseApi(payload);
 
 if (res.caseId) {
+    setCreatedCaseId(res.caseId); 
   toast.success("Case created successfully!");
 } else {
   toast.error("Failed to create case");
@@ -292,7 +294,7 @@ if (res.caseId) {
         }
     };
 
-const handleConvertToSale = async (caseId: number) => {
+{/*const handleConvertToSale = async (caseId: number) => {
   try {
     const payload = {
       case_id: caseId,
@@ -323,6 +325,48 @@ const handleConvertToSale = async (caseId: number) => {
     toast.error("Server error");
   }
 };
+ */}
+const handleConfirmSale = async () => {
+  if (!createdCaseId) {
+    toast.error("Create case first!");
+    return;
+  }
+  try {
+    const payload = {
+      case_id: createdCaseId,
+      premium_amount: 200,  
+      tax: 20,
+      total: 220,
+    };
+    const res = await createSaleApi(payload);
+    if (res?.saleId) {
+      setCreatedSaleId(res.saleId); // Store Sale ID
+      toast.success("Sale confirmed successfully!");
+    } else {
+      toast.error("Failed to confirm sale");
+    }
+  } catch (err) {
+    toast.error("Server error");
+  }
+};
+
+const handleGenerateInvoice = async () => {
+  if (!createdSaleId) return;
+  const res = await generateInvoiceApi(createdSaleId);
+  if (res?.url) window.open(res.url, "_blank");
+  else toast.error("Failed to download invoice");
+};
+
+const handleGenerateCertificate = async () => {
+  if (!createdSaleId) return;
+  const res = await generateCertificateApi(createdSaleId);
+  if (res?.url) window.open(res.url, "_blank");
+  else toast.error("Failed to download certificate");
+};
+
+
+
+
 
 
     return (
@@ -354,8 +398,8 @@ const handleConvertToSale = async (caseId: number) => {
                 )}
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
+{/* Navigation Buttons */}
+<div className="flex justify-between mt-8 pt-6 border-t border-white/10">
   {/* Previous Button */}
   <button
     onClick={() => {
@@ -386,40 +430,79 @@ const handleConvertToSale = async (caseId: number) => {
       </button>
     )}
 
-    {/* Next / Submit */}
-    <button
-      onClick={
-        activeTab === tabs[tabs.length - 1].id
-          ? handleSubmitCase
-          : () => {
-              const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-              if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1].id);
-            }
-      }
-      className="px-6 py-3 rounded-xl text-white transition-colors"
-      style={{
-        backgroundColor: "#1c398e",
-        border: "1px solid rgba(28,57,142,0.3)"
-      }}
-    >
-      {activeTab === tabs[tabs.length - 1].id ? "Submit Case" : "Next"}
-    </button>
-
-    {/* Convert to Sale */}
-    {createdCaseId && (
+    {/* Next Button (always visible except last tab) */}
+    {activeTab !== tabs[tabs.length - 1].id && (
       <button
-        onClick={() => handleConvertToSale(createdCaseId)}
+        onClick={() => {
+          const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+          if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1].id);
+        }}
         className="px-6 py-3 rounded-xl text-white transition-colors"
         style={{
-          backgroundColor: "#16a34a",
-          border: "1px solid #16a34a"
+          backgroundColor: "#1c398e",
+          border: "1px solid rgba(28,57,142,0.3)"
         }}
       >
-        Convert to Sale
+        Next
       </button>
+    )}
+
+    {/* Submit Case Button - only on last tab, before case is created */}
+    {activeTab === tabs[tabs.length - 1].id && !createdCaseId && (
+      <button
+        onClick={handleSubmitCase}
+        className="px-6 py-3 rounded-xl text-white transition-colors"
+        style={{
+          backgroundColor: "#1c398e",
+          border: "1px solid rgba(28,57,142,0.3)"
+        }}
+      >
+        Submit Case
+      </button>
+    )}
+
+    {/* Confirm Sale Button - after case created, before sale confirmed */}
+    {createdCaseId && !createdSaleId && (
+      <button
+        onClick={handleConfirmSale}
+        className="px-6 py-3 rounded-xl text-white transition-colors"
+        style={{
+          backgroundColor: "#16a34a", // green
+          border: "1px solid rgba(22,163,74,0.3)"
+        }}
+      >
+        Confirm Sale
+      </button>
+    )}
+
+    {/* Download Invoice & Certificate - after sale confirmed */}
+    {createdSaleId && (
+      <>
+        <button
+          onClick={handleGenerateInvoice}
+          className="px-6 py-3 rounded-xl text-white transition-colors"
+          style={{
+            backgroundColor: "#eab308", // yellow
+            border: "1px solid rgba(234,179,8,0.3)"
+          }}
+        >
+          Download Invoice
+        </button>
+        <button
+          onClick={handleGenerateCertificate}
+          className="px-6 py-3 rounded-xl text-white transition-colors"
+          style={{
+            backgroundColor: "#9333ea", // purple
+            border: "1px solid rgba(147,51,234,0.3)"
+          }}
+        >
+          Download Certificate
+        </button>
+      </>
     )}
   </div>
 </div>
+
 
         </div>
     );

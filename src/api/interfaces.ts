@@ -14,6 +14,10 @@ export interface LoginRequest {
       force_password_change?: boolean;
     };
   }
+  export interface CreateCaseResponse {
+  message: string;
+  caseId: number;
+  }
 export interface CreateSaleRequest {
   case_id: number;
   premium_amount: number;
@@ -42,5 +46,9 @@ export interface GenerateInvoiceResponse {
 }
 
 export interface GenerateCertificateResponse {
+  url: string;
+}
+
+export interface DownloadResponse {
   url: string;
 }
