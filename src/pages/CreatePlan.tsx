@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff, Info } from "lucide-react";
-import {
-  getAllCataloguesApi,
-  createCatalogueApi,
-  updateCatalogueApi,
-  deleteCatalogueApi
-
-import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff } from "lucide-react";
 import { 
   getAllCataloguesApi, 
   createCatalogueApi, 
