@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff, Info } from "lucide-react";
-import {
-  getAllCataloguesApi,
-  createCatalogueApi,
-  updateCatalogueApi,
-  deleteCatalogueApi
-
-import { Trash2, Edit3, Save, X, Plus, Check, Eye, EyeOff } from "lucide-react";
 import { 
   getAllCataloguesApi, 
   createCatalogueApi, 
@@ -282,6 +275,7 @@ const CreatePlan: React.FC = () => {
       active: plan.active,
       flatPrice: plan.flatPrice,
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -384,7 +378,7 @@ const CreatePlan: React.FC = () => {
                 ) : field === 'active' ? (
                   <button
                     onClick={handleToggleActive}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${formData.active
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300  ${formData.active
                       ? 'bg-green-500/20 border-green-400/30 text-green-300'
                       : 'bg-red-500/20 border-red-400/30 text-red-300'
                       }`}
@@ -415,7 +409,7 @@ const CreatePlan: React.FC = () => {
             <div className="flex gap-3 mt-8">
               <button
                 onClick={handleSavePlan}
-                className="flex-1 bg-blue-600  text-white font-semibold py-3 px-6 rounded-xl 300 flex items-center justify-center gap-2"
+                className="flex-1 bg-blue-600  text-white font-semibold py-3 px-6 rounded-xl 300 flex items-center cursor-pointer justify-center gap-2"
               >
                 <Save className="w-5 h-5" />
                 {editingPlan ? 'Update Plan' : 'Save Plan'}
@@ -548,7 +542,7 @@ const CreatePlan: React.FC = () => {
 
                   <button
                     onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
+                    className="cursor-pointer p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
                     title="View details"
                   >
                     <Info className="w-4 h-4" />
@@ -638,14 +632,14 @@ const CreatePlan: React.FC = () => {
                 <div className="flex gap-2 mt-4 pt-3 border-t border-white/10">
                   <button
                     onClick={() => handleEditPlan(plan)}
-                    className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-blue-400/20"
+                    className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 cursor-pointer rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-blue-400/20"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeletePlan(plan.id)}
-                    className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-red-400/20"
+                    className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 cursor-pointer text-red-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-red-400/20"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Delete
