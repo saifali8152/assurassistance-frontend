@@ -353,16 +353,16 @@ const handleConfirmSale = async () => {
 const handleGenerateInvoice = async () => {
   if (!createdSaleId) return;
   const res = await generateInvoiceApi(createdSaleId);
-  if (res?.url) window.open(res.url, "_blank");
-  else toast.error("Failed to download invoice");
+  window.open(res.pdfUrl, "_blank"); // <-- Full URL now
 };
+
 
 const handleGenerateCertificate = async () => {
   if (!createdSaleId) return;
-  const res = await generateCertificateApi(createdSaleId);
-  if (res?.url) window.open(res.url, "_blank");
-  else toast.error("Failed to download certificate");
+  const res = await generateInvoiceApi(createdSaleId);
+  window.open(res.pdfUrl, "_blank"); // <-- Full URL now
 };
+
 
 
 

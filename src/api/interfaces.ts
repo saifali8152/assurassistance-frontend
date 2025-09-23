@@ -51,4 +51,5 @@ export interface GenerateCertificateResponse {
 
 export interface DownloadResponse {
   url: string;
+  pdfUrl: string;
 }
