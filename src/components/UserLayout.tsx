@@ -16,6 +16,7 @@ import {
   CreditCard,
   Settings,
   Layers,
+  Activity,
 } from "lucide-react";
 
 const UserLayout: React.FC = () => {
@@ -172,9 +173,13 @@ const UserLayout: React.FC = () => {
             </div>
             <nav className="space-y-2">
               <NavLink to="/" icon={BarChart3}>Dashboard</NavLink>
-              <NavLink to="/bookings" icon={Calendar}>My Bookings</NavLink>
+              <NavLink to="/user/bookings" icon={Calendar}>My Bookings</NavLink>
               <NavLink to="/user/createCase" icon={Layers}>Create Case</NavLink>
-              <NavLink to="/clients" icon={Users}>My Clients</NavLink>
+              <NavLink to="/user/ledger" icon={Activity}>Sales Ledger</NavLink>
+
+
+
+              <NavLink to="/user/clients" icon={Users}>My Clients</NavLink>
               <NavLink to="/payments" icon={CreditCard}>Payments</NavLink>
               <NavLink to="/settings" icon={Settings}>Settings</NavLink>
             </nav>
