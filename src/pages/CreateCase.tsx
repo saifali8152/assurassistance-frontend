@@ -5,7 +5,7 @@ import SelectField from "../components/SelectField";
 import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
-import { createCaseApi,changeCaseStatusApi } from "../api/caseApi";
+import { createCaseApi, changeCaseStatusApi } from "../api/caseApi";
 import { toast } from "react-hot-toast";
 
 interface Tab {
@@ -286,7 +286,7 @@ const CreateCase: React.FC = () => {
               required
               readOnly
             />
-            
+
           </div>
         </div>
       ),
@@ -312,42 +312,42 @@ const CreateCase: React.FC = () => {
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
 
 
-const handleSubmitCase = async () => {
-  if (!selectedPlan || !destination || !fullName || !email || !phoneNumber || !passportId || !address || !startDate || !endDate) {
-    toast.error("Please fill all required fields");
-    return;
-  }
-  try {
-    // Set status to "Confirmed" automatically
-    const payload = {
-      traveller: {
-        full_name: fullName,
-        passport_or_id: passportId,
-        phone: phoneNumber,
-        email,
-        address,
-      },
-      caseData: {
-        destination,
-        start_date: startDate,
-        end_date: endDate,
-        selected_plan_id: Number(selectedPlan),
-        status: "Confirmed", // <-- Set automatically
-      }
-    };
-    const res = await createCaseApi(payload);
-
-    if (res.caseId) {
-      setCreatedCaseId(res.caseId); 
-      setActiveTab("review");
-      toast.success("Case created successfully!");
-    } else {
-      toast.error("Failed to create case");
+  const handleSubmitCase = async () => {
+    if (!selectedPlan || !destination || !fullName || !email || !phoneNumber || !passportId || !address || !startDate || !endDate) {
+      toast.error("Please fill all required fields");
+      return;
     }
-  } catch (err) {
-    toast.error("Server error");
-  }
-};
+    try {
+      // Set status to "Confirmed" automatically
+      const payload = {
+        traveller: {
+          full_name: fullName,
+          passport_or_id: passportId,
+          phone: phoneNumber,
+          email,
+          address,
+        },
+        caseData: {
+          destination,
+          start_date: startDate,
+          end_date: endDate,
+          selected_plan_id: Number(selectedPlan),
+          status: "Confirmed", // <-- Set automatically
+        }
+      };
+      const res = await createCaseApi(payload);
+
+      if (res.caseId) {
+        setCreatedCaseId(res.caseId);
+        setActiveTab("review");
+        toast.success("Case created successfully!");
+      } else {
+        toast.error("Failed to create case");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
+  };
 
   const handleConfirmSale = async () => {
     if (!createdCaseId) {
@@ -373,16 +373,16 @@ const handleSubmitCase = async () => {
     }
   };
 
-const handleCancelCase = async () => {
-  if (!createdCaseId) return;
-  try {
-    await changeCaseStatusApi(createdCaseId, "Cancelled");
-    toast.success("Case cancelled.");
-    // Optionally, redirect or reset state here
-  } catch (err) {
-    toast.error("Failed to cancel case.");
-  }
-};
+  const handleCancelCase = async () => {
+    if (!createdCaseId) return;
+    try {
+      await changeCaseStatusApi(createdCaseId, "Cancelled");
+      toast.success("Case cancelled.");
+      // Optionally, redirect or reset state here
+    } catch (err) {
+      toast.error("Failed to cancel case.");
+    }
+  };
 
 
   const handleGenerateInvoice = async () => {
@@ -482,18 +482,18 @@ const handleCancelCase = async () => {
             </button>
           )}
 
-{createdCaseId && !createdSaleId && activeTab === "review" && (
-  <button
-    onClick={handleCancelCase}
-    className="px-6 py-3 rounded-xl text-white transition-colors"
-    style={{
-      backgroundColor: "#ef4444",
-      border: "1px solid rgba(239,68,68,0.3)"
-    }}
-  >
-    Cancel Case
-  </button>
-)}
+          {createdCaseId && !createdSaleId && activeTab === "review" && (
+            <button
+              onClick={handleCancelCase}
+              className="px-6 py-3 rounded-xl text-white transition-colors"
+              style={{
+                backgroundColor: "#ef4444",
+                border: "1px solid rgba(239,68,68,0.3)"
+              }}
+            >
+              Cancel Case
+            </button>
+          )}
 
           {/* Confirm Sale Button  */}
           {createdCaseId && !createdSaleId && activeTab === "review" && (
