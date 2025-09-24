@@ -59,6 +59,7 @@ function App() {
             }
           >
             <Route index element={<UserDashboard />} />
+            <Route path="createCase" element={<CreateCase />} />
           </Route>
 
           {/* Unauthorized page fallback */}

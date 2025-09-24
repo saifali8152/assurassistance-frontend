@@ -3,7 +3,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Bell,
-  Search,
   Menu,
   X,
   BarChart3,
