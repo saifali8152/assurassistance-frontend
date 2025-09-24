@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Edit3, Check, Clock, User as UserIcon, Mail } from "lucide-react";
 import InputField from "../components/InputFields";
-import { createAgentApi, listAgentsApi , updateUserStatusApi} from "../api/agentApi";
+import { createAgentApi, listAgentsApi, updateUserStatusApi } from "../api/agentApi";
 import { toast } from "react-hot-toast";
 
 type User = {
@@ -33,6 +33,12 @@ const CreateUser: React.FC = () => {
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    userId: string | null;
+    newStatus: "active" | "inactive" | null;
+  }>({ open: false, userId: null, newStatus: null });
 
   // ✅ Load real users from backend
   useEffect(() => {
@@ -92,23 +98,32 @@ const CreateUser: React.FC = () => {
     setIsFormVisible(false);
   };
 
-const toggleUserStatus = async (userId: string) => {
-  const user = users.find((u) => u.id === userId);
-  if (!user) return;
+  const toggleUserStatus = (userId: string) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
 
-  const newStatus = user.status === "active" ? "inactive" : "active";
-  try {
-    await updateUserStatusApi(userId, newStatus);
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId ? { ...u, status: newStatus } : u
-      )
-    );
-    toast.success(`User status updated to ${newStatus}`);
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || "Failed to update status");
-  }
-};
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    setConfirmModal({ open: true, userId, newStatus });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!confirmModal.userId || !confirmModal.newStatus) return;
+
+    try {
+      await updateUserStatusApi(confirmModal.userId, confirmModal.newStatus);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === confirmModal.userId ? { ...u, status: confirmModal.newStatus! } : u
+        )
+      );
+      toast.success(`User status updated to ${confirmModal.newStatus}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update status");
+    } finally {
+      setConfirmModal({ open: false, userId: null, newStatus: null });
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -120,7 +135,7 @@ const toggleUserStatus = async (userId: string) => {
           </h1>
           {!isFormVisible && (
             <button
-              onClick={() => { setEditingUser(null); setFormData({ firstName: '', lastName: '', email: '', temporaryPassword: ''}); setIsFormVisible(true); }}
+              onClick={() => { setEditingUser(null); setFormData({ firstName: '', lastName: '', email: '', temporaryPassword: '' }); setIsFormVisible(true); }}
               className="cursor-pointer px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg"
             >
               Add New User
@@ -199,6 +214,32 @@ const toggleUserStatus = async (userId: string) => {
           </table>
         </div>
       </div>
+      {confirmModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md text-center">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Confirm Action
+            </h2>
+            <p className="text-white/80 mb-6">
+              Are you sure you want to {confirmModal.newStatus === "active" ? "activate" : "deactivate"} this user?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setConfirmModal({ open: false, userId: null, newStatus: null })}
+                className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className="px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
