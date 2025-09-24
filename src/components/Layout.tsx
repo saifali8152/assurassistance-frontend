@@ -177,11 +177,13 @@ const Layout: React.FC = () => {
             </div>
             <nav className="space-y-2">
               <NavLink to="/admin" icon={BarChart3}>Dashboard</NavLink>
-              <NavLink to="/admin/analytics" icon={Activity}>Analytics</NavLink>
+            {/*  <NavLink to="/admin/analytics" icon={Activity}>Analytics</NavLink> */}
               <NavLink to="/admin/users" icon={Users}>Users</NavLink>
               <NavLink to="/admin/createCase" icon={Layers}>Create Case</NavLink>
               <NavLink to="/admin/createPlan" icon={FilePlus}>Create Plan</NavLink>
+               <NavLink to="/admin/ledger" icon={Activity}>Sales Ledger</NavLink>
               <NavLink to="/admin/settings" icon={Settings}>Settings</NavLink>
+             
             </nav>
           </div>
         </aside>
