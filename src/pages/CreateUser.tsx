@@ -67,6 +67,11 @@ const CreateUser: React.FC = () => {
   const handleInputChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  const [passwordModal, setPasswordModal] = useState<{
+    open: boolean;
+    password: string;
+    userEmail: string;
+  }>({ open: false, password: "", userEmail: "" });
 
   const handleFormSubmit = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
@@ -78,11 +83,28 @@ const CreateUser: React.FC = () => {
       const name = `${formData.firstName} ${formData.lastName}`;
       const res = await createAgentApi({ name, email: formData.email });
 
-      toast.success(`Agent created! Temp password: ${res.tempPassword}`);
+      // Instead of toast, show modal with password
+      setPasswordModal({
+        open: true,
+        password: res.tempPassword,
+        userEmail: formData.email
+      });
+
       await fetchUsers(); // reload users after creation
       resetForm();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to create agent");
+    }
+  };
+  const closePasswordModal = () => {
+    setPasswordModal({ open: false, password: "", userEmail: "" });
+  };
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Password copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy password");
     }
   };
 
@@ -240,9 +262,56 @@ const CreateUser: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Password Display Modal */}
+      {passwordModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md">
+            <h2 className="text-xl font-semibold text-white mb-4 text-center">
+              User Created Successfully!
+            </h2>
 
+            <div className="space-y-4">
+              <p className="text-white font-medium text-center bg-white/10 rounded-lg p-2">
+                {passwordModal.userEmail}
+              </p>
+
+              <div className="bg-white/10 border border-white/20 rounded-lg p-4">
+                <label className="block text-white/70 text-sm mb-2">Temporary Password:</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={passwordModal.password}
+                    readOnly
+                    className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(passwordModal.password)}
+                    className="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3">
+                <p className="text-yellow-200 text-sm text-center">
+                  ⚠️ Please save this password securely. It won't be shown again.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={closePasswordModal}
+                className="px-6 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium transition-colors shadow-lg cursor-pointer"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 export default CreateUser;

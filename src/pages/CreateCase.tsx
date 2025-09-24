@@ -321,44 +321,44 @@ const CreateCase: React.FC = () => {
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
 
 
-// ...existing code...
-const handleSubmitCase = async () => {
+  // ...existing code...
+  const handleSubmitCase = async () => {
     if (!selectedPlan || !destination || !fullName || !email || !phoneNumber || !passportId || !address || !startDate || !endDate) {
-        toast.error("Please fill all required fields");
-        return;
+      toast.error("Please fill all required fields");
+      return;
     }
     try {
-        // Prepare payload to match backend expectations
-        const payload = {
-            traveller: {
-                full_name: fullName,
-                passport_or_id: passportId,
-                phone: phoneNumber,
-                email,
-                address,
-            },
-            caseData: {
-                destination,
-                start_date: startDate,
-                end_date: endDate,
-                selected_plan_id: Number(selectedPlan),
-                status,
-            }
-        };
-        const res = await createCaseApi(payload);
-
-        if (res.caseId) {
-            setCreatedCaseId(res.caseId); 
-            setActiveTab("review"); // <-- Move to Review & Confirm tab
-            toast.success("Case created successfully!");
-        } else {
-            toast.error("Failed to create case");
+      // Prepare payload to match backend expectations
+      const payload = {
+        traveller: {
+          full_name: fullName,
+          passport_or_id: passportId,
+          phone: phoneNumber,
+          email,
+          address,
+        },
+        caseData: {
+          destination,
+          start_date: startDate,
+          end_date: endDate,
+          selected_plan_id: Number(selectedPlan),
+          status,
         }
+      };
+      const res = await createCaseApi(payload);
+
+      if (res.caseId) {
+        setCreatedCaseId(res.caseId);
+        setActiveTab("review"); // <-- Move to Review & Confirm tab
+        toast.success("Case created successfully!");
+      } else {
+        toast.error("Failed to create case");
+      }
     } catch (err) {
-        toast.error("Server error");
+      toast.error("Server error");
     }
-};
-// ...existing code...
+  };
+  // ...existing code...
 
   const handleConfirmSale = async () => {
     if (!createdCaseId) {
@@ -427,7 +427,6 @@ const handleSubmitCase = async () => {
       </div>
 
       {/* Navigation Buttons */}
-      {/* Navigation Buttons */}
       <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
         {/* Previous Button */}
         {!createdSaleId && (
@@ -437,11 +436,7 @@ const handleSubmitCase = async () => {
               if (currentIndex > 0) setActiveTab(visibleTabs[currentIndex - 1].id);
             }}
             disabled={activeTab === visibleTabs[0].id}
-            className="px-6 py-3 rounded-xl text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: "#0f172b",
-              border: "1px solid rgba(255,255,255,0.2)"
-            }}
+            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Previous
           </button>
@@ -470,11 +465,7 @@ const handleSubmitCase = async () => {
                 const currentIndex = visibleTabs.findIndex(tab => tab.id === activeTab);
                 if (currentIndex < visibleTabs.length - 1) setActiveTab(visibleTabs[currentIndex + 1].id);
               }}
-              className="px-6 py-3 rounded-xl text-white transition-colors"
-              style={{
-                backgroundColor: "#1c398e",
-                border: "1px solid rgba(28,57,142,0.3)"
-              }}
+              className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
               Next
             </button>
@@ -484,11 +475,7 @@ const handleSubmitCase = async () => {
           {!createdSaleId && activeTab === visibleTabs[visibleTabs.length - 1].id && !createdCaseId && (
             <button
               onClick={handleSubmitCase}
-              className="px-6 py-3 rounded-xl text-white transition-colors"
-              style={{
-                backgroundColor: "#1c398e",
-                border: "1px solid rgba(28,57,142,0.3)"
-              }}
+              className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
               Submit Case
             </button>
