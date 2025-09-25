@@ -14,6 +14,7 @@ import CreateCase from './pages/CreateCase'
 import CreatePlan from './pages/CreatePlan'
 import AnalyticsPage from './pages/AnalyticsPage'
 import LedgerPage from './pages/LedgerPage'
+import Reconciliation from './pages/ReconciliationTable'
 
 
 
@@ -52,6 +53,7 @@ function App() {
             <Route path="createCase" element={<CreateCase />} />
             <Route path="CreatePlan" element={<CreatePlan />} />
             <Route path='ledger' element={<LedgerPage />} />
+            <Route path='Reconciliation' element={<Reconciliation />} />
           </Route>
 
           {/* User routes with protection */}

@@ -37,7 +37,6 @@ const CreateCase: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [durationDays, setDurationDays] = useState('');
-  //const [status, setStatus] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -142,8 +141,6 @@ const CreateCase: React.FC = () => {
       )}
     </div>
   );
-
-
   // Move eligibleDestinations ABOVE tabs
   const eligibleDestinations = selectedPlanObj?.eligibleDestinations || [];
   // Tab configuration
@@ -306,7 +303,7 @@ const CreateCase: React.FC = () => {
     visibleTabs = [...tabs, reviewTab];
   }
   if (createdSaleId) {
-    visibleTabs = [reviewTab]; // Only show review tab after sale confirmed
+    visibleTabs = [reviewTab]; 
   }
 
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
@@ -442,14 +439,11 @@ const CreateCase: React.FC = () => {
             Previous
           </button>
         )}
-
-
-
         <div className="flex space-x-3">
           {/* Save Draft */}
           {!createdSaleId && activeTab !== visibleTabs[visibleTabs.length - 1].id && (
             <button
-              className="px-6 py-3 rounded-xl text-white transition-colors"
+              className="px-6 py-3 rounded-xl text-white transition-colors cursor-pointer"
               style={{
                 backgroundColor: "transparent",
                 border: "1px solid rgba(255,255,255,0.2)"
@@ -485,11 +479,7 @@ const CreateCase: React.FC = () => {
           {createdCaseId && !createdSaleId && activeTab === "review" && (
             <button
               onClick={handleCancelCase}
-              className="px-6 py-3 rounded-xl text-white transition-colors"
-              style={{
-                backgroundColor: "#ef4444",
-                border: "1px solid rgba(239,68,68,0.3)"
-              }}
+              className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors cursor-pointer"
             >
               Cancel Case
             </button>
@@ -499,11 +489,7 @@ const CreateCase: React.FC = () => {
           {createdCaseId && !createdSaleId && activeTab === "review" && (
             <button
               onClick={handleConfirmSale}
-              className="px-6 py-3 rounded-xl text-white transition-colors"
-              style={{
-                backgroundColor: "#16a34a",
-                border: "1px solid rgba(22,163,74,0.3)"
-              }}
+              className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
               Confirm Sale
             </button>
@@ -514,21 +500,13 @@ const CreateCase: React.FC = () => {
             <>
               <button
                 onClick={handleGenerateInvoice}
-                className="px-6 py-3 rounded-xl text-white transition-colors"
-                style={{
-                  backgroundColor: "#eab308",
-                  border: "1px solid rgba(234,179,8,0.3)"
-                }}
+                className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
                 Download Invoice
               </button>
               <button
                 onClick={handleGenerateCertificate}
-                className="px-6 py-3 rounded-xl text-white transition-colors"
-                style={{
-                  backgroundColor: "#9333ea",
-                  border: "1px solid rgba(147,51,234,0.3)"
-                }}
+                className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
                 Download Certificate
               </button>
@@ -536,8 +514,6 @@ const CreateCase: React.FC = () => {
           )}
         </div>
       </div>
-
-
     </div>
   );
 };

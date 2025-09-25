@@ -15,7 +15,8 @@ import {
   LogOut,
   FilePlus,
   Activity,
-  Layers
+  Layers,
+  ReceiptText
 } from "lucide-react";
 
 const Layout: React.FC = () => {
@@ -181,6 +182,7 @@ const Layout: React.FC = () => {
               <NavLink to="/admin/createCase" icon={Layers}>Create Case</NavLink>
               <NavLink to="/admin/createPlan" icon={FilePlus}>Create Plan</NavLink>
                <NavLink to="/admin/ledger" icon={Activity}>Sales Ledger</NavLink>
+               <NavLink to="/admin/Reconciliation" icon={ReceiptText}>Reconciliation Table</NavLink>
               <NavLink to="/admin/settings" icon={Settings}>Settings</NavLink>
              
             </nav>

@@ -254,7 +254,7 @@ const CreateUser: React.FC = () => {
               </button>
               <button
                 onClick={confirmStatusChange}
-                className="px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg"
+                className="px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg cursor-pointer"
               >
                 Confirm
               </button>
