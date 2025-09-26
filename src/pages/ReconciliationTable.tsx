@@ -3,6 +3,14 @@ import { ChevronDown, Download, Calendar, Search, Filter } from 'lucide-react';
 
 interface ReconciliationData {
   id: string;
+  agentName: string;
+  month: string;
+  totalSales: number;
+  totalAmount: number;
+  paidAmount: number;
+  unpaidAmount: number;
+  partialAmount: number;
+  balanceDue: number;
   user: string;
   month: string;
   grossCollected: number;
@@ -15,6 +23,59 @@ interface ReconciliationData {
 const sampleData: ReconciliationData[] = [
   {
     id: '1',
+    agentName: 'John Smith',
+    month: 'Sep-2025',
+    totalSales: 15,
+    totalAmount: 2500.0,
+    paidAmount: 2000.0,
+    unpaidAmount: 300.0,
+    partialAmount: 200.0,
+    balanceDue: 500.0,
+  },
+  {
+    id: '2',
+    agentName: 'Sarah Johnson',
+    month: 'Sep-2025',
+    totalSales: 22,
+    totalAmount: 3200.5,
+    paidAmount: 2800.0,
+    unpaidAmount: 200.5,
+    partialAmount: 200.0,
+    balanceDue: 400.5,
+  },
+  {
+    id: '3',
+    agentName: 'Mike Davis',
+    month: 'Apr-2025',
+    totalSales: 8,
+    totalAmount: 1500.75,
+    paidAmount: 1200.0,
+    unpaidAmount: 150.75,
+    partialAmount: 150.0,
+    balanceDue: 300.75,
+  },
+  {
+    id: '4',
+    agentName: 'Emily Chen',
+    month: 'Sep-2025',
+    totalSales: 31,
+    totalAmount: 4500.0,
+    paidAmount: 3800.0,
+    unpaidAmount: 400.0,
+    partialAmount: 300.0,
+    balanceDue: 700.0,
+  },
+  {
+    id: '5',
+    agentName: 'Robert Wilson',
+    month: 'Sep-2025',
+    totalSales: 12,
+    totalAmount: 2000.9,
+    paidAmount: 1500.0,
+    unpaidAmount: 250.9,
+    partialAmount: 250.0,
+    balanceDue: 500.9,
+  },
     user: 'John Smith',
     month: 'Sep-2025',
     grossCollected: 15420.50,
@@ -188,6 +249,10 @@ function Reconciliation() {
     const monthYear = `${selectedMonth}-${selectedYear}`;
     return sampleData.filter(item =>
       item.month === monthYear &&
+      item.agentName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [selectedMonth, selectedYear, searchTerm]);
+
       item.user.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [selectedMonth, selectedYear, searchTerm]);
@@ -240,6 +305,18 @@ function Reconciliation() {
   };
 
   const exportToCSV = () => {
+    const headers = ['Agent Name', 'Month', 'Total Sales', 'Total Amount', 'Paid Amount', 'Unpaid Amount', 'Partial Amount', 'Balance Due'];
+    const csvData = [
+      headers,
+      ...filteredData.map(row => [
+        row.agentName,
+        row.month,
+        row.totalSales.toString(),
+        row.totalAmount.toString(),
+        row.paidAmount.toString(),
+        row.unpaidAmount.toString(),
+        row.partialAmount.toString(),
+        row.balanceDue.toString(),
     const headers = ['User', 'Month', 'Gross Collected', 'Fees', 'Net Due', 'Notes'];
     const csvData = [
       headers,
@@ -289,6 +366,7 @@ function Reconciliation() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
                 <input
                   type="text"
+                  placeholder="Search agents..."
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -328,6 +406,13 @@ function Reconciliation() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/20">
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Agent Name</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Sales</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Amount</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Paid Amount</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Unpaid Amount</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Partial Amount</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Balance Due</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm">User</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm">Month</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm">Gross Collected</th>
@@ -341,6 +426,11 @@ function Reconciliation() {
                     <tr key={row.id} className={`border-b border-white/10 hover:bg-white/5 transition-colors ${index % 2 === 0 ? 'bg-white/2' : ''
                       }`}>
                       <td className="py-4 px-2">
+                        <div className="text-white font-medium">{row.agentName}</div>
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        <span className="text-white font-semibold bg-blue-500/20 px-2 py-1 rounded-lg">
+                          {row.totalSales}
                         <div className="text-white font-medium">{row.user}</div>
                       </td>
                       <td className="py-4 px-2">
@@ -350,6 +440,27 @@ function Reconciliation() {
                       </td>
                       <td className="py-4 px-2">
                         <span className="text-white font-semibold">
+                          {formatCurrency(row.totalAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 ">
+                        <span className="font-semibold text-white">
+                          {formatCurrency(row.paidAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 ">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.unpaidAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 ">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.partialAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 text-white ">
+                        <span className="font-semibold">
+                          {formatCurrency(row.balanceDue)}
                           {formatCurrency(row.grossCollected)}
                         </span>
                       </td>
