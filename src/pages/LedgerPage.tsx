@@ -51,16 +51,17 @@ const LedgerPage: React.FC = () => {
     }
 
   };
-  const handleSave = async (saleId: string, payment_status: string, payment_notes: string) => {
-    try {
-      await updatePaymentApi(saleId, payment_status, payment_notes);
-      alert("Changes saved successfully!");
-      load(page);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save changes.");
-    }
-  };
+const handleSave = async (saleId: string, payment_status: string, payment_notes: string, received_amount: number) => {
+  try {
+    await updatePaymentApi(saleId, payment_status, payment_notes, received_amount);
+    alert("Changes saved successfully!");
+    load(page);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save changes.");
+  }
+};
+
   return (
     <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
 
@@ -125,6 +126,7 @@ const LedgerPage: React.FC = () => {
               <th className="px-4 py-3 text-white font-medium">Traveller</th>
               <th className="px-4 py-3 text-white font-medium">Plan</th>
               <th className="px-4 py-3 text-white font-medium">Total</th>
+              <th className="px-4 py-3 text-white font-medium">Received Amount</th>
               <th className="px-4 py-3 text-white font-medium">Payment</th>
               <th className="px-4 py-3 text-white font-medium">Confirmed At</th>
               <th className="px-4 py-3 text-white font-medium">Payment Status</th>
@@ -142,6 +144,21 @@ const LedgerPage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-white">{r.plan_name}</td>
                 <td className="px-4 py-3 text-white font-medium">{Number(r.total).toFixed(2)}</td>
+<td className="px-4 py-3">
+  <input
+    type="number"
+    value={r.received_amount || ""}
+    onChange={(e) => {
+      const updatedRows = rows.map(row =>
+        row.sale_id === r.sale_id ? { ...row, received_amount: parseFloat(e.target.value) || 0 } : row
+      );
+      setRows(updatedRows);
+    }}
+    className="w-24 p-1 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
+  />
+</td>
+
+
                 <td className="px-4 py-3 text-white">{r.payment_status}</td>
                 <td className="px-4 py-3 text-white">
                   {r.confirmed_at ? new Date(r.confirmed_at).toLocaleString() : ""}
@@ -176,13 +193,13 @@ const LedgerPage: React.FC = () => {
   />
 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleSave(r.sale_id, r.payment_status, r.payment_notes)}
+               <button
+  onClick={() => handleSave(r.sale_id, r.payment_status, r.payment_notes, r.received_amount)}
+  className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors cursor-pointer"
+>
+  Save
+</button>
 
-                    className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors cursor-pointer"
-                  >
-                    Save
-                  </button>
                 </td>
               </tr>
             ))}

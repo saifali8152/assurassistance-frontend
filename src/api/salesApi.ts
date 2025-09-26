@@ -18,12 +18,12 @@ export const generateCertificateApi = async (saleId: number): Promise<DownloadRe
   return apiGet<DownloadResponse>(`/sales/${saleId}/certificate`);
 };
 
-
-
-export const updatePaymentApi = (saleId: string, payment_status: string, payment_notes: string) => {
+export const updatePaymentApi = (saleId: string, payment_status: string, payment_notes: string, received_amount: number) => {
   return apiPatch(`/sales/${saleId}/payment`, {
     payment_status,
-    payment_notes
+    payment_notes,
+    received_amount
   });
 };
+
 
