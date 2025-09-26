@@ -12,7 +12,6 @@ interface ReconciliationData {
   partialAmount: number;
   balanceDue: number;
   user: string;
-  month: string;
   grossCollected: number;
   fees: number;
   netDue: number;
@@ -31,6 +30,11 @@ const sampleData: ReconciliationData[] = [
     unpaidAmount: 300.0,
     partialAmount: 200.0,
     balanceDue: 500.0,
+    user: 'John Smith',
+    grossCollected: 15420.50,
+    fees: 1542.05,
+    netDue: 13878.45,
+    notes: 'Regular commission'
   },
   {
     id: '2',
@@ -42,6 +46,11 @@ const sampleData: ReconciliationData[] = [
     unpaidAmount: 200.5,
     partialAmount: 200.0,
     balanceDue: 400.5,
+    user: 'Sarah Johnson',
+    grossCollected: 22150.75,
+    fees: 2215.08,
+    netDue: 19935.67,
+    notes: 'Bonus applied'
   },
   {
     id: '3',
@@ -53,6 +62,11 @@ const sampleData: ReconciliationData[] = [
     unpaidAmount: 150.75,
     partialAmount: 150.0,
     balanceDue: 300.75,
+    user: 'Mike Davis',
+    grossCollected: 8930.25,
+    fees: 893.03,
+    netDue: 8037.22,
+    notes: ''
   },
   {
     id: '4',
@@ -64,6 +78,11 @@ const sampleData: ReconciliationData[] = [
     unpaidAmount: 400.0,
     partialAmount: 300.0,
     balanceDue: 700.0,
+    user: 'Emily Chen',
+    grossCollected: 31250.00,
+    fees: 3125.00,
+    netDue: 28125.00,
+    notes: 'Top performer'
   },
   {
     id: '5',
@@ -75,45 +94,7 @@ const sampleData: ReconciliationData[] = [
     unpaidAmount: 250.9,
     partialAmount: 250.0,
     balanceDue: 500.9,
-  },
-    user: 'John Smith',
-    month: 'Sep-2025',
-    grossCollected: 15420.50,
-    fees: 1542.05,
-    netDue: 13878.45,
-    notes: 'Regular commission'
-  },
-  {
-    id: '2',
-    user: 'Sarah Johnson',
-    month: 'Sep-2025',
-    grossCollected: 22150.75,
-    fees: 2215.08,
-    netDue: 19935.67,
-    notes: 'Bonus applied'
-  },
-  {
-    id: '3',
-    user: 'Mike Davis',
-    month: 'Sep-2025',
-    grossCollected: 8930.25,
-    fees: 893.03,
-    netDue: 8037.22,
-    notes: ''
-  },
-  {
-    id: '4',
-    user: 'Emily Chen',
-    month: 'Sep-2025',
-    grossCollected: 31250.00,
-    fees: 3125.00,
-    netDue: 28125.00,
-    notes: 'Top performer'
-  },
-  {
-    id: '5',
     user: 'Robert Wilson',
-    month: 'Sep-2025',
     grossCollected: 12780.90,
     fees: 1278.09,
     netDue: 11502.81,
@@ -121,8 +102,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '6',
-    user: 'Lisa Anderson',
+    agentName: '',
     month: 'Aug-2025',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Lisa Anderson',
     grossCollected: 18640.30,
     fees: 1864.03,
     netDue: 16776.27,
@@ -130,17 +118,31 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '7',
-    user: 'David Brown',
+    agentName: '',
     month: 'Aug-2025',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'David Brown',
     grossCollected: 25890.60,
     fees: 2589.06,
     netDue: 23301.54,
     notes: 'Exceeded target'
-  }
-   {
+  },
+  {
     id: '8',
-    user: 'Sophia Miller',
+    agentName: '',
     month: 'Jan-2024',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Sophia Miller',
     grossCollected: 17890.40,
     fees: 1789.04,
     netDue: 16101.36,
@@ -148,8 +150,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '9',
-    user: 'Liam Johnson',
+    agentName: '',
     month: 'Mar-2023',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Liam Johnson',
     grossCollected: 30250.75,
     fees: 3025.07,
     netDue: 27225.68,
@@ -157,8 +166,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '10',
-    user: 'Olivia Davis',
+    agentName: '',
     month: 'Jul-2022',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Olivia Davis',
     grossCollected: 14980.30,
     fees: 1498.03,
     netDue: 13482.27,
@@ -166,8 +182,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '11',
-    user: 'Ethan Wilson',
+    agentName: '',
     month: 'Oct-2021',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Ethan Wilson',
     grossCollected: 22560.90,
     fees: 2256.09,
     netDue: 20304.81,
@@ -175,8 +198,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '12',
-    user: 'Ava Martinez',
+    agentName: '',
     month: 'Dec-2020',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Ava Martinez',
     grossCollected: 31240.50,
     fees: 3124.05,
     netDue: 28116.45,
@@ -184,8 +214,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '13',
-    user: 'Noah Anderson',
+    agentName: '',
     month: 'Feb-2023',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Noah Anderson',
     grossCollected: 19875.20,
     fees: 1987.52,
     netDue: 17887.68,
@@ -193,8 +230,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '14',
-    user: 'Isabella Thomas',
+    agentName: '',
     month: 'May-2024',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Isabella Thomas',
     grossCollected: 26740.10,
     fees: 2674.01,
     netDue: 24066.09,
@@ -202,8 +246,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '15',
-    user: 'James Garcia',
+    agentName: '',
     month: 'Nov-2022',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'James Garcia',
     grossCollected: 18590.00,
     fees: 1859.00,
     netDue: 16731.00,
@@ -211,8 +262,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '16',
-    user: 'Mia Rodriguez',
+    agentName: '',
     month: 'Apr-2021',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Mia Rodriguez',
     grossCollected: 20950.85,
     fees: 2095.09,
     netDue: 18855.76,
@@ -220,8 +278,15 @@ const sampleData: ReconciliationData[] = [
   },
   {
     id: '17',
-    user: 'Benjamin Lee',
+    agentName: '',
     month: 'Sep-2020',
+    totalSales: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    unpaidAmount: 0,
+    partialAmount: 0,
+    balanceDue: 0,
+    user: 'Benjamin Lee',
     grossCollected: 27480.70,
     fees: 2748.07,
     netDue: 24732.63,
@@ -249,11 +314,10 @@ function Reconciliation() {
     const monthYear = `${selectedMonth}-${selectedYear}`;
     return sampleData.filter(item =>
       item.month === monthYear &&
-      item.agentName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [selectedMonth, selectedYear, searchTerm]);
-
-      item.user.toLowerCase().includes(searchTerm.toLowerCase())
+      (
+        item.agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.user.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     );
   }, [selectedMonth, selectedYear, searchTerm]);
 
@@ -305,11 +369,15 @@ function Reconciliation() {
   };
 
   const exportToCSV = () => {
-    const headers = ['Agent Name', 'Month', 'Total Sales', 'Total Amount', 'Paid Amount', 'Unpaid Amount', 'Partial Amount', 'Balance Due'];
+    const headers = [
+      'Agent Name', 'User', 'Month', 'Total Sales', 'Total Amount', 'Paid Amount', 'Unpaid Amount', 'Partial Amount', 'Balance Due',
+      'Gross Collected', 'Fees', 'Net Due', 'Notes'
+    ];
     const csvData = [
       headers,
       ...filteredData.map(row => [
         row.agentName,
+        row.user,
         row.month,
         row.totalSales.toString(),
         row.totalAmount.toString(),
@@ -317,12 +385,6 @@ function Reconciliation() {
         row.unpaidAmount.toString(),
         row.partialAmount.toString(),
         row.balanceDue.toString(),
-    const headers = ['User', 'Month', 'Gross Collected', 'Fees', 'Net Due', 'Notes'];
-    const csvData = [
-      headers,
-      ...filteredData.map(row => [
-        row.user,
-        row.month,
         row.grossCollected.toString(),
         row.fees.toString(),
         row.netDue.toString(),
@@ -422,14 +484,41 @@ function Reconciliation() {
                 </thead>
                 <tbody>
                   {filteredData.map((row, index) => (
-                    <tr key={row.id} className={`border-b border-white/10 hover:bg-white/5 transition-colors ${index % 2 === 0 ? 'bg-white/2' : ''
-                      }`}>
+                    <tr key={row.id} className={`border-b border-white/10 hover:bg-white/5 transition-colors ${index % 2 === 0 ? 'bg-white/2' : ''}`}>
                       <td className="py-4 px-2">
                         <div className="text-white font-medium">{row.agentName}</div>
                       </td>
                       <td className="py-4 px-2 text-center">
                         <span className="text-white font-semibold bg-blue-500/20 px-2 py-1 rounded-lg">
                           {row.totalSales}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.totalAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="font-semibold text-white">
+                          {formatCurrency(row.paidAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.unpaidAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.partialAmount)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 text-white">
+                        <span className="font-semibold">
+                          {formatCurrency(row.balanceDue)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
                         <div className="text-white font-medium">{row.user}</div>
                       </td>
                       <td className="py-4 px-2">
@@ -439,27 +528,6 @@ function Reconciliation() {
                       </td>
                       <td className="py-4 px-2">
                         <span className="text-white font-semibold">
-                          {formatCurrency(row.totalAmount)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2 ">
-                        <span className="font-semibold text-white">
-                          {formatCurrency(row.paidAmount)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2 ">
-                        <span className="text-white font-semibold">
-                          {formatCurrency(row.unpaidAmount)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2 ">
-                        <span className="text-white font-semibold">
-                          {formatCurrency(row.partialAmount)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2 text-white ">
-                        <span className="font-semibold">
-                          {formatCurrency(row.balanceDue)}
                           {formatCurrency(row.grossCollected)}
                         </span>
                       </td>
