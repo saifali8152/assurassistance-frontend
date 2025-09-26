@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import InputField from "../components/InputFields";
+import DateField from "../components/DateField";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
 import SelectField from "../components/SelectField";
 import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
@@ -255,18 +256,17 @@ const CreateCase: React.FC = () => {
               onChange={setDestination}
               required
             />
-            <InputField
+            <DateField
               label="Start Date"
-              type="date"
               placeholder="Start Date"
               icon={<CalendarIcon />}
               value={startDate}
               onChange={setStartDate}
               required
             />
-            <InputField
+
+            <DateField
               label="End Date"
-              type="date"
               placeholder="End Date"
               icon={<CalendarIcon />}
               value={endDate}
@@ -329,7 +329,7 @@ const CreateCase: React.FC = () => {
           start_date: startDate,
           end_date: endDate,
           selected_plan_id: Number(selectedPlan),
-          status: "Confirmed", // <-- Set automatically
+          status: "Confirmed",
         }
       };
       const res = await createCaseApi(payload);
