@@ -75,7 +75,7 @@ const sampleData: ReconciliationData[] = [
     fees: 2589.06,
     netDue: 23301.54,
     notes: 'Exceeded target'
-  }
+  },
    {
     id: '8',
     user: 'Sophia Miller',

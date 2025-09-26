@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getLedgerApi, downloadLedgerCsvApi } from "../api/ledgerApi";
 import { apiGet } from "../lib/api"; // for direct fetch (blob)
 import { Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
-
+import { updatePaymentApi } from "../api/salesApi";
 const LedgerPage: React.FC = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [editingRow, setEditingRow] = useState<any | null>(null);
@@ -51,10 +51,11 @@ const LedgerPage: React.FC = () => {
     }
 
   };
-  const handleSave = async (saleId: string, paymentStatus: string, notes: string) => {
+  const handleSave = async (saleId: string, payment_status: string, payment_notes: string) => {
     try {
-      console.log(`Saving Sale ID: ${saleId}, Payment Status: ${paymentStatus}, Notes: ${notes}`);
+      await updatePaymentApi(saleId, payment_status, payment_notes);
       alert("Changes saved successfully!");
+      load(page);
     } catch (err) {
       console.error(err);
       alert("Failed to save changes.");
@@ -156,27 +157,28 @@ const LedgerPage: React.FC = () => {
                     }}
                     className="bg-white/5 border border-white/20 rounded-lg text-white"
                   >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="partial">Partial</option>
-                    <option value="paid">Paid</option>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Paid">Paid</option>
                   </select>
                 </td>
                 <td className="px-4 py-3">
-                  <textarea
-                    value={r.notes || ""}
-                    onChange={(e) => {
-                      const updatedRows = rows.map(row =>
-                        row.sale_id === r.sale_id ? { ...row, notes: e.target.value } : row
-                      );
-                      setRows(updatedRows);
-                    }}
-                    rows={2}
-                    className="w-full p-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
-                  />
-                </td>
+  <textarea
+    value={r.payment_notes || ""}
+    onChange={(e) => {
+      const updatedRows = rows.map(row =>
+        row.sale_id === r.sale_id ? { ...row, payment_notes: e.target.value } : row
+      );
+      setRows(updatedRows);
+    }}
+    rows={2}
+    className="w-full p-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
+  />
+</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => handleSave(r.sale_id, r.payment_status, r.notes)}
+                    onClick={() => handleSave(r.sale_id, r.payment_status, r.payment_notes)}
+
                     className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors cursor-pointer"
                   >
                     Save
