@@ -1,5 +1,5 @@
 //src/api/salesApi.ts
-import { apiPost ,apiGet} from "../lib/api";
+import { apiPost ,apiGet, apiPatch} from "../lib/api";
 import type {
   CreateSaleRequest,
   CreateSaleResponse,
@@ -17,3 +17,13 @@ export const generateInvoiceApi = async (saleId: number): Promise<DownloadRespon
 export const generateCertificateApi = async (saleId: number): Promise<DownloadResponse> => {
   return apiGet<DownloadResponse>(`/sales/${saleId}/certificate`);
 };
+
+export const updatePaymentApi = (saleId: string, payment_status: string, payment_notes: string, received_amount: number) => {
+  return apiPatch(`/sales/${saleId}/payment`, {
+    payment_status,
+    payment_notes,
+    received_amount
+  });
+};
+
+

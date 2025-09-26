@@ -6,7 +6,7 @@ import DateField from "../components/DateField";
 import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
-import { createCaseApi } from "../api/caseApi";
+import { createCaseApi, changeCaseStatusApi } from "../api/caseApi";
 import { toast } from "react-hot-toast";
 
 interface Tab {
@@ -38,7 +38,6 @@ const CreateCase: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [durationDays, setDurationDays] = useState('');
-  const [status, setStatus] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -116,7 +115,6 @@ const CreateCase: React.FC = () => {
           <div><span className="font-medium text-white">Start Date:</span> {startDate}</div>
           <div><span className="font-medium text-white">End Date:</span> {endDate}</div>
           <div><span className="font-medium text-white">Duration:</span> {durationDays} days</div>
-          <div><span className="font-medium text-white">Status:</span> {status}</div>
         </div>
       </div>
 
@@ -144,8 +142,6 @@ const CreateCase: React.FC = () => {
       )}
     </div>
   );
-
-
   // Move eligibleDestinations ABOVE tabs
   const eligibleDestinations = selectedPlanObj?.eligibleDestinations || [];
   // Tab configuration
@@ -289,15 +285,7 @@ const CreateCase: React.FC = () => {
               required
               readOnly
             />
-            <SelectField
-              label="Status"
-              options={["Draft", "Confirmed", "Cancelled"]}
-              placeholder="Status"
-              icon={<CircleDot />}
-              value={status}
-              onChange={setStatus}
-              required
-            />
+
           </div>
         </div>
       ),
@@ -317,24 +305,23 @@ const CreateCase: React.FC = () => {
     visibleTabs = [...tabs, reviewTab];
   }
   if (createdSaleId) {
-<<<<<<< Updated upstream
     visibleTabs = [reviewTab]; // Only show review tab after sale confirmed
 =======
     visibleTabs = [reviewTab];
->>>>>>> Stashed changes
+=======
+    visibleTabs = [reviewTab]; 
   }
 
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
 
 
-  // ...existing code...
   const handleSubmitCase = async () => {
     if (!selectedPlan || !destination || !fullName || !email || !phoneNumber || !passportId || !address || !startDate || !endDate) {
       toast.error("Please fill all required fields");
       return;
     }
     try {
-      // Prepare payload to match backend expectations
+      // Set status to "Confirmed" automatically
       const payload = {
         traveller: {
           full_name: fullName,
@@ -348,14 +335,14 @@ const CreateCase: React.FC = () => {
           start_date: startDate,
           end_date: endDate,
           selected_plan_id: Number(selectedPlan),
-          status,
+          status: "Confirmed", // <-- Set automatically
         }
       };
       const res = await createCaseApi(payload);
 
       if (res.caseId) {
         setCreatedCaseId(res.caseId);
-        setActiveTab("review"); // <-- Move to Review & Confirm tab
+        setActiveTab("review");
         toast.success("Case created successfully!");
       } else {
         toast.error("Failed to create case");
@@ -364,7 +351,6 @@ const CreateCase: React.FC = () => {
       toast.error("Server error");
     }
   };
-  // ...existing code...
 
   const handleConfirmSale = async () => {
     if (!createdCaseId) {
@@ -389,6 +375,18 @@ const CreateCase: React.FC = () => {
       toast.error("Server error");
     }
   };
+
+  const handleCancelCase = async () => {
+    if (!createdCaseId) return;
+    try {
+      await changeCaseStatusApi(createdCaseId, "Cancelled");
+      toast.success("Case cancelled.");
+      // Optionally, redirect or reset state here
+    } catch (err) {
+      toast.error("Failed to cancel case.");
+    }
+  };
+
 
   const handleGenerateInvoice = async () => {
     if (!createdSaleId) return;
@@ -447,14 +445,11 @@ const CreateCase: React.FC = () => {
             Previous
           </button>
         )}
-
-
-
         <div className="flex space-x-3">
           {/* Save Draft */}
           {!createdSaleId && activeTab !== visibleTabs[visibleTabs.length - 1].id && (
             <button
-              className="px-6 py-3 rounded-xl text-white transition-colors"
+              className="px-6 py-3 rounded-xl text-white transition-colors cursor-pointer"
               style={{
                 backgroundColor: "transparent",
                 border: "1px solid rgba(255,255,255,0.2)"
@@ -487,15 +482,20 @@ const CreateCase: React.FC = () => {
             </button>
           )}
 
-          {/* Confirm Sale Button - after case created, before sale confirmed */}
+          {createdCaseId && !createdSaleId && activeTab === "review" && (
+            <button
+              onClick={handleCancelCase}
+              className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors cursor-pointer"
+            >
+              Cancel Case
+            </button>
+          )}
+
+          {/* Confirm Sale Button  */}
           {createdCaseId && !createdSaleId && activeTab === "review" && (
             <button
               onClick={handleConfirmSale}
-              className="px-6 py-3 rounded-xl text-white transition-colors"
-              style={{
-                backgroundColor: "#16a34a",
-                border: "1px solid rgba(22,163,74,0.3)"
-              }}
+              className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
               Confirm Sale
             </button>
@@ -506,21 +506,13 @@ const CreateCase: React.FC = () => {
             <>
               <button
                 onClick={handleGenerateInvoice}
-                className="px-6 py-3 rounded-xl text-white transition-colors"
-                style={{
-                  backgroundColor: "#eab308",
-                  border: "1px solid rgba(234,179,8,0.3)"
-                }}
+                className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
                 Download Invoice
               </button>
               <button
                 onClick={handleGenerateCertificate}
-                className="px-6 py-3 rounded-xl text-white transition-colors"
-                style={{
-                  backgroundColor: "#9333ea",
-                  border: "1px solid rgba(147,51,234,0.3)"
-                }}
+                className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
                 Download Certificate
               </button>
@@ -528,8 +520,6 @@ const CreateCase: React.FC = () => {
           )}
         </div>
       </div>
-
-
     </div>
   );
 };
