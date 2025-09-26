@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getLedgerApi, downloadLedgerCsvApi } from "../api/ledgerApi";
-import { apiGet } from "../lib/api"; // for direct fetch (blob)
+//import { apiGet } from "../lib/api"; // for direct fetch (blob)
 import { Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { updatePaymentApi } from "../api/salesApi";
 const LedgerPage: React.FC = () => {
@@ -26,31 +26,31 @@ const LedgerPage: React.FC = () => {
 
   useEffect(() => { load(1); }, []);
 
-  const handleExport = async () => {
-    try {
-      // Use token from localStorage
-      const token = localStorage.getItem("token");
-      const urlPath = downloadLedgerCsvApi(filters); // returns path like /api/ledger/export?... 
-      const res = await fetch(urlPath, {
-        method: "GET",
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      });
-      if (!res.ok) throw new Error("Failed to download");
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `sales_ledger_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to download CSV");
-    }
+const handleExport = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const url = downloadLedgerCsvApi(filters);
 
-  };
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: token ? `Bearer ${token}` : "" }
+    });
+
+    if (!res.ok) throw new Error("Failed to download");
+
+    const blob = await res.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `sales_ledger_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to download CSV");
+  }
+};
+
 const handleSave = async (saleId: string, payment_status: string, payment_notes: string, received_amount: number) => {
   try {
     await updatePaymentApi(saleId, payment_status, payment_notes, received_amount);

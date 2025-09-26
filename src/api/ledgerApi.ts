@@ -1,5 +1,6 @@
-// src/api/ledgerApi.ts
 import { apiGet } from "../lib/api";
+
+const API_BASE_URL = "http://localhost:5000/api"; // same as in lib/api.ts
 
 export interface LedgerFilters {
   startDate?: string;
@@ -11,17 +12,15 @@ export interface LedgerFilters {
   limit?: number;
 }
 
-// returns { success, data, meta }
 export const getLedgerApi = (filters: LedgerFilters) => {
   const qs = new URLSearchParams();
   Object.entries(filters).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") qs.set(k, String(v)); });
   return apiGet(`/ledger?${qs.toString()}`);
 };
 
-// download CSV - returns a browser-download via link; we will fetch blob
+// download CSV - returns full backend URL for fetch()
 export const downloadLedgerCsvApi = (filters: LedgerFilters) => {
   const qs = new URLSearchParams();
   Object.entries(filters).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") qs.set(k, String(v)); });
-  const url = `/api/ledger/export?${qs.toString()}`;
-  return url;
+  return `${API_BASE_URL}/ledger/export?${qs.toString()}`;
 };
