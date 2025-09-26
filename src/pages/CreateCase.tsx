@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import InputField from "../components/InputFields";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, CircleDot } from "lucide-react";
 import SelectField from "../components/SelectField";
-import DateField from "../components/DateField";
 import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
@@ -256,15 +255,14 @@ const CreateCase: React.FC = () => {
               onChange={setDestination}
               required
             />
-            <DateField
+            <InputField
               label="Start Date"
+              type="date"
               placeholder="Start Date"
               icon={<CalendarIcon />}
               value={startDate}
               onChange={setStartDate}
               required
-              minDate="2024-01-01"   // optional
-              maxDate="2030-12-31"   // optional
             />
             <InputField
               label="End Date"
@@ -305,11 +303,7 @@ const CreateCase: React.FC = () => {
     visibleTabs = [...tabs, reviewTab];
   }
   if (createdSaleId) {
-    visibleTabs = [reviewTab]; // Only show review tab after sale confirmed
-=======
     visibleTabs = [reviewTab];
-=======
-    visibleTabs = [reviewTab]; 
   }
 
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
