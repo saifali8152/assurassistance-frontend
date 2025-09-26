@@ -11,6 +11,12 @@ interface ReconciliationData {
   unpaidAmount: number;
   partialAmount: number;
   balanceDue: number;
+  user: string;
+  month: string;
+  grossCollected: number;
+  fees: number;
+  netDue: number;
+  notes: string;
 }
 
 // Sample data - in a real app, this would come from an API
@@ -70,6 +76,157 @@ const sampleData: ReconciliationData[] = [
     partialAmount: 250.0,
     balanceDue: 500.9,
   },
+    user: 'John Smith',
+    month: 'Sep-2025',
+    grossCollected: 15420.50,
+    fees: 1542.05,
+    netDue: 13878.45,
+    notes: 'Regular commission'
+  },
+  {
+    id: '2',
+    user: 'Sarah Johnson',
+    month: 'Sep-2025',
+    grossCollected: 22150.75,
+    fees: 2215.08,
+    netDue: 19935.67,
+    notes: 'Bonus applied'
+  },
+  {
+    id: '3',
+    user: 'Mike Davis',
+    month: 'Sep-2025',
+    grossCollected: 8930.25,
+    fees: 893.03,
+    netDue: 8037.22,
+    notes: ''
+  },
+  {
+    id: '4',
+    user: 'Emily Chen',
+    month: 'Sep-2025',
+    grossCollected: 31250.00,
+    fees: 3125.00,
+    netDue: 28125.00,
+    notes: 'Top performer'
+  },
+  {
+    id: '5',
+    user: 'Robert Wilson',
+    month: 'Sep-2025',
+    grossCollected: 12780.90,
+    fees: 1278.09,
+    netDue: 11502.81,
+    notes: 'Partial month'
+  },
+  {
+    id: '6',
+    user: 'Lisa Anderson',
+    month: 'Aug-2025',
+    grossCollected: 18640.30,
+    fees: 1864.03,
+    netDue: 16776.27,
+    notes: 'Regular commission'
+  },
+  {
+    id: '7',
+    user: 'David Brown',
+    month: 'Aug-2025',
+    grossCollected: 25890.60,
+    fees: 2589.06,
+    netDue: 23301.54,
+    notes: 'Exceeded target'
+  }
+   {
+    id: '8',
+    user: 'Sophia Miller',
+    month: 'Jan-2024',
+    grossCollected: 17890.40,
+    fees: 1789.04,
+    netDue: 16101.36,
+    notes: 'On track'
+  },
+  {
+    id: '9',
+    user: 'Liam Johnson',
+    month: 'Mar-2023',
+    grossCollected: 30250.75,
+    fees: 3025.07,
+    netDue: 27225.68,
+    notes: 'Highest quarter so far'
+  },
+  {
+    id: '10',
+    user: 'Olivia Davis',
+    month: 'Jul-2022',
+    grossCollected: 14980.30,
+    fees: 1498.03,
+    netDue: 13482.27,
+    notes: 'Steady performance'
+  },
+  {
+    id: '11',
+    user: 'Ethan Wilson',
+    month: 'Oct-2021',
+    grossCollected: 22560.90,
+    fees: 2256.09,
+    netDue: 20304.81,
+    notes: 'Improved compared to last year'
+  },
+  {
+    id: '12',
+    user: 'Ava Martinez',
+    month: 'Dec-2020',
+    grossCollected: 31240.50,
+    fees: 3124.05,
+    netDue: 28116.45,
+    notes: 'Year-end spike'
+  },
+  {
+    id: '13',
+    user: 'Noah Anderson',
+    month: 'Feb-2023',
+    grossCollected: 19875.20,
+    fees: 1987.52,
+    netDue: 17887.68,
+    notes: 'Slight dip this month'
+  },
+  {
+    id: '14',
+    user: 'Isabella Thomas',
+    month: 'May-2024',
+    grossCollected: 26740.10,
+    fees: 2674.01,
+    netDue: 24066.09,
+    notes: 'Exceeded quarterly goal'
+  },
+  {
+    id: '15',
+    user: 'James Garcia',
+    month: 'Nov-2022',
+    grossCollected: 18590.00,
+    fees: 1859.00,
+    netDue: 16731.00,
+    notes: 'Consistent growth'
+  },
+  {
+    id: '16',
+    user: 'Mia Rodriguez',
+    month: 'Apr-2021',
+    grossCollected: 20950.85,
+    fees: 2095.09,
+    netDue: 18855.76,
+    notes: 'Solid mid-year performance'
+  },
+  {
+    id: '17',
+    user: 'Benjamin Lee',
+    month: 'Sep-2020',
+    grossCollected: 27480.70,
+    fees: 2748.07,
+    netDue: 24732.63,
+    notes: 'Recovered after slump'
+  }
 ];
 
 const months = [
@@ -95,6 +252,19 @@ function Reconciliation() {
       item.agentName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [selectedMonth, selectedYear, searchTerm]);
+
+      item.user.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [selectedMonth, selectedYear, searchTerm]);
+
+  // Calculate totals
+  const totals = useMemo(() => {
+    return filteredData.reduce((acc, item) => ({
+      grossCollected: acc.grossCollected + item.grossCollected,
+      fees: acc.fees + item.fees,
+      netDue: acc.netDue + item.netDue
+    }), { grossCollected: 0, fees: 0, netDue: 0 });
+  }, [filteredData]);
 
   // Calculate dropdown position when opening
   useEffect(() => {
@@ -147,6 +317,16 @@ function Reconciliation() {
         row.unpaidAmount.toString(),
         row.partialAmount.toString(),
         row.balanceDue.toString(),
+    const headers = ['User', 'Month', 'Gross Collected', 'Fees', 'Net Due', 'Notes'];
+    const csvData = [
+      headers,
+      ...filteredData.map(row => [
+        row.user,
+        row.month,
+        row.grossCollected.toString(),
+        row.fees.toString(),
+        row.netDue.toString(),
+        row.notes
       ])
     ];
 
@@ -186,7 +366,7 @@ function Reconciliation() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
                 <input
                   type="text"
-                  placeholder="Search agents..."
+                  placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200"
@@ -232,6 +412,12 @@ function Reconciliation() {
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Unpaid Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Partial Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Balance Due</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">User</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">Month</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">Gross Collected</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">Fees</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">Net Due</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,6 +430,11 @@ function Reconciliation() {
                       <td className="py-4 px-2 text-center">
                         <span className="text-white font-semibold bg-blue-500/20 px-2 py-1 rounded-lg">
                           {row.totalSales}
+                        <div className="text-white font-medium">{row.user}</div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white/80 text-sm bg-white/10 px-2 py-1 rounded-lg">
+                          {row.month}
                         </span>
                       </td>
                       <td className="py-4 px-2">
@@ -269,6 +460,22 @@ function Reconciliation() {
                       <td className="py-4 px-2 text-white ">
                         <span className="font-semibold">
                           {formatCurrency(row.balanceDue)}
+                          {formatCurrency(row.grossCollected)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.fees)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white font-semibold">
+                          {formatCurrency(row.netDue)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-white/70 text-sm">
+                          {row.notes || '—'}
                         </span>
                       </td>
                     </tr>
