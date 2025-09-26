@@ -189,16 +189,12 @@ function Reconciliation() {
                 <thead>
                   <tr className="border-b border-white/20">
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Agent Name</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Month</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Sales</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Paid Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Unpaid Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Partial Amount</th>
                     <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Balance Due</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Gross Collected</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Fees</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Net Due</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,7 +203,6 @@ function Reconciliation() {
                       <td className="py-4 px-2">
                         <div className="text-white font-medium">{row.agent_name}</div>
                       </td>
-                      <td className="py-4 px-2 text-white">{row.month}</td>
                       <td className="py-4 px-2 text-center">
                         <span className="text-white font-semibold bg-blue-500/20 px-2 py-1 rounded-lg">
                           {row.total_sales}
@@ -238,21 +233,7 @@ function Reconciliation() {
                           {formatCurrency(row.balance_due)}
                         </span>
                       </td>
-                      <td className="py-4 px-2">
-                        <span className="text-white font-semibold">
-                          {formatCurrency(row.gross_collected)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2">
-                        <span className="text-white font-semibold">
-                          {formatCurrency(row.fees)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2">
-                        <span className="text-white font-semibold">
-                          {formatCurrency(row.net_due)}
-                        </span>
-                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>
