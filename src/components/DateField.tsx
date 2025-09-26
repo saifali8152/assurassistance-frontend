@@ -156,7 +156,7 @@ const DateField: React.FC<DateFieldProps> = ({
         {/* Calendar Dropdown */}
         {isOpen && !readOnly && (
           // You can adjust the width of the calendar here. e.g., w-72, w-80, w-96
-          <div className="absolute top-full mt-2 left-0 w-80 z-50">
+          <div className="absolute top-full mt-2 left-0 w-85 z-50">
             <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-4 shadow-2xl">
               {/* Month Navigation */}
               <div className="flex items-center justify-between mb-4">
@@ -230,7 +230,7 @@ const DateField: React.FC<DateFieldProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDateSelect(new Date())}
-                  className="w-full py-2 px-3 text-sm text-blue-300 hover:bg-white/10 rounded-lg transition-colors"
+                  className="w-full py-2 px-3 text-sm text-blue-300 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                 >
                   Today
                 </button>
