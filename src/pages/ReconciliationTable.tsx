@@ -250,7 +250,6 @@ function Reconciliation() {
 
       </div>
 
-      {/* Portal-style dropdown rendered outside main container */}
       {isMonthDropdownOpen && (
         <div
           id="month-dropdown"
