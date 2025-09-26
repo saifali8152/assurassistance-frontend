@@ -303,7 +303,11 @@ const CreateCase: React.FC = () => {
     visibleTabs = [...tabs, reviewTab];
   }
   if (createdSaleId) {
-    visibleTabs = [reviewTab]; 
+<<<<<<< Updated upstream
+    visibleTabs = [reviewTab]; // Only show review tab after sale confirmed
+=======
+    visibleTabs = [reviewTab];
+>>>>>>> Stashed changes
   }
 
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];

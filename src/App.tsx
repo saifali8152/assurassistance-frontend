@@ -12,12 +12,17 @@ import AdminDashboard from './pages/AdminDashboard'
 import CreateUser from './pages/CreateUser'
 import CreateCase from './pages/CreateCase'
 import CreatePlan from './pages/CreatePlan'
+import AnalyticsPage from './pages/AnalyticsPage'
+import LedgerPage from './pages/LedgerPage'
+import Reconciliation from './pages/ReconciliationTable'
+
+
 
 // User Layout and Pages
 import UserLayout from './components/UserLayout'
 import UserDashboard from './pages/UserDashboard'
 
-const AnalyticsPage = () => <div className="p-6"><h1 className="text-white text-2xl">Analytics Page</h1></div>;
+//const AnalyticsPage = () => <div className="p-6"><h1 className="text-white text-2xl">Analytics Page</h1></div>;
 
 function App() {
   return (
@@ -47,6 +52,8 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="createCase" element={<CreateCase />} />
             <Route path="CreatePlan" element={<CreatePlan />} />
+            <Route path='ledger' element={<LedgerPage />} />
+            <Route path='Reconciliation' element={<Reconciliation />} />
           </Route>
 
           {/* User routes with protection */}
@@ -60,6 +67,7 @@ function App() {
           >
             <Route index element={<UserDashboard />} />
             <Route path="createCase" element={<CreateCase />} />
+            <Route path='ledger' element={<LedgerPage />} />
           </Route>
 
           {/* Unauthorized page fallback */}
