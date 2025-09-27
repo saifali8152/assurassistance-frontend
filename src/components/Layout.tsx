@@ -54,7 +54,7 @@ const Layout: React.FC = () => {
         to={to}
         className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors w-full text-left ${
           isActive
-            ? 'bg-blue-500/20 text-white'
+            ? 'bg text-white'
             : 'hover:bg-white/10 text-white/80 hover:text-white'
         }`}
       >

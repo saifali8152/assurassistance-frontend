@@ -96,7 +96,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">Welcome back</h2>
               <p className="text-gray-300 text-sm sm:text-base">Sign in to continue</p>
             </div>
-
             {/* Login Form */}
             <div className="space-y-4 sm:space-y-6">
               {/* // Email field */}
