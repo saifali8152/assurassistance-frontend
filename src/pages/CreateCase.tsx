@@ -155,6 +155,7 @@ const CreateCase: React.FC = () => {
             <div>
               <InputField
                 label="Full Name"
+                validationType="fullName"
                 type="text"
                 placeholder="Sam Carter"
                 icon={<UserIcon />}
@@ -166,6 +167,7 @@ const CreateCase: React.FC = () => {
             <div>
               <InputField
                 label="Email"
+                validationType="email"
                 type="text"
                 placeholder="Your Email"
                 icon={<Mail />}
@@ -178,6 +180,7 @@ const CreateCase: React.FC = () => {
               <InputField
                 label="Number"
                 type="number"
+                validationType="phone" 
                 placeholder="Phone Number"
                 icon={<Contact />}
                 value={phoneNumber}
@@ -189,6 +192,7 @@ const CreateCase: React.FC = () => {
               <InputField
                 label="Passport"
                 type="text"
+                validationType="passportId"
                 placeholder="Passport ID"
                 icon={<IdCard />}
                 value={passportId}
@@ -360,7 +364,7 @@ const CreateCase: React.FC = () => {
       };
       const res = await createSaleApi(payload);
       if (res?.saleId) {
-        setCreatedSaleId(res.saleId); // Store Sale ID
+        setCreatedSaleId(res.saleId); 
         toast.success("Sale confirmed successfully!");
       } else {
         toast.error("Failed to confirm sale");

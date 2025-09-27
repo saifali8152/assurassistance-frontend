@@ -103,6 +103,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <InputField
                 label="Email"
                 type="email"
+                validationType="email"
                 placeholder="Your Email"
                 icon={<Mail />}
                 value={email}

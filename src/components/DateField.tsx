@@ -155,7 +155,6 @@ const DateField: React.FC<DateFieldProps> = ({
 
         {/* Calendar Dropdown */}
         {isOpen && !readOnly && (
-          // You can adjust the width of the calendar here. e.g., w-72, w-80, w-96
           <div className="absolute top-full mt-2 left-0 w-85 z-50">
             <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-4 shadow-2xl">
               {/* Month Navigation */}
