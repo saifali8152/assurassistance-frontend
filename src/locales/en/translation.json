@@ -36,13 +36,22 @@
     "confirmedAt": "Confirmed At",
     "paymentStatus": "Payment Status",
     "notes": "Notes",
-    "save": "Save"
+    "save": "Save",
+    "searchPlaceholder": "Search name/policy/plan",
+    "paymentStatusUnpaid": "Unpaid",
+    "paymentStatusPartial": "Partial",
+    "paymentStatusPaid": "Paid",
+    "showingResults": "Showing {{count}} of {{total}} results",
+    "page": "Page {{page}}"
   },
   "toast": {
     "serverError": "Server error",
     "createdCase": "Case created successfully!",
     "failedCreateCase": "Failed to create case",
-    "saleCreated": "Sale created successfully!"
+    "saleCreated": "Sale created successfully!",
+    "failedDownloadCsv": "Failed to download CSV",
+    "saveSuccess": "Changes saved successfully!",
+    "saveFailed": "Failed to save changes."
   },
   "invoice": {
     "title": "INVOICE",

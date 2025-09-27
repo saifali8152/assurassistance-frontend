@@ -34,13 +34,22 @@
     "confirmedAt": "Confirmé le",
     "paymentStatus": "Statut du paiement",
     "notes": "Notes",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "searchPlaceholder": "Rechercher nom/police/forfait",
+    "paymentStatusUnpaid": "Non payé",
+    "paymentStatusPartial": "Partiel",
+    "paymentStatusPaid": "Payé",
+    "showingResults": "Affichage de {{count}} sur {{total}} résultats",
+    "page": "Page {{page}}"
   },
   "toast": {
     "serverError": "Erreur du serveur",
     "createdCase": "Dossier créé avec succès !",
     "failedCreateCase": "Échec de la création du dossier",
-    "saleCreated": "Vente créée avec succès !"
+    "saleCreated": "Vente créée avec succès !",
+    "failedDownloadCsv": "Échec du téléchargement du CSV",
+    "saveSuccess": "Modifications enregistrées avec succès !",
+    "saveFailed": "Échec de l'enregistrement des modifications."
   },
   "invoice": {
     "title": "FACTURE",
