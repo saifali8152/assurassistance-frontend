@@ -1,0 +1,61 @@
+{
+  "app": {
+    "title": "AssurAssistance"
+  },
+  "case": {
+    "create": "Create Case",
+    "submit": "Submit Case",
+    "saveDraft": "Save Draft",
+    "next": "Next",
+    "previous": "Previous",
+    "review": "Review & Confirm"
+  },
+  "sale": {
+    "confirm": "Confirm Sale",
+    "downloadInvoice": "Download Invoice",
+    "downloadCertificate": "Download Certificate"
+  },
+  "ledger": {
+    "title": "Sales Ledger",
+    "export": "Export CSV",
+    "apply": "Apply",
+    "saleId": "Sale ID",
+    "traveller": "Traveller",
+    "plan": "Plan",
+    "total": "Total",
+    "receivedAmount": "Received Amount",
+    "payment": "Payment",
+    "confirmedAt": "Confirmed At",
+    "paymentStatus": "Payment Status",
+    "notes": "Notes",
+    "save": "Save"
+  },
+  "toast": {
+    "serverError": "Server error",
+    "createdCase": "Case created successfully!",
+    "failedCreateCase": "Failed to create case",
+    "saleCreated": "Sale created successfully!"
+  },
+  "invoice": {
+    "title": "INVOICE",
+    "issuer": "Issuer",
+    "issueDate": "Issue Date",
+    "invoiceNo": "Invoice No",
+    "policyNo": "Policy No",
+    "billTo": "Bill To",
+    "description": "Description",
+    "amount": "Amount",
+    "tax": "Tax",
+    "total": "Total",
+    "paymentStatusNote": "Payment Status will be updated in the admin portal."
+  },
+  "certificate": {
+    "title": "Insurance Certificate",
+    "policyNo": "Policy No",
+    "certificateNo": "Certificate No",
+    "issueDate": "Issue Date",
+    "insured": "Insured",
+    "coverageSummary": "Coverage Summary",
+    "terms": "Terms & Conditions apply"
+  }
+}

@@ -8,7 +8,7 @@ import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { createCaseApi, changeCaseStatusApi } from "../api/caseApi";
 import { toast } from "react-hot-toast";
-
+import { useTranslation } from "react-i18next";
 interface Tab {
   id: string;
   label: string;
@@ -43,7 +43,7 @@ const CreateCase: React.FC = () => {
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState<number | null>(null);
   const [createdSaleId, setCreatedSaleId] = useState<number | null>(null);
-
+const { t } = useTranslation();
   useEffect(() => {
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -436,7 +436,8 @@ const CreateCase: React.FC = () => {
             disabled={activeTab === visibleTabs[0].id}
             className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            Previous
+            {/*  Previous */}
+            {t('case.previous')}
           </button>
         )}
         <div className="flex space-x-3">
@@ -462,7 +463,8 @@ const CreateCase: React.FC = () => {
               }}
               className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
-              Next
+              {/* Next */}
+              {t('case.next')}
             </button>
           )}
 
@@ -472,7 +474,8 @@ const CreateCase: React.FC = () => {
               onClick={handleSubmitCase}
               className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
-              Submit Case
+              {/* Submit Case */}
+              {t('case.submit')}
             </button>
           )}
 

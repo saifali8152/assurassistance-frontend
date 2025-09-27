@@ -1,0 +1,58 @@
+{
+  "app": { "title": "AssurAssistance" },
+  "case": {
+    "create": "Créer un dossier",
+    "submit": "Soumettre le dossier",
+    "saveDraft": "Enregistrer le brouillon",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "review": "Vérifier & Confirmer"
+  },
+  "sale": {
+    "confirm": "Confirmer la vente",
+    "downloadInvoice": "Télécharger la facture",
+    "downloadCertificate": "Télécharger le certificat"
+  },
+  "ledger": {
+    "title": "Grand livre des ventes",
+    "export": "Exporter CSV",
+    "apply": "Appliquer",
+    "saleId": "ID de vente",
+    "traveller": "Voyageur",
+    "plan": "Forfait",
+    "total": "Total",
+    "receivedAmount": "Montant reçu",
+    "payment": "Paiement",
+    "confirmedAt": "Confirmé le",
+    "paymentStatus": "Statut du paiement",
+    "notes": "Notes",
+    "save": "Enregistrer"
+  },
+  "toast": {
+    "serverError": "Erreur du serveur",
+    "createdCase": "Dossier créé avec succès !",
+    "failedCreateCase": "Échec de la création du dossier"
+  },
+  "invoice": {
+    "title": "FACTURE",
+    "issuer": "Émetteur",
+    "issueDate": "Date d'émission",
+    "invoiceNo": "N° Facture",
+    "policyNo": "N° Police",
+    "billTo": "Facturer à",
+    "description": "Description",
+    "amount": "Montant",
+    "tax": "Taxe",
+    "total": "Total",
+    "paymentStatusNote": "Le statut du paiement sera mis à jour dans le portail admin."
+  },
+  "certificate": {
+    "title": "Certificat d'assurance",
+    "policyNo": "N° Police",
+    "certificateNo": "N° Certificat",
+    "issueDate": "Date d'émission",
+    "insured": "Assuré",
+    "coverageSummary": "Résumé de la couverture",
+    "terms": "Conditions générales s'appliquent"
+  }
+}

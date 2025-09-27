@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
 import {
   Bell,
   Menu,
@@ -18,6 +19,7 @@ import {
   Layers,
   ReceiptText
 } from "lucide-react";
+import LanguageSelector from "./LanguageSelector";
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +128,7 @@ const Layout: React.FC = () => {
 
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-3">
+            <LanguageSelector />
             <button className="p-2 rounded-lg backdrop-blur-xl bg-white/10 cursor-pointer border border-white/20 hover:bg-white/20 transition-colors relative">
               <Bell className="w-5 h-5 text-white " />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
