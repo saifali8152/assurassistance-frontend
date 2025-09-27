@@ -226,5 +226,16 @@
   "search": "Search...",
   "name": "Emma Johnson",
   "email": "emma@travelagency.com"
+},
+"adminDashboard": {
+  "loading": "Loading...",
+  "totalSales": "Total Sales",
+  "grossCollected": "Gross Collected",
+  "unpaidBalance": "Unpaid Balance",
+  "activeUsers": "Active Users",
+  "recentUsers": "Recent Users",
+  "user": "User",
+  "sales": "Sales",
+  "lastActivity": "Last Activity"
 }
 }

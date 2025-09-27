@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   Bell,
   Search,
@@ -27,6 +28,7 @@ const UserLayout: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { t } = useTranslation(); // <-- Add this
+  const { user } = useAuth();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -136,14 +138,11 @@ const UserLayout: React.FC = () => {
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
               >
-                <img
-                  src="https://i.pravatar.cc/32?img=5"
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full"
-                />
+                
                 <div className="hidden sm:block">
-                  <p className="text-white text-sm font-medium">{t("userLayout.name", "Emma Johnson")}</p>
-                  <p className="text-white/60 text-xs">{t("userLayout.email", "emma@travelagency.com")}</p>
+                  <p className="text-white text-sm font-medium">{user?.name || t("user.name", "Name")}</p>
+                  <p className="text-white/60 text-xs">{user?.email || t("user.email", "Email")}</p>
+
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-white/60 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180" : ""}`}
