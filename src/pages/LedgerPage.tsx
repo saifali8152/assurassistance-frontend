@@ -86,7 +86,6 @@ const LedgerPage: React.FC = () => {
             placeholder={t("ledger.searchPlaceholder") || "Search name/policy/plan"}
             value={filters.search}
             onChange={(val) => setFilters((f) => ({ ...f, search: val }))}
-            onKeyDown={handleKeyDown}
             className="w-full"
             showValidation={false}
           />
