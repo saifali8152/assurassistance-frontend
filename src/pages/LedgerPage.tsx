@@ -1,3 +1,4 @@
+// LedgerPage.tsx
 import React, { useState, useEffect } from "react";
 import { getLedgerApi, downloadLedgerCsvApi } from "../api/ledgerApi";
 //import { apiGet } from "../lib/api"; // for direct fetch (blob)
@@ -5,10 +6,10 @@ import { Search, Download, Calendar, ChevronLeft, ChevronRight } from "lucide-re
 import InputField from "../components/InputFields";
 import DateField from "../components/DateField";
 import { updatePaymentApi } from "../api/salesApi";
-import { useTranslation } from "react-i18next"; // <-- Add this
+import { useTranslation } from "react-i18next"; 
 
 const LedgerPage: React.FC = () => {
-  const { t } = useTranslation(); // <-- Add this
+  const { t } = useTranslation(); 
   const [rows, setRows] = useState<any[]>([]);
   const [editingRow, setEditingRow] = useState<any | null>(null);
   const [page, setPage] = useState(1);
