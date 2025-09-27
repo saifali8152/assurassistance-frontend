@@ -110,5 +110,21 @@
     "tax": "Taxe",
     "total": "Total",
     "saleId": "ID de vente"
-  }
+  },
+  "reconciliation": {
+  "title": "Tableau de rapprochement",
+  "subtitle": "Résumé mensuel du rapprochement pour tous les agents",
+  "searchPlaceholder": "Rechercher des agents...",
+  "export": "Exporter CSV",
+  "agentName": "Nom de l'agent",
+  "totalSales": "Ventes totales",
+  "totalAmount": "Montant total",
+  "paidAmount": "Montant payé",
+  "unpaidAmount": "Montant non payé",
+  "partialAmount": "Montant partiel",
+  "balanceDue": "Solde dû",
+  "noData": "Aucune donnée trouvée",
+  "noDataFor": "Aucune donnée de rapprochement disponible pour {{month}} {{year}}",
+  "year": "ANNÉE"
+}
 }

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, Download, Calendar, Search, Filter } from 'lucide-react';
 import { getReconciliationApi } from '../api/reconciliationApi';
+import { useTranslation } from 'react-i18next'; // <-- Add i18n
 
 // Match backend fields exactly!
 interface ReconciliationData {
@@ -26,6 +27,7 @@ const months = [
 const years = ['2023', '2024', '2025', '2026'];
 
 function Reconciliation() {
+  const { t } = useTranslation(); // <-- Add i18n
   const [selectedMonth, setSelectedMonth] = useState('Sep');
   const [selectedYear, setSelectedYear] = useState('2025');
   const [searchTerm, setSearchTerm] = useState('');
@@ -134,10 +136,10 @@ function Reconciliation() {
             {/* Left Side - Title */}
             <div>
               <h1 className="text-white font-bold text-2xl sm:text-3xl lg:text-4xl mb-2">
-                Reconciliation Table
+                {t('reconciliation.title')}
               </h1>
               <p className="text-white/70 text-sm sm:text-base">
-                Monthly reconciliation summary for all agents
+                {t('reconciliation.subtitle')}
               </p>
             </div>
 
@@ -149,7 +151,7 @@ function Reconciliation() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
                 <input
                   type="text"
-                  placeholder="Search agents..."
+                  placeholder={t('reconciliation.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200"
@@ -175,7 +177,7 @@ function Reconciliation() {
                 className="flex items-center justify-center gap-2 backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105 whitespace-nowrap"
               >
                 <Download size={18} />
-                Export CSV
+                {t('reconciliation.export')}
               </button>
             </div>
           </div>
@@ -188,13 +190,13 @@ function Reconciliation() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/20">
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Agent Name</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Sales</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Total Amount</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Paid Amount</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Unpaid Amount</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Partial Amount</th>
-                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">Balance Due</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.agentName')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.totalSales')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.totalAmount')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.paidAmount')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.unpaidAmount')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.partialAmount')}</th>
+                    <th className="py-4 px-2 text-white/80 font-semibold text-sm ">{t('reconciliation.balanceDue')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -233,7 +235,6 @@ function Reconciliation() {
                           {formatCurrency(row.balance_due)}
                         </span>
                       </td>
-                      
                     </tr>
                   ))}
                 </tbody>
@@ -241,8 +242,10 @@ function Reconciliation() {
             ) : (
               <div className="text-center py-12">
                 <Filter className="mx-auto mb-4 text-white/50" size={48} />
-                <h3 className="text-white/80 text-lg font-medium mb-2">No data found</h3>
-                <p className="text-white/50">No reconciliation data available for {selectedMonth} {selectedYear}</p>
+                <h3 className="text-white/80 text-lg font-medium mb-2">{t('reconciliation.noData')}</h3>
+                <p className="text-white/50">
+                  {t('reconciliation.noDataFor', { month: selectedMonth, year: selectedYear })}
+                </p>
               </div>
             )}
           </div>
@@ -261,7 +264,7 @@ function Reconciliation() {
           }}
         >
           <div className="p-4">
-            <div className="text-white/70 text-xs font-semibold mb-3 text-center">YEAR</div>
+            <div className="text-white/70 text-xs font-semibold mb-3 text-center">{t('reconciliation.year')}</div>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {years.map(year => (
                 <button

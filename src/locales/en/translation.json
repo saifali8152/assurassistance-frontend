@@ -112,5 +112,21 @@
     "tax": "Tax",
     "total": "Total",
     "saleId": "Sale ID"
-  }
+  },
+  "reconciliation": {
+  "title": "Reconciliation Table",
+  "subtitle": "Monthly reconciliation summary for all agents",
+  "searchPlaceholder": "Search agents...",
+  "export": "Export CSV",
+  "agentName": "Agent Name",
+  "totalSales": "Total Sales",
+  "totalAmount": "Total Amount",
+  "paidAmount": "Paid Amount",
+  "unpaidAmount": "Unpaid Amount",
+  "partialAmount": "Partial Amount",
+  "balanceDue": "Balance Due",
+  "noData": "No data found",
+  "noDataFor": "No reconciliation data available for {{month}} {{year}}",
+  "year": "YEAR"
+}
 }
