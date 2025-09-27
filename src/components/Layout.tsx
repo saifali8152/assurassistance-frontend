@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
 import {
   Bell,
   Menu,
@@ -20,13 +19,15 @@ import {
   ReceiptText
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from "react-i18next"; // <-- Add this
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { user } = useAuth();
+  const { user } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const location = useLocation(); // Hook to get the current URL path
+  const location = useLocation();
+  const { t } = useTranslation(); // <-- Add this
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -109,22 +110,10 @@ const Layout: React.FC = () => {
                 <Grid3X3 className="w-5 h-5 text-white" />
               </div>
               <span className="text-white font-semibold text-lg hidden sm:block">
-                AssurAssistance
+                {t("app.title")}
               </span>
             </div>
           </div>
-
-          {/* Center - Search Bar 
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
-              />
-            </div>
-          </div>  */}
 
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-3">
@@ -135,34 +124,29 @@ const Layout: React.FC = () => {
             </button>
 
             <div ref={dropdownRef} className="relative">
-      <button
-        onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-        className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
-      >
-     {/*   <img
-          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
-          alt="Profile"
-          className="w-8 h-8 rounded-full"
-        />  */}
-        <div className="hidden sm:block">
-          <p className="text-white text-sm font-medium">{user?.name || "Loading..."}</p>
-          <p className="text-white/60 text-xs">{user?.email || "Loading..."}</p>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-white/60 transition-transform duration-200 ${
-            profileDropdownOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className={`flex items-center space-x-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl px-3 py-2 hover:bg-white/20 transition-all duration-200 cursor-pointer ${profileDropdownOpen ? "ring-2 ring-blue-400/50" : ""}`}
+              >
+                <div className="hidden sm:block">
+                  <p className="text-white text-sm font-medium">{user?.name || t("user.name", "Name")}</p>
+                  <p className="text-white/60 text-xs">{user?.email || t("user.email", "Email")}</p>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-white/60 transition-transform duration-200 ${
+                    profileDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-[#1E2A3A]/90 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
                   <div className="py-2">
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><User className="w-4 h-4" /> <span className="text-sm font-medium">Profile</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Settings className="w-4 h-4" /> <span className="text-sm font-medium">Settings</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Lock className="w-4 h-4" /> <span className="text-sm font-medium">Change Password</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Bell className="w-4 h-4" /> <span className="text-sm font-medium">Notifications</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-red-400 hover:text-red-300"><LogOut className="w-4 h-4" /> <span className="text-sm font-medium">Logout</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><User className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.profile", "Profile")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Settings className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.settings", "Settings")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Lock className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.changePassword", "Change Password")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Bell className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.notifications", "Notifications")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-red-400 hover:text-red-300"><LogOut className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.logout", "Logout")}</span></button>
                   </div>
                 </div>
               )}
@@ -179,15 +163,13 @@ const Layout: React.FC = () => {
               <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-white/20 transition-colors"><X className="w-5 h-5 text-white" /></button>
             </div>
             <nav className="space-y-2">
-              <NavLink to="/admin" icon={BarChart3}>Dashboard</NavLink>
-            {/*  <NavLink to="/admin/analytics" icon={Activity}>Analytics</NavLink> */}
-              <NavLink to="/admin/users" icon={Users}>Users</NavLink>
-              <NavLink to="/admin/createCase" icon={Layers}>Create Case</NavLink>
-              <NavLink to="/admin/createPlan" icon={FilePlus}>Create Plan</NavLink>
-               <NavLink to="/admin/ledger" icon={Activity}>Sales Ledger</NavLink>
-               <NavLink to="/admin/Reconciliation" icon={ReceiptText}>Reconciliation Table</NavLink>
-              <NavLink to="/admin/settings" icon={Settings}>Settings</NavLink>
-             
+              <NavLink to="/admin" icon={BarChart3}>{t("sidebar.dashboard", "Dashboard")}</NavLink>
+              <NavLink to="/admin/users" icon={Users}>{t("sidebar.users", "Users")}</NavLink>
+              <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
+              <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
+              <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>
+              <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>
+              <NavLink to="/admin/settings" icon={Settings}>{t("sidebar.settings", "Settings")}</NavLink>
             </nav>
           </div>
         </aside>
