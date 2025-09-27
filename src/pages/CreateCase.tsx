@@ -99,44 +99,44 @@ const { t } = useTranslation();
   const reviewDetails = (
     <div className="space-y-6">
       <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-        <h3 className="text-lg font-semibold text-white mb-4">Traveller Details</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('createCase.travellerDetails')}</h3>
         <div className="grid grid-cols-2 gap-4 text-white/80">
-          <div><span className="font-medium text-white">Name:</span> {fullName}</div>
-          <div><span className="font-medium text-white">Email:</span> {email}</div>
-          <div><span className="font-medium text-white">Phone:</span> {phoneNumber}</div>
-          <div><span className="font-medium text-white">Passport:</span> {passportId}</div>
-          <div><span className="font-medium text-white">Address:</span> {address}</div>
+          <div><span className="font-medium text-white">{t('createCase.name')}:</span> {fullName}</div>
+          <div><span className="font-medium text-white">{t('createCase.email')}:</span> {email}</div>
+          <div><span className="font-medium text-white">{t('createCase.phone')}:</span> {phoneNumber}</div>
+          <div><span className="font-medium text-white">{t('createCase.passport')}:</span> {passportId}</div>
+          <div><span className="font-medium text-white">{t('createCase.address')}:</span> {address}</div>
         </div>
       </div>
       <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-        <h3 className="text-lg font-semibold text-white mb-4">Case Details</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('createCase.caseDetails')}</h3>
         <div className="grid grid-cols-2 gap-4 text-white/80">
-          <div><span className="font-medium text-white">Destination:</span> {destination}</div>
-          <div><span className="font-medium text-white">Start Date:</span> {startDate}</div>
-          <div><span className="font-medium text-white">End Date:</span> {endDate}</div>
-          <div><span className="font-medium text-white">Duration:</span> {durationDays} days</div>
+          <div><span className="font-medium text-white">{t('createCase.destination')}:</span> {destination}</div>
+          <div><span className="font-medium text-white">{t('createCase.startDate')}:</span> {startDate}</div>
+          <div><span className="font-medium text-white">{t('createCase.endDate')}:</span> {endDate}</div>
+          <div><span className="font-medium text-white">{t('createCase.durationDays')}:</span> {durationDays} {t('createCase.durationDaysPlaceholder')}</div>
         </div>
       </div>
 
       {selectedPlanObj && (
         <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-          <h3 className="text-lg font-semibold text-white mb-4">Plan Details</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('createCase.reviewPlan')}</h3>
           <div className="grid grid-cols-2 gap-4 text-white/80">
-            <div><span className="font-medium text-white">Plan:</span> {selectedPlanObj.name}</div>
-            <div><span className="font-medium text-white">Product Type:</span> {selectedPlanObj.productType}</div>
-            <div><span className="font-medium text-white">Coverage:</span> {selectedPlanObj.coverage}</div>
-            <div><span className="font-medium text-white">Price:</span> {selectedPlanObj.flatPrice}</div>
+            <div><span className="font-medium text-white">{t('createCase.plan')}:</span> {selectedPlanObj.name}</div>
+            <div><span className="font-medium text-white">{t('createCase.productType')}:</span> {selectedPlanObj.productType}</div>
+            <div><span className="font-medium text-white">{t('createCase.coverage')}:</span> {selectedPlanObj.coverage}</div>
+            <div><span className="font-medium text-white">{t('createCase.price')}:</span> {selectedPlanObj.flatPrice}</div>
           </div>
         </div>
       )}
       {createdSaleId && (
         <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-          <h3 className="text-lg font-semibold text-white mb-4">Sale Details</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('createCase.reviewSale')}</h3>
           <div className="grid grid-cols-2 gap-4 text-white/80">
-            <div><span className="font-medium text-white">Sale ID:</span> {createdSaleId}</div>
-            <div><span className="font-medium text-white">Premium:</span> 200</div>
-            <div><span className="font-medium text-white">Tax:</span> 20</div>
-            <div><span className="font-medium text-white">Total:</span> 220</div>
+            <div><span className="font-medium text-white">{t('createCase.saleId')}:</span> {createdSaleId}</div>
+            <div><span className="font-medium text-white">{t('createCase.premium')}:</span> 200</div>
+            <div><span className="font-medium text-white">{t('createCase.tax')}:</span> 20</div>
+            <div><span className="font-medium text-white">{t('createCase.total')}:</span> 220</div>
           </div>
         </div>
       )}
@@ -148,15 +148,15 @@ const { t } = useTranslation();
   const tabs: Tab[] = [
     {
       id: "traveller",
-      label: "Traveller",
+      label: t('createCase.travellerDetails'),
       content: (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputField
-                label="Full Name"
+                label={t('createCase.fullName')}
                 type="text"
-                placeholder="Sam Carter"
+                placeholder={t('createCase.fullNamePlaceholder')}
                 icon={<UserIcon />}
                 value={fullName}
                 onChange={setFullName}
@@ -165,9 +165,9 @@ const { t } = useTranslation();
             </div>
             <div>
               <InputField
-                label="Email"
+                label={t('createCase.email')}
                 type="text"
-                placeholder="Your Email"
+                placeholder={t('createCase.emailPlaceholder')}
                 icon={<Mail />}
                 value={email}
                 onChange={setEmail}
@@ -176,9 +176,9 @@ const { t } = useTranslation();
             </div>
             <div>
               <InputField
-                label="Number"
+                label={t('createCase.phone')}
                 type="number"
-                placeholder="Phone Number"
+                placeholder={t('createCase.phonePlaceholder')}
                 icon={<Contact />}
                 value={phoneNumber}
                 onChange={setPhoneNumber}
@@ -187,9 +187,9 @@ const { t } = useTranslation();
             </div>
             <div>
               <InputField
-                label="Passport"
+                label={t('createCase.passport')}
                 type="text"
-                placeholder="Passport ID"
+                placeholder={t('createCase.passportPlaceholder')}
                 icon={<IdCard />}
                 value={passportId}
                 onChange={setPassportId}
@@ -198,9 +198,9 @@ const { t } = useTranslation();
             </div>
             <div>
               <InputField
-                label="Address"
+                label={t('createCase.address')}
                 type="text"
-                placeholder="Your Address"
+                placeholder={t('createCase.addressPlaceholder')}
                 icon={<Home />}
                 value={address}
                 onChange={setAddress}
@@ -214,10 +214,10 @@ const { t } = useTranslation();
 
     {
       id: "choosePlan",
-      label: "Choose Plan",
+      label: t('createCase.choosePlan'),
       content: (
         <div className="space-y-6">
-          <h2 className="text-xl font-medium text-white mb-4">Choose Plan</h2>
+          <h2 className="text-xl font-medium text-white mb-4">{t('createCase.choosePlanTitle')}</h2>
           <div className="grid grid-cols-3 gap-8">
             {plans.map((plan) => (
               <div key={plan.id} className="relative ">
@@ -243,22 +243,22 @@ const { t } = useTranslation();
 
     {
       id: "case",
-      label: "Case Details",
+      label: t('createCase.caseDetails'),
       content: (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-8">
             <SelectField
-              label="Destination"
+              label={t('createCase.destination')}
               options={eligibleDestinations}
-              placeholder="Travel Destination"
+              placeholder={t('createCase.destinationPlaceholder')}
               icon={<Globe2 />}
               value={destination}
               onChange={setDestination}
               required
             />
             <DateField
-              label="Start Date"
-              placeholder="Start Date"
+              label={t('createCase.startDate')}
+              placeholder={t('createCase.startDatePlaceholder')}
               icon={<CalendarIcon />}
               value={startDate}
               onChange={setStartDate}
@@ -266,17 +266,17 @@ const { t } = useTranslation();
             />
 
             <DateField
-              label="End Date"
-              placeholder="End Date"
+              label={t('createCase.endDate')}
+              placeholder={t('createCase.endDatePlaceholder')}
               icon={<CalendarIcon />}
               value={endDate}
               onChange={setEndDate}
               required
             />
             <InputField
-              label="Duration Days"
+              label={t('createCase.durationDays')}
               type="number"
-              placeholder="Duration (days)"
+              placeholder={t('createCase.durationDaysPlaceholder')}
               icon={<ClockIcon />}
               value={durationDays}
               onChange={() => { }}
@@ -293,7 +293,7 @@ const { t } = useTranslation();
 
   const reviewTab: Tab = {
     id: "review",
-    label: "Review & Confirm",
+    label: t('createCase.reviewTab'),
     content: reviewDetails,
   };
 
@@ -397,7 +397,7 @@ const { t } = useTranslation();
 
   return (
     <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
-      <h1 className="text-2xl font-semibold text-white mb-8">Create Case</h1>
+      <h1 className="text-2xl font-semibold text-white mb-8">{t('case.create')}</h1>
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 mb-8 bg-white/5 p-1 rounded-2xl">
@@ -450,7 +450,7 @@ const { t } = useTranslation();
                 border: "1px solid rgba(255,255,255,0.2)"
               }}
             >
-              Save Draft
+              {t('case.saveDraft')}
             </button>
           )}
 
@@ -484,7 +484,7 @@ const { t } = useTranslation();
               onClick={handleCancelCase}
               className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors cursor-pointer"
             >
-              Cancel Case
+             {t('case.cancel')}
             </button>
           )}
 
@@ -494,7 +494,7 @@ const { t } = useTranslation();
               onClick={handleConfirmSale}
               className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
             >
-              Confirm Sale
+             {t('case.confirmSale')}
             </button>
           )}
 
@@ -505,13 +505,13 @@ const { t } = useTranslation();
                 onClick={handleGenerateInvoice}
                 className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
-                Download Invoice
+                {t('sale.downloadInvoice')}
               </button>
               <button
                 onClick={handleGenerateCertificate}
                 className="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
               >
-                Download Certificate
+                {t('sale.downloadCertificate')}
               </button>
             </>
           )}

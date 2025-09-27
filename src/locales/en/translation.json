@@ -8,6 +8,14 @@
     "saveDraft": "Save Draft",
     "next": "Next",
     "previous": "Previous",
+    "review": "Review & Confirm",
+    "cancel": "Cancel Case",
+    "confirmSale": "Confirm Sale"
+  },
+  "caseTabs": {
+    "traveller": "Traveller",
+    "plan": "Choose a Plan",
+    "caseDetails": "Case Details",
     "review": "Review & Confirm"
   },
   "sale": {
@@ -57,5 +65,43 @@
     "insured": "Insured",
     "coverageSummary": "Coverage Summary",
     "terms": "Terms & Conditions apply"
+  },
+  "createCase": {
+    "travellerDetails": "Traveller Details",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Sam Carter",
+    "email": "Email",
+    "emailPlaceholder": "Your email",
+    "phone": "Number",
+    "phonePlaceholder": "Phone Number",
+    "passport": "Passport",
+    "passportPlaceholder": "Passport ID",
+    "address": "Address",
+    "addressPlaceholder": "Your Address",
+    "choosePlan": "Choose Plan",
+    "choosePlanTitle": "Choose Plan",
+    "caseDetails": "Case Details",
+    "destination": "Destination",
+    "destinationPlaceholder": "Travel Destination",
+    "startDate": "Start Date",
+    "startDatePlaceholder": "Start Date",
+    "endDate": "End Date",
+    "endDatePlaceholder": "End Date",
+    "durationDays": "Duration (days)",
+    "durationDaysPlaceholder": "Duration (days)",
+    "reviewTab": "Review & Confirm",
+    "reviewTraveller": "Traveller Details",
+    "reviewCase": "Case Details",
+    "reviewPlan": "Plan Details",
+    "reviewSale": "Sale Details",
+    "name": "Name",
+    "plan": "Plan",
+    "productType": "Product Type",
+    "coverage": "Coverage",
+    "price": "Price",
+    "premium": "Premium",
+    "tax": "Tax",
+    "total": "Total",
+    "saleId": "Sale ID"
   }
 }

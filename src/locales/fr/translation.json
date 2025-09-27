@@ -6,6 +6,14 @@
     "saveDraft": "Enregistrer le brouillon",
     "next": "Suivant",
     "previous": "Précédent",
+    "review": "Vérifier & Confirmer",
+    "cancel": "Annuler le dossier",
+    "confirmSale": "Confirmer la vente"
+  },
+  "caseTabs": {
+    "traveller": "Voyageur",
+    "plan": "Choisir un forfait",
+    "caseDetails": "Détails du dossier",
     "review": "Vérifier & Confirmer"
   },
   "sale": {
@@ -31,7 +39,8 @@
   "toast": {
     "serverError": "Erreur du serveur",
     "createdCase": "Dossier créé avec succès !",
-    "failedCreateCase": "Échec de la création du dossier"
+    "failedCreateCase": "Échec de la création du dossier",
+    "saleCreated": "Vente créée avec succès !"
   },
   "invoice": {
     "title": "FACTURE",
@@ -54,5 +63,43 @@
     "insured": "Assuré",
     "coverageSummary": "Résumé de la couverture",
     "terms": "Conditions générales s'appliquent"
+  },
+  "createCase": {
+    "travellerDetails": "Détails du voyageur",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Sam Carter",
+    "email": "Email",
+    "emailPlaceholder": "Votre email",
+    "phone": "Numéro",
+    "phonePlaceholder": "Numéro de téléphone",
+    "passport": "Passeport",
+    "passportPlaceholder": "Numéro de passeport",
+    "address": "Adresse",
+    "addressPlaceholder": "Votre adresse",
+    "choosePlan": "Choisir un forfait",
+    "choosePlanTitle": "Choisir un forfait",
+    "caseDetails": "Détails du dossier",
+    "destination": "Destination",
+    "destinationPlaceholder": "Destination de voyage",
+    "startDate": "Date de début",
+    "startDatePlaceholder": "Date de début",
+    "endDate": "Date de fin",
+    "endDatePlaceholder": "Date de fin",
+    "durationDays": "Durée (jours)",
+    "durationDaysPlaceholder": "Durée (jours)",
+    "reviewTab": "Vérifier & Confirmer",
+    "reviewTraveller": "Détails du voyageur",
+    "reviewCase": "Détails du dossier",
+    "reviewPlan": "Détails du forfait",
+    "reviewSale": "Détails de la vente",
+    "name": "Nom",
+    "plan": "Forfait",
+    "productType": "Type de produit",
+    "coverage": "Couverture",
+    "price": "Prix",
+    "premium": "Prime",
+    "tax": "Taxe",
+    "total": "Total",
+    "saleId": "ID de vente"
   }
 }
