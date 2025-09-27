@@ -59,7 +59,7 @@ const CreatePlan: React.FC = () => {
   const [durationInput, setDurationInput] = useState("");
   //const [pricingRuleInput, setPricingRuleInput] = useState("");
 
-  const productTypes = ["Travel", "Blank", "Health Evacuation", "Travel Inbound"];
+  const productTypes = ["Travel", "Bank", "Health Evacuation", "Travel Inbound"];
 
 
   const fieldLabels = {
