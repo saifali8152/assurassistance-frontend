@@ -63,14 +63,14 @@ const CreatePlan: React.FC = () => {
 
 
   const fieldLabels = {
-    name: "Plan Name",
-    productType: "Product Type",
-    coverage: "Coverage Details",
-    eligibleDestinations: "Eligible Destinations",
-    durations: "Duration Options",
-    flatPrice: "Flat Price",
-    terms: "Terms & Conditions",
-    active: "Plan Status"
+    name: t("plan.name"),
+    productType: t("plan.productType"),
+    coverage: t("plan.coverage"),
+    eligibleDestinations: t("plan.eligibleDestinations"),
+    durations: t("plan.durations"),
+    flatPrice: t("plan.flatPrice"),
+    terms: t("plan.terms"),
+    active: t("plan.active")
   };
 
   const fieldOrder: (keyof FormData)[] = [
