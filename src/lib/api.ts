@@ -1,6 +1,6 @@
 // src/lib/api.ts
 import axios from "axios";
-
+import i18n from "../i18n"; 
 const API_BASE_URL = "http://localhost:5000/api";
 
 const api = axios.create({
@@ -15,6 +15,8 @@ api.interceptors.request.use((config) => {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+  const lang = localStorage.getItem("lang") || i18n.language || "en";
+  config.headers["Accept-Language"] = lang;
     return config;
   });
   

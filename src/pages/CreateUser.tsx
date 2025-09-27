@@ -3,6 +3,7 @@ import { Eye, Edit3, Check, Clock, User as UserIcon, Mail } from "lucide-react";
 import InputField from "../components/InputFields";
 import { createAgentApi, listAgentsApi, updateUserStatusApi } from "../api/agentApi";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next"; // <-- Add this
 
 type User = {
   id: string;
@@ -13,10 +14,11 @@ type User = {
 };
 
 const StatusBadge = ({ status }: { status: User["status"] }) => {
+  const { t } = useTranslation(); // <-- Add this
   const statusConfig = {
-    active: { icon: Check, text: "Active", bgClass: "bg-green-500/20", textClass: "text-green-400", iconClass: "text-green-400" },
-    pending: { icon: Clock, text: "Pending", bgClass: "bg-yellow-500/20", textClass: "text-yellow-400", iconClass: "text-yellow-400" },
-    inactive: { icon: Clock, text: "Inactive", bgClass: "bg-red-500/20", textClass: "text-red-400", iconClass: "text-red-400" },
+    active: { icon: Check, text: t("user.statusActive", "Active"), bgClass: "bg-green-500/20", textClass: "text-green-400", iconClass: "text-green-400" },
+    pending: { icon: Clock, text: t("user.statusPending", "Pending"), bgClass: "bg-yellow-500/20", textClass: "text-yellow-400", iconClass: "text-yellow-400" },
+    inactive: { icon: Clock, text: t("user.statusInactive", "Inactive"), bgClass: "bg-red-500/20", textClass: "text-red-400", iconClass: "text-red-400" },
   };
   const config = statusConfig[status];
   const IconComponent = config.icon;
@@ -29,6 +31,7 @@ const StatusBadge = ({ status }: { status: User["status"] }) => {
 };
 
 const CreateUser: React.FC = () => {
+  const { t } = useTranslation(); // <-- Add this
   const [users, setUsers] = useState<User[]>([]);
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -60,7 +63,7 @@ const CreateUser: React.FC = () => {
       });
       setUsers(mappedUsers);
     } catch (err) {
-      toast.error("Failed to fetch users");
+      toast.error(t("user.failedFetch", "Failed to fetch users"));
     }
   };
 
@@ -75,7 +78,7 @@ const CreateUser: React.FC = () => {
 
   const handleFormSubmit = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
-      toast.error("All fields are required!");
+      toast.error(t("user.allFieldsRequired", "All fields are required!"));
       return;
     }
 
@@ -93,7 +96,7 @@ const CreateUser: React.FC = () => {
       await fetchUsers(); // reload users after creation
       resetForm();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create agent");
+      toast.error(err.response?.data?.message || t("user.failedCreate", "Failed to create agent"));
     }
   };
   const closePasswordModal = () => {
@@ -102,9 +105,9 @@ const CreateUser: React.FC = () => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Password copied to clipboard!");
+      toast.success(t("user.passwordCopied", "Password copied to clipboard!"));
     } catch (err) {
-      toast.error("Failed to copy password");
+      toast.error(t("user.failedCopy", "Failed to copy password"));
     }
   };
 
@@ -138,9 +141,11 @@ const CreateUser: React.FC = () => {
           u.id === confirmModal.userId ? { ...u, status: confirmModal.newStatus! } : u
         )
       );
-      toast.success(`User status updated to ${confirmModal.newStatus}`);
+      toast.success(
+        t("user.statusUpdated", { status: t(`user.status${confirmModal.newStatus.charAt(0).toUpperCase() + confirmModal.newStatus.slice(1)}`) }, "User status updated")
+      );
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to update status");
+      toast.error(err.response?.data?.message || t("user.failedUpdateStatus", "Failed to update status"));
     } finally {
       setConfirmModal({ open: false, userId: null, newStatus: null });
     }
@@ -153,14 +158,14 @@ const CreateUser: React.FC = () => {
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <h1 className="text-white text-2xl font-bold">
-            {editingUser ? `Editing ${editingUser.firstName}` : 'Create a New User'}
+            {editingUser ? t("user.editing", { name: editingUser.firstName }, `Editing ${editingUser.firstName}`) : t("user.createNew", "Create a New User")}
           </h1>
           {!isFormVisible && (
             <button
               onClick={() => { setEditingUser(null); setFormData({ firstName: '', lastName: '', email: '', temporaryPassword: '' }); setIsFormVisible(true); }}
               className="cursor-pointer px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg"
             >
-              Add New User
+              {t("user.addNew", "Add New User")}
             </button>
           )}
         </div>
@@ -169,31 +174,34 @@ const CreateUser: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField
                 type="text"
-                placeholder="First Name"
+                placeholder={t("user.firstName", "First Name")}
                 value={formData.firstName}
                 onChange={(value) => handleInputChange('firstName', value)}
                 icon={<UserIcon />}
               />
               <InputField
                 type="text"
-                placeholder="Last Name"
+                placeholder={t("user.lastName", "Last Name")}
                 value={formData.lastName}
                 onChange={(value) => handleInputChange('lastName', value)}
                 icon={<UserIcon />}
               />
               <InputField
                 type="email"
-                placeholder="Email"
+                placeholder={t("user.email", "Email")}
                 value={formData.email}
                 onChange={(value) => handleInputChange('email', value)}
                 icon={<Mail />}
               />
-
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <button onClick={resetForm} className="cursor-pointer px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors">Discard</button>
-              <button onClick={handleFormSubmit} className="cursor-pointer px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg">{editingUser ? 'Update User' : 'Create User'}</button>
+              <button onClick={resetForm} className="cursor-pointer px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors">
+                {t("user.discard", "Discard")}
+              </button>
+              <button onClick={handleFormSubmit} className="cursor-pointer px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg">
+                {editingUser ? t("user.update", "Update User") : t("user.create", "Create User")}
+              </button>
             </div>
           </div>
         )}
@@ -201,15 +209,15 @@ const CreateUser: React.FC = () => {
 
       {/* --- Users Table Section --- */}
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl">
-        <h2 className="text-white text-2xl font-bold mb-6">Current Users</h2>
+        <h2 className="text-white text-2xl font-bold mb-6">{t("user.currentUsers", "Current Users")}</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left text-white/70 font-medium py-4 px-2">Name</th>
-                <th className="text-center text-white/70 font-medium py-4 px-2">Status</th>
-                <th className="text-center text-white/70 font-medium py-4 px-2 hidden sm:table-cell">Email</th>
-                <th className="text-left text-white/70 font-medium py-4 px-2">Actions</th>
+                <th className="text-left text-white/70 font-medium py-4 px-2">{t("user.name", "Name")}</th>
+                <th className="text-center text-white/70 font-medium py-4 px-2 hidden sm:table-cell">{t("user.status", "Status")}</th>
+                <th className="text-center text-white/70 font-medium py-4 px-2 hidden sm:table-cell">{t("user.email", "Email")}</th>
+                <th className="text-left text-white/70 font-medium py-4 px-2">{t("user.actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -240,23 +248,23 @@ const CreateUser: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md text-center">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Confirm Action
+              {t("user.confirmAction", "Confirm Action")}
             </h2>
             <p className="text-white/80 mb-6">
-              Are you sure you want to {confirmModal.newStatus === "active" ? "activate" : "deactivate"} this user?
+              {t("user.confirmStatus", { action: confirmModal.newStatus === "active" ? t("user.activate", "activate") : t("user.deactivate", "deactivate") }, "Are you sure you want to {{action}} this user?")}
             </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setConfirmModal({ open: false, userId: null, newStatus: null })}
                 className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 transition-colors cursor-pointer"
               >
-                Cancel
+                {t("user.cancel", "Cancel")}
               </button>
               <button
                 onClick={confirmStatusChange}
                 className="px-6 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors shadow-lg cursor-pointer"
               >
-                Confirm
+                {t("user.confirm", "Confirm")}
               </button>
             </div>
           </div>
@@ -267,7 +275,7 @@ const CreateUser: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md">
             <h2 className="text-xl font-semibold text-white mb-4 text-center">
-              User Created Successfully!
+              {t("user.createdSuccess", "User Created Successfully!")}
             </h2>
 
             <div className="space-y-4">
@@ -276,7 +284,7 @@ const CreateUser: React.FC = () => {
               </p>
 
               <div className="bg-white/10 border border-white/20 rounded-lg p-4">
-                <label className="block text-white/70 text-sm mb-2">Temporary Password:</label>
+                <label className="block text-white/70 text-sm mb-2">{t("user.tempPassword", "Temporary Password:")}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -288,14 +296,14 @@ const CreateUser: React.FC = () => {
                     onClick={() => copyToClipboard(passwordModal.password)}
                     className="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors cursor-pointer"
                   >
-                    Copy
+                    {t("user.copy", "Copy")}
                   </button>
                 </div>
               </div>
 
               <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3">
                 <p className="text-yellow-200 text-sm text-center">
-                  ⚠️ Please save this password securely. It won't be shown again.
+                  {t("user.savePassword", "⚠️ Please save this password securely. It won't be shown again.")}
                 </p>
               </div>
             </div>
@@ -305,7 +313,7 @@ const CreateUser: React.FC = () => {
                 onClick={closePasswordModal}
                 className="px-6 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium transition-colors shadow-lg cursor-pointer"
               >
-                Got it!
+                {t("user.gotIt", "Got it!")}
               </button>
             </div>
           </div>

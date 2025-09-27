@@ -8,6 +8,7 @@ import {
 
 } from "../api/catalogueApi";
 import { toast } from "react-hot-toast"; // for notifications
+import { useTranslation } from "react-i18next";
 
 interface Plan {
   id: string;
@@ -33,6 +34,8 @@ interface FormData {
 }
 
 const CreatePlan: React.FC = () => {
+  const { t } = useTranslation();
+
   const [plans, setPlans] = useState<Plan[]>([]);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -56,22 +59,18 @@ const CreatePlan: React.FC = () => {
   const [durationInput, setDurationInput] = useState("");
   //const [pricingRuleInput, setPricingRuleInput] = useState("");
 
-  const productTypes = ["Travel", "Blank", "Health Evacuation", "Travel Inbound"];
-  {/*const availableDestinations = [
-    "USA", "Canada", "Mexico", "UK", "France", "Germany", "Italy", "Spain", 
-    "Japan", "China", "Australia", "India", "Brazil", "Argentina", "Egypt", 
-    "South Africa", "Thailand", "Singapore", "New Zealand", "Norway"
-  ];  */}
+  const productTypes = ["Travel", "Bank", "Health Evacuation", "Travel Inbound"];
+
 
   const fieldLabels = {
-    name: "Plan Name",
-    productType: "Product Type",
-    coverage: "Coverage Details",
-    eligibleDestinations: "Eligible Destinations",
-    durations: "Duration Options",
-    flatPrice: "Flat Price",
-    terms: "Terms & Conditions",
-    active: "Plan Status"
+    name: t("plan.name"),
+    productType: t("plan.productType"),
+    coverage: t("plan.coverage"),
+    eligibleDestinations: t("plan.eligibleDestinations"),
+    durations: t("plan.durations"),
+    flatPrice: t("plan.flatPrice"),
+    terms: t("plan.terms"),
+    active: t("plan.active")
   };
 
   const fieldOrder: (keyof FormData)[] = [
@@ -334,7 +333,7 @@ const CreatePlan: React.FC = () => {
     <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl w-full">
       <h1 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
         <Plus className="w-8 h-8" />
-        {editingPlan ? 'Edit Plan' : 'Create New Plan'}
+        {editingPlan ? t("plan.editTitle") : t("plan.createTitle")}
       </h1>
 
       {/* Form Section */}
@@ -342,7 +341,7 @@ const CreatePlan: React.FC = () => {
         {/* Input Form */}
         <div className="space-y-6">
           <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Plan Details</h2>
+            <h2 className="text-xl font-semibold text-white mb-6">{t("plan.detailsTitle")}</h2>
 
             {fieldOrder.map((field) => (
               <div key={field} className="mb-4">
@@ -363,15 +362,15 @@ const CreatePlan: React.FC = () => {
                     </select>
                   </div>
                 ) : field === 'eligibleDestinations' ? (
-                  renderTagInput('eligibleDestinations', destinationInput, setDestinationInput, 'Enter destination and press Enter...')
+                  renderTagInput('eligibleDestinations', destinationInput, setDestinationInput, t("plan.eligibleDestinationsPlaceholder"))
                 ) : field === 'durations' ? (
-                  renderTagInput('durations', durationInput, setDurationInput, 'Enter duration and press Enter...')
+                  renderTagInput('durations', durationInput, setDurationInput, t("plan.durationsPlaceholder"))
                 ) : field === 'flatPrice' ? (
                   <input
                     type="number"
                     value={formData.flatPrice ?? ""}
                     onChange={(e) => handleInputChange('flatPrice', e.target.value === "" ? undefined : Number(e.target.value))}
-                    placeholder="Enter flat price..."
+                    placeholder={t("plan.flatPricePlaceholder")}
                     className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50 focus:bg-white/10 transition-all duration-300"
                     min={0}
                   />
@@ -384,7 +383,7 @@ const CreatePlan: React.FC = () => {
                       }`}
                   >
                     {formData.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    {formData.active ? 'Active' : 'Inactive'}
+                    {formData.active ? t("plan.active") : t("plan.inactive")}
                   </button>
                 ) : field === 'terms' ? (
                   <textarea
@@ -412,7 +411,7 @@ const CreatePlan: React.FC = () => {
                 className="flex-1 bg-blue-600  text-white font-semibold py-3 px-6 rounded-xl 300 flex items-center cursor-pointer justify-center gap-2"
               >
                 <Save className="w-5 h-5" />
-                {editingPlan ? 'Update Plan' : 'Save Plan'}
+                {editingPlan ? t("plan.updateButton") : t("plan.saveButton")}
               </button>
 
               {editingPlan && (
@@ -421,7 +420,7 @@ const CreatePlan: React.FC = () => {
                   className="px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300 flex items-center gap-2"
                 >
                   <X className="w-5 h-5" />
-                  Cancel
+                  {t("plan.cancelButton")}
                 </button>
               )}
             </div>
@@ -431,7 +430,7 @@ const CreatePlan: React.FC = () => {
         {/* Live Preview */}
         <div className="space-y-6">
           <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Live Preview</h2>
+            <h2 className="text-xl font-semibold text-white mb-6">{t("plan.livePreviewTitle")}</h2>
 
             {Object.keys(previewData).length > 0 ? (
               <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
@@ -447,7 +446,7 @@ const CreatePlan: React.FC = () => {
                       <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${previewData.active ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
                         }`}>
                         {previewData.active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                        {previewData.active ? 'Active' : 'Inactive'}
+                        {previewData.active ? t("plan.active") : t("plan.inactive")}
                       </div>
                     </div>
                   </div>
@@ -455,14 +454,14 @@ const CreatePlan: React.FC = () => {
 
                 {previewData.coverage && (
                   <div>
-                    <span className="text-white/70 text-sm">Coverage:</span>
+                    <span className="text-white/70 text-sm">{t("plan.coverage")}:</span>
                     <p className="text-white/90">{previewData.coverage}</p>
                   </div>
                 )}
 
                 {previewData.eligibleDestinations && previewData.eligibleDestinations.length > 0 && (
                   <div>
-                    <span className="text-white/70 text-sm">Destinations:</span>
+                    <span className="text-white/70 text-sm">{t("plan.destinations")}:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {previewData.eligibleDestinations.map((dest, i) => (
                         <span key={i} className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs">
@@ -475,7 +474,7 @@ const CreatePlan: React.FC = () => {
 
                 {previewData.durations && previewData.durations.length > 0 && (
                   <div>
-                    <span className="text-white/70 text-sm">Durations:</span>
+                    <span className="text-white/70 text-sm">{t("plan.durations")}:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {previewData.durations.map((duration, i) => (
                         <span key={i} className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-lg text-xs">
@@ -488,7 +487,7 @@ const CreatePlan: React.FC = () => {
 
                 {previewData.flatPrice !== undefined && (
                   <div>
-                    <span className="text-white/70 text-sm">Flat Price:</span>
+                    <span className="text-white/70 text-sm">{t("plan.flatPrice")}:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded-lg text-xs">
                         {previewData.flatPrice}
@@ -499,7 +498,7 @@ const CreatePlan: React.FC = () => {
 
                 {previewData.terms && (
                   <div>
-                    <span className="text-white/70 text-sm">Terms:</span>
+                    <span className="text-white/70 text-sm">{t("plan.terms")}:</span>
                     <p className="text-white/90 text-xs">{previewData.terms}</p>
                   </div>
                 )}
@@ -507,7 +506,7 @@ const CreatePlan: React.FC = () => {
             ) : (
               <div className="text-center text-white/50 py-12">
                 <Plus className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p>Start typing to see preview</p>
+                <p>{t("plan.startTyping")}</p>
               </div>
             )}
           </div>
@@ -517,7 +516,7 @@ const CreatePlan: React.FC = () => {
       {/* Saved Plans */}
       {plans.length > 0 && (
         <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-2xl font-semibold text-white mb-6">Saved Plans ({plans.length})</h2>
+          <h2 className="text-2xl font-semibold text-white mb-6">{t("plan.savedPlansTitle")} ({plans.length})</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan) => (
@@ -535,7 +534,7 @@ const CreatePlan: React.FC = () => {
                         : 'bg-red-500/20 text-red-300 border border-red-400/30'
                         }`}>
                         {plan.active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                        {plan.active ? 'Active' : 'Inactive'}
+                        {plan.active ? t("plan.active") : t("plan.inactive")}
                       </span>
                     </div>
                   </div>
@@ -543,7 +542,7 @@ const CreatePlan: React.FC = () => {
                   <button
                     onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
                     className="cursor-pointer p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
-                    title="View details"
+                    title={t("plan.viewDetails")}
                   >
                     <Info className="w-4 h-4" />
                   </button>
@@ -552,19 +551,19 @@ const CreatePlan: React.FC = () => {
                 {/* Default View - Plan Name, Status, Price */}
                 <div className="flex flex-col gap-4 mb-4">
                   <div>
-                    <span className="text-white/60 text-xs uppercase tracking-wide">Coverage</span>
+                    <span className="text-white/60 text-xs uppercase tracking-wide">{t("plan.coverage")}</span>
                     <p className="text-white/90 text-sm mt-1 leading-relaxed">{plan.coverage}</p>
                   </div>
                   <div className="grid grid-cols-2">
                     <div>
-                      <span className="text-white/60 text-sm">Product Type</span>
+                      <span className="text-white/60 text-sm">{t("plan.productType")}</span>
                       <p className="text-white text-sm">{plan.productType}</p>
                     </div>
 
                     <div>
-                      <span className="text-white/60 text-sm">Price</span>
+                      <span className="text-white/60 text-sm">{t("plan.price")}</span>
                       <p className="text-white font-medium">
-                        {plan.flatPrice !== undefined ? `$${plan.flatPrice}` : 'Not specified'}
+                        {plan.flatPrice !== undefined ? `$${plan.flatPrice}` : t("plan.notSpecified")}
                       </p>
                     </div>
                   </div>
@@ -577,7 +576,7 @@ const CreatePlan: React.FC = () => {
 
                     {plan.eligibleDestinations.length > 0 && (
                       <div>
-                        <span className="text-white/60 text-xs uppercase tracking-wide">Destinations</span>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">{t("plan.destinations")}</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {plan.eligibleDestinations.slice(0, 3).map((dest, i) => (
                             <span
@@ -589,7 +588,7 @@ const CreatePlan: React.FC = () => {
                           ))}
                           {plan.eligibleDestinations.length > 3 && (
                             <span className="px-2 py-1 bg-white/10 text-white/60 rounded text-xs">
-                              +{plan.eligibleDestinations.length - 3} more
+                              +{plan.eligibleDestinations.length - 3} {t("plan.more")}
                             </span>
                           )}
                         </div>
@@ -598,7 +597,7 @@ const CreatePlan: React.FC = () => {
 
                     {plan.durations.length > 0 && (
                       <div>
-                        <span className="text-white/60 text-xs uppercase tracking-wide">Durations</span>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">{t("plan.durations")}</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {plan.durations.slice(0, 3).map((duration, i) => (
                             <span
@@ -610,7 +609,7 @@ const CreatePlan: React.FC = () => {
                           ))}
                           {plan.durations.length > 3 && (
                             <span className="px-2 py-1 bg-white/10 text-white/60 rounded text-xs">
-                              +{plan.durations.length - 3} more
+                              +{plan.durations.length - 3} {t("plan.more")}
                             </span>
                           )}
                         </div>
@@ -619,7 +618,7 @@ const CreatePlan: React.FC = () => {
 
                     {plan.terms && (
                       <div>
-                        <span className="text-white/60 text-xs uppercase tracking-wide">Terms</span>
+                        <span className="text-white/60 text-xs uppercase tracking-wide">{t("plan.terms")}</span>
                         <p className="text-white/80 text-xs mt-1 leading-relaxed line-clamp-3">
                           {plan.terms}
                         </p>
@@ -635,14 +634,14 @@ const CreatePlan: React.FC = () => {
                     className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 cursor-pointer rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-blue-400/20"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    Edit
+                    {t("plan.editButton")}
                   </button>
                   <button
                     onClick={() => handleDeletePlan(plan.id)}
                     className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 cursor-pointer text-red-300 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm border border-red-400/20"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Delete
+                    {t("plan.deleteButton")}
                   </button>
                 </div>
               </div>

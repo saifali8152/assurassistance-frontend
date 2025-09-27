@@ -18,12 +18,15 @@ import {
   Layers,
   Activity,
 } from "lucide-react";
+import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from "react-i18next"; // <-- Add this
 
 const UserLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { t } = useTranslation(); // <-- Add this
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -104,7 +107,7 @@ const UserLayout: React.FC = () => {
                 <Grid3X3 className="w-5 h-5 text-white" />
               </div>
               <span className="text-white font-semibold text-lg hidden sm:block">
-                AssurAssistance
+                {t("app.title")}
               </span>
             </div>
           </div>
@@ -115,7 +118,7 @@ const UserLayout: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t("userLayout.search", "Search...")}
                 className="w-full pl-10 pr-4 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
               />
             </div>
@@ -123,11 +126,11 @@ const UserLayout: React.FC = () => {
 
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-3">
+            <LanguageSelector />
             <button className="p-2 rounded-lg backdrop-blur-xl bg-white/10 cursor-pointer border border-white/20 hover:bg-white/20 transition-colors relative">
               <Bell className="w-5 h-5 text-white " />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </button>
-
             <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
@@ -139,23 +142,21 @@ const UserLayout: React.FC = () => {
                   className="w-8 h-8 rounded-full"
                 />
                 <div className="hidden sm:block">
-                  <p className="text-white text-sm font-medium">Emma Johnson</p>
-                  <p className="text-white/60 text-xs">emma@travelagency.com</p>
+                  <p className="text-white text-sm font-medium">{t("userLayout.name", "Emma Johnson")}</p>
+                  <p className="text-white/60 text-xs">{t("userLayout.email", "emma@travelagency.com")}</p>
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-white/60 transition-transform duration-200 ${profileDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
-
-
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-[#1E2A3A]/90 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
                   <div className="py-2">
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><User className="w-4 h-4" /> <span className="text-sm font-medium">Profile</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Settings className="w-4 h-4" /> <span className="text-sm font-medium">Settings</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Lock className="w-4 h-4" /> <span className="text-sm font-medium">Change Password</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Bell className="w-4 h-4" /> <span className="text-sm font-medium">Notifications</span></button>
-                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-red-400 hover:text-red-300"><LogOut className="w-4 h-4" /> <span className="text-sm font-medium">Logout</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><User className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.profile", "Profile")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Settings className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.settings", "Settings")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Lock className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.changePassword", "Change Password")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-white"><Bell className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.notifications", "Notifications")}</span></button>
+                    <button onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-150 text-red-400 hover:text-red-300"><LogOut className="w-4 h-4" /> <span className="text-sm font-medium">{t("profile.logout", "Logout")}</span></button>
                   </div>
                 </div>
               )}
@@ -172,16 +173,13 @@ const UserLayout: React.FC = () => {
               <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-white/20 transition-colors"><X className="w-5 h-5 text-white" /></button>
             </div>
             <nav className="space-y-2">
-              <NavLink to="/" icon={BarChart3}>Dashboard</NavLink>
-              <NavLink to="/user/bookings" icon={Calendar}>My Bookings</NavLink>
-              <NavLink to="/user/createCase" icon={Layers}>Create Case</NavLink>
-              <NavLink to="/user/ledger" icon={Activity}>Sales Ledger</NavLink>
-
-
-
-              <NavLink to="/user/clients" icon={Users}>My Clients</NavLink>
-              <NavLink to="/payments" icon={CreditCard}>Payments</NavLink>
-              <NavLink to="/settings" icon={Settings}>Settings</NavLink>
+              <NavLink to="/" icon={BarChart3}>{t("userLayout.dashboard", "Dashboard")}</NavLink>
+              <NavLink to="/user/bookings" icon={Calendar}>{t("userLayout.myBookings", "My Bookings")}</NavLink>
+              <NavLink to="/user/createCase" icon={Layers}>{t("userLayout.createCase", "Create Case")}</NavLink>
+              <NavLink to="/user/ledger" icon={Activity}>{t("userLayout.salesLedger", "Sales Ledger")}</NavLink>
+              <NavLink to="/user/clients" icon={Users}>{t("userLayout.myClients", "My Clients")}</NavLink>
+              <NavLink to="/payments" icon={CreditCard}>{t("userLayout.payments", "Payments")}</NavLink>
+              <NavLink to="/settings" icon={Settings}>{t("userLayout.settings", "Settings")}</NavLink>
             </nav>
           </div>
         </aside>
