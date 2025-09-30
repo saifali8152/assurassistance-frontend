@@ -4,6 +4,12 @@ import { Users, TrendingDown, DollarSign, Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const AdminDashboard = () => {
+import { Users, TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
+import { useTranslation } from "react-i18next"; // <-- Add this
+
+const AdminDashboard = () => {
+  const { t } = useTranslation(); // <-- Add this
+
   const defaultStats = {
     totalSales: 0,
     grossCollected: 0,
@@ -11,6 +17,7 @@ const AdminDashboard = () => {
     activeUsers: 0,
     recentUsers: []
   };
+
   const [stats, setStats] = useState<any>(defaultStats);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation(undefined, { keyPrefix: "dashboard" });
@@ -27,7 +34,7 @@ const AdminDashboard = () => {
       });
   }, []);
 
-  if (loading) return <p className="text-white">Loading...</p>;
+  if (loading) return <p className="text-white">{t("adminDashboard.loading", "Loading...")}</p>;
 
   return (
     <>
@@ -41,6 +48,7 @@ const AdminDashboard = () => {
             </div>
           </div>
           <h3 className="text-white/60 text-sm font-medium mb-1"> {t("totalSales")}</h3>
+          <h3 className="text-white/60 text-sm font-medium mb-1">{t("adminDashboard.totalSales", "Total Sales")}</h3>
           <p className="text-white text-2xl font-bold">${stats.totalSales}</p>
         </div>
         {/* Gross Collected */}
@@ -49,6 +57,7 @@ const AdminDashboard = () => {
             <div className="p-2 rounded-lg bg-blue-500/20"><Activity className="w-6 h-6 text-blue-400" /></div>
           </div>
           <h3 className="text-white/60 text-sm font-medium mb-1">{t("grossCollected")}</h3>
+          <h3 className="text-white/60 text-sm font-medium mb-1">{t("adminDashboard.grossCollected", "Gross Collected")}</h3>
           <p className="text-white text-2xl font-bold">${stats.grossCollected}</p>
         </div>
 
@@ -58,6 +67,7 @@ const AdminDashboard = () => {
             <div className="p-2 rounded-lg bg-red-500/20"><TrendingDown className="w-6 h-6 text-red-400" /></div>
           </div>
           <h3 className="text-white/60 text-sm font-medium mb-1">{t("unpaidBalance")}</h3>
+          <h3 className="text-white/60 text-sm font-medium mb-1">{t("adminDashboard.unpaidBalance", "Unpaid Balance")}</h3>
           <p className="text-white text-2xl font-bold">${stats.unpaidBalance}</p>
         </div>
 
@@ -67,6 +77,7 @@ const AdminDashboard = () => {
             <div className="p-2 rounded-lg bg-green-500/20"><Users className="w-6 h-6 text-green-400" /></div>
           </div>
           <h3 className="text-white/60 text-sm font-medium mb-1">{t("activeUsers")}</h3>
+          <h3 className="text-white/60 text-sm font-medium mb-1">{t("adminDashboard.activeUsers", "Active Users")}</h3>
           <p className="text-white text-2xl font-bold">{stats.activeUsers}</p>
         </div>
       </div>
@@ -113,6 +124,11 @@ const AdminDashboard = () => {
       {/* Recent Users Table */}
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl">
         <h3 className="text-white text-lg font-semibold mb-6">{t("recentUsers")}</h3>
+  
+
+      {/* Recent Users Table */}
+      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl">
+        <h3 className="text-white text-lg font-semibold mb-6">{t("adminDashboard.recentUsers", "Recent Users")}</h3>
         <div className="overflow-x-auto">
           <table className="w-full table-fixed">
             <thead>
@@ -122,6 +138,11 @@ const AdminDashboard = () => {
                 <th className="text-left pb-4">{t("grossCollected")}</th>
                 <th className="text-left pb-4">{t("unpaidBalance")}</th>
                 <th className="text-left pb-4">{t("lastActivity")}</th>
+                <th className="text-left pb-4">{t("adminDashboard.user", "User")}</th>
+                <th className="text-left pb-4">{t("adminDashboard.sales", "Sales")}</th>
+                <th className="text-left pb-4">{t("adminDashboard.grossCollected", "Gross Collected")}</th>
+                <th className="text-left pb-4">{t("adminDashboard.unpaidBalance", "Unpaid Balance")}</th>
+                <th className="text-left pb-4">{t("adminDashboard.lastActivity", "Last Activity")}</th>
               </tr>
             </thead>
             <tbody className="text-white text-left">
