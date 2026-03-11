@@ -171,7 +171,9 @@ const Layout: React.FC = () => {
             <nav className="space-y-2">
               <NavLink to="/admin" icon={BarChart3}>{t("sidebar.dashboard", "Dashboard")}</NavLink>
               <NavLink to="/admin/users" icon={Users}>{t("sidebar.agents", "Agents")}</NavLink>
-              <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
+              {user?.role === "admin" && (
+                <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
+              )}
               <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
               <NavLink to="/admin/cases" icon={FilePlus}>{t("sidebar.allCases", "All Cases")}</NavLink>
               <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>

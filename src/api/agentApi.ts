@@ -1,11 +1,81 @@
 //src/agentApi.ts
 import { apiPost, apiGet, apiPatch } from "../lib/api";
 
-export const createAgentApi = async (data: { name: string; email: string }) => {
+export type CreateAgentPayload = {
+  name: string;
+  email: string;
+  company_name: string;
+  partnership_type: string;
+  country_of_residence: string;
+  whatsapp_phone: string;
+  iata_number?: string;
+  geographical_location?: string;
+  work_phone?: string;
+  assigned_plan_ids?: number[];
+};
+
+export const createAgentApi = async (data: CreateAgentPayload & { tempPassword?: string }) => {
   return apiPost<{ id: number; email: string; tempPassword: string; message: string }>(
     "/admin/create-agent",
     data
   );
+};
+
+export type SubAgentItem = {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  work_phone?: string | null;
+  whatsapp_phone?: string | null;
+  created_at?: string;
+  assigned_plan_ids?: number[];
+};
+
+export type AgentProfile = {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  force_password_change?: number;
+  last_login?: string | null;
+  created_at?: string;
+  company_name?: string | null;
+  partnership_type?: string | null;
+  country_of_residence?: string | null;
+  iata_number?: string | null;
+  geographical_location?: string | null;
+  work_phone?: string | null;
+  whatsapp_phone?: string | null;
+  assigned_plan_ids?: number[];
+  parent_agent_id?: number | null;
+  sub_agents?: SubAgentItem[];
+};
+
+export type CreateSubAgentPayload = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  work_phone?: string;
+  whatsapp_phone: string;
+  assigned_plan_ids: number[];
+};
+
+export const createSubAgentApi = async (agentId: string, data: CreateSubAgentPayload) => {
+  const res = await apiPost<{ success: boolean; data: { id: number; email: string; tempPassword: string }; message: string }>(
+    `/admin/agents/${agentId}/sub-agents`,
+    data
+  );
+  return res as any;
+};
+
+export const getAgentApi = async (id: string) => {
+  const res = await apiGet<{ success: boolean; data: AgentProfile }>(`/admin/agents/${id}`);
+  return (res as any).data;
+};
+
+export const updateAgentApi = async (id: string, data: Partial<CreateAgentPayload>) => {
+  return apiPatch<{ success: boolean; message: string }>(`/admin/agents/${id}`, data);
 };
 
 export const listAgentsApi = async (params?: {

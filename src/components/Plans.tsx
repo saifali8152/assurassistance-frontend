@@ -29,7 +29,7 @@ const PlanCard = ({ plan }: PlanCardProps) => {
     const { t } = useTranslation();
 
     return (
-        <div className="bg-white border border-[#D9D9D9] rounded-xl p-6 hover:border-[#E4590F] transition-all duration-300 relative">
+        <div className="h-full flex flex-col bg-white border border-[#D9D9D9] rounded-xl p-6 hover:border-[#E4590F] transition-all duration-300 relative min-h-[260px]">
             {/* Header */}
             <div className="mb-4">
                 <div className="flex justify-between items-start">
@@ -84,6 +84,8 @@ const PlanCard = ({ plan }: PlanCardProps) => {
                 </div>
             </div>
 
+            {/* Content area - grows to fill card for equal height */}
+            <div className="flex-1 flex flex-col min-h-0">
             {/* Coverage Description */}
             {plan.coverage && (
                 <p className="text-[#2B2B2B]/80 mb-4 text-sm">{plan.coverage}</p>
@@ -233,6 +235,7 @@ const PlanCard = ({ plan }: PlanCardProps) => {
                     )}
                 </div>
             )}
+            </div>
 
             {/* Info Icon - Bottom Right */}
             <button

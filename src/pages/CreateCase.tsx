@@ -616,11 +616,11 @@ const CreateCase: React.FC = () => {
               <p className="text-[#2B2B2B]/60 font-normal">{t('createCase.noPlansAvailable') || 'No plans available'}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
               {plans.map((plan) => (
-                <div key={plan.id} className="relative">
+                <div key={plan.id} className="relative h-full flex flex-col min-h-[280px]">
                   <div
-                    className={`cursor-pointer transition-all duration-200 rounded-xl ${selectedPlan === plan.id ? 'ring-2 ring-[#E4590F] ring-offset-2' : ''}`}
+                    className={`cursor-pointer transition-all duration-200 rounded-xl flex-1 flex flex-col min-h-0 ${selectedPlan === plan.id ? 'ring-2 ring-[#E4590F] ring-offset-2' : ''}`}
                     onClick={() => setSelectedPlan(plan.id)}
                   >
                     <PlanCard plan={plan} />

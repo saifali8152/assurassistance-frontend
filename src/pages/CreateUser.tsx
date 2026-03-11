@@ -1,10 +1,42 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Check, Clock, User as UserIcon, Mail, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X } from "lucide-react";
 import InputField from "../components/InputFields";
-import { createAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi } from "../api/agentApi";
+import { createAgentApi, getAgentApi, updateAgentApi, createSubAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, type AgentProfile } from "../api/agentApi";
+import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { formatDateTime, formatFullDateTime, getPasswordChangeStatus } from "../utils/dateUtils";
+
+const PARTNERSHIP_TYPES = [
+  "Insurance company",
+  "Broker",
+  "Travel agency",
+  "Corporate desk",
+  "Independent Agent",
+];
+
+const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada",
+  "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Côte-d'Ivoire", "Croatia",
+  "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
+  "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
+  "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+  "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
+  "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
+  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
+  "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
+  "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
+  "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
+  "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
+  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
+  "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela",
+  "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+];
 
 type User = {
   id: string;
@@ -47,9 +79,23 @@ const PasswordChangeBadge = ({ forcePasswordChange }: { forcePasswordChange?: bo
 const CreateUser: React.FC = () => {
   const { t } = useTranslation(); // <-- Add this
   const [users, setUsers] = useState<User[]>([]);
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
+  const [formData, setFormData] = useState({
+    firstName: "", lastName: "", email: "", temporaryPassword: "",
+    companyName: "", partnershipType: "", countryOfResidence: "", whatsappPhone: "",
+    iataNumber: "", geographicalLocation: "", workPhone: "", assignedPlanIds: [] as number[],
+  });
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [viewAgentData, setViewAgentData] = useState<AgentProfile | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [loadingViewAgent, setLoadingViewAgent] = useState(false);
+  const [plans, setPlans] = useState<{ id: number; name: string }[]>([]);
+  const [partnershipDropdownOpen, setPartnershipDropdownOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [plansDropdownOpen, setPlansDropdownOpen] = useState(false);
+  const partnershipDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const plansDropdownRef = useRef<HTMLDivElement>(null);
   
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -77,9 +123,39 @@ const CreateUser: React.FC = () => {
     newStatus: "active" | "inactive" | null;
   }>({ open: false, userId: null, newStatus: null });
 
-  // ✅ Load real users from backend
+  const [isSubAgentDialogOpen, setIsSubAgentDialogOpen] = useState(false);
+  const [subAgentFormData, setSubAgentFormData] = useState({
+    firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [] as number[],
+  });
+  const [subAgentPlansDropdownOpen, setSubAgentPlansDropdownOpen] = useState(false);
+  const [creatingSubAgent, setCreatingSubAgent] = useState(false);
+  const subAgentPlansRef = useRef<HTMLDivElement>(null);
+  const [subAgentPasswordModal, setSubAgentPasswordModal] = useState<{ open: boolean; password: string; userEmail: string }>({ open: false, password: "", userEmail: "" });
+
+  // Load users and plans
   useEffect(() => {
     fetchUsers();
+  }, []);
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const res = await getAllCataloguesApi();
+        const data = (res as any)?.data ?? res;
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
+        setPlans(list.map((p: any) => ({ id: p.id, name: p.name || `Plan ${p.id}` })));
+      } catch (_) {}
+    };
+    loadPlans();
+  }, []);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (partnershipDropdownRef.current && !partnershipDropdownRef.current.contains(e.target as Node)) setPartnershipDropdownOpen(false);
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) setCountryDropdownOpen(false);
+      if (plansDropdownRef.current && !plansDropdownRef.current.contains(e.target as Node)) setPlansDropdownOpen(false);
+      if (subAgentPlansRef.current && !subAgentPlansRef.current.contains(e.target as Node)) setSubAgentPlansDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Handle search and filter changes
@@ -151,24 +227,64 @@ const CreateUser: React.FC = () => {
   }>({ open: false, password: "", userEmail: "" });
 
   const handleFormSubmit = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      toast.error(t("agent.allFieldsRequired", "All fields are required!"));
+    const name = `${formData.firstName} ${formData.lastName}`.trim();
+    if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim()) {
+      toast.error(t("agent.allFieldsRequired", "Name and email are required!"));
+      return;
+    }
+    if (!editingUser) {
+      if (!formData.companyName?.trim() || !formData.partnershipType || !formData.countryOfResidence?.trim() || !formData.whatsappPhone?.trim()) {
+        toast.error(t("agent.requiredFields", "Company name, type of partnership, country of residence and WhatsApp phone are required."));
+        return;
+      }
+    }
+
+    if (editingUser) {
+      setIsUpdating(true);
+      try {
+        await updateAgentApi(editingUser.id, {
+          name,
+          company_name: formData.companyName.trim() || undefined,
+          partnership_type: formData.partnershipType || undefined,
+          country_of_residence: formData.countryOfResidence.trim() || undefined,
+          whatsapp_phone: formData.whatsappPhone.trim() || undefined,
+          iata_number: formData.iataNumber.trim() || undefined,
+          geographical_location: formData.geographicalLocation.trim() || undefined,
+          work_phone: formData.workPhone.trim() || undefined,
+          assigned_plan_ids: formData.assignedPlanIds,
+        });
+        toast.success(t("agent.updated", "Agent updated successfully"));
+        await fetchUsers();
+        resetForm();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || t("agent.failedUpdate", "Failed to update agent"));
+      } finally {
+        setIsUpdating(false);
+      }
       return;
     }
 
     setIsCreating(true);
     try {
-      const name = `${formData.firstName} ${formData.lastName}`;
-      const res = await createAgentApi({ name, email: formData.email });
+      const res = await createAgentApi({
+        name,
+        email: formData.email.trim(),
+        company_name: formData.companyName.trim(),
+        partnership_type: formData.partnershipType,
+        country_of_residence: formData.countryOfResidence.trim(),
+        whatsapp_phone: formData.whatsappPhone.trim(),
+        iata_number: formData.iataNumber.trim() || undefined,
+        geographical_location: formData.geographicalLocation.trim() || undefined,
+        work_phone: formData.workPhone.trim() || undefined,
+        assigned_plan_ids: formData.assignedPlanIds.length ? formData.assignedPlanIds : undefined,
+      });
 
-      // Instead of toast, show modal with password
       setPasswordModal({
         open: true,
         password: res.tempPassword,
         userEmail: formData.email
       });
-
-      await fetchUsers(); // reload users after creation
+      await fetchUsers();
       resetForm();
     } catch (err: any) {
       toast.error(err.response?.data?.message || t("agent.failedCreate", "Failed to create agent"));
@@ -207,9 +323,113 @@ const CreateUser: React.FC = () => {
   };
 
   const resetForm = () => {
-    setFormData({ firstName: "", lastName: "", email: "", temporaryPassword: "" });
+    setFormData({
+      firstName: "", lastName: "", email: "", temporaryPassword: "",
+      companyName: "", partnershipType: "", countryOfResidence: "", whatsappPhone: "",
+      iataNumber: "", geographicalLocation: "", workPhone: "", assignedPlanIds: [],
+    });
     setEditingUser(null);
-    setIsFormVisible(false);
+    setIsFormDialogOpen(false);
+  };
+
+  const handleEditAgent = async (user: User) => {
+    try {
+      const data = await getAgentApi(user.id);
+      const [first = "", ...rest] = (data.name || "").split(" ");
+      setFormData({
+        firstName: first,
+        lastName: rest.join(" ") || "",
+        email: data.email || "",
+        temporaryPassword: "",
+        companyName: data.company_name || "",
+        partnershipType: data.partnership_type || "",
+        countryOfResidence: data.country_of_residence || "",
+        whatsappPhone: data.whatsapp_phone || "",
+        iataNumber: data.iata_number || "",
+        geographicalLocation: data.geographical_location || "",
+        workPhone: data.work_phone || "",
+        assignedPlanIds: data.assigned_plan_ids || [],
+      });
+      setEditingUser(user);
+      setIsFormDialogOpen(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t("agent.failedFetch", "Failed to load agent"));
+    }
+  };
+
+  const handleViewAgent = async (userId: string) => {
+    setLoadingViewAgent(true);
+    setIsViewDialogOpen(true);
+    setViewAgentData(null);
+    try {
+      const data = await getAgentApi(userId);
+      setViewAgentData(data);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t("agent.failedFetch", "Failed to load agent"));
+      setIsViewDialogOpen(false);
+    } finally {
+      setLoadingViewAgent(false);
+    }
+  };
+
+  const closeViewDialog = () => {
+    setIsViewDialogOpen(false);
+    setViewAgentData(null);
+    setIsSubAgentDialogOpen(false);
+  };
+
+  const openAddSubAgentDialog = () => {
+    setSubAgentFormData({
+      firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [],
+    });
+    setIsSubAgentDialogOpen(true);
+  };
+
+  const handleSubAgentFormSubmit = async () => {
+    if (!viewAgentData) return;
+    const { firstName, lastName, email, workPhone, whatsappPhone, assignedPlanIds } = subAgentFormData;
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !whatsappPhone?.trim()) {
+      toast.error(t("agent.subAgentRequired", "First name, last name, email and WhatsApp phone are required."));
+      return;
+    }
+    if (!assignedPlanIds.length) {
+      toast.error(t("agent.subAgentPlansRequired", "At least one assigned plan is required."));
+      return;
+    }
+    setCreatingSubAgent(true);
+    try {
+      const res = await createSubAgentApi(String(viewAgentData.id), {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim(),
+        work_phone: workPhone?.trim() || undefined,
+        whatsapp_phone: whatsappPhone.trim(),
+        assigned_plan_ids: assignedPlanIds,
+      });
+      setSubAgentPasswordModal({
+        open: true,
+        password: res.data?.tempPassword || "",
+        userEmail: email.trim(),
+      });
+      const updated = await getAgentApi(String(viewAgentData.id));
+      setViewAgentData(updated);
+      setSubAgentFormData({ firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [] });
+      setIsSubAgentDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t("agent.failedCreateSubAgent", "Failed to create sub-agent"));
+    } finally {
+      setCreatingSubAgent(false);
+    }
+  };
+
+  const openAddAgentDialog = () => {
+    setEditingUser(null);
+    setFormData({
+      firstName: "", lastName: "", email: "", temporaryPassword: "",
+      companyName: "", partnershipType: "", countryOfResidence: "", whatsappPhone: "",
+      iataNumber: "", geographicalLocation: "", workPhone: "", assignedPlanIds: [],
+    });
+    setIsFormDialogOpen(true);
   };
 
   const toggleUserStatus = (userId: string) => {
@@ -243,72 +463,22 @@ const CreateUser: React.FC = () => {
   };
 
 
+  const formDialogTitle = editingUser ? t("agent.editAgent", "Edit Agent") : t("agent.createNew", "Create a New Agent");
+
   return (
     <div className="space-y-8">
-      {/* --- User Form Section --- */}
+      {/* --- Agents Table Section --- */}
       <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <h1 className="text-[#E4590F] text-xl sm:text-2xl font-semibold">
-            {editingUser ? `Editing ${editingUser.firstName}` : t("agent.createNew", "Create a New Agent")}
-          </h1>
-          {!isFormVisible && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 w-full sm:w-auto">
+            <h2 className="text-[#E4590F] text-xl sm:text-2xl font-semibold">{t("agent.currentAgents", "Current Agents")}</h2>
             <button
-              onClick={() => { setEditingUser(null); setFormData({ firstName: '', lastName: '', email: '', temporaryPassword: '' }); setIsFormVisible(true); }}
+              onClick={openAddAgentDialog}
               className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors"
             >
               {t("agent.addNew", "Add New Agent")}
             </button>
-          )}
-        </div>
-        {isFormVisible && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                type="text"
-                placeholder={t("agent.firstName", "First Name") + " *"}
-                value={formData.firstName}
-                onChange={(value) => handleInputChange('firstName', value)}
-                icon={<UserIcon />}
-              />
-              <InputField
-                type="text"
-                placeholder={t("agent.lastName", "Last Name") + " *"}
-                value={formData.lastName}
-                onChange={(value) => handleInputChange('lastName', value)}
-                icon={<UserIcon />}
-              />
-              <InputField
-                type="email"
-                placeholder={t("agent.email", "Email") + " *"}
-                value={formData.email}
-                onChange={(value) => handleInputChange('email', value)}
-                icon={<Mail />}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <button onClick={resetForm} className="cursor-pointer px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors">
-                {t("user.discard", "Discard")}
-              </button>
-              <button 
-                onClick={handleFormSubmit} 
-                disabled={isCreating}
-                className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] disabled:bg-[#E4590F]/50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
-              >
-                {isCreating && (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                )}
-                {editingUser ? t("agent.update", "Update Agent") : t("agent.create", "Create Agent")}
-              </button>
-            </div>
           </div>
-        )}
-      </div>
-
-      {/* --- Users Table Section --- */}
-      <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-[#E4590F] text-xl sm:text-2xl font-semibold">{t("agent.currentAgents", "Current Agents")}</h2>
           
           {/* Search and Filter Controls */}
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -459,6 +629,21 @@ const CreateUser: React.FC = () => {
                   
                   <td className="py-4 px-2">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleViewAgent(user.id)}
+                        disabled={loadingViewAgent}
+                        className="p-2 rounded-lg bg-[#D9D9D9]/50 hover:bg-[#E4590F]/20 text-[#2B2B2B] hover:text-[#E4590F] transition-colors cursor-pointer disabled:opacity-50"
+                        title={t("agent.viewDetails", "View agent details")}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditAgent(user)}
+                        className="p-2 rounded-lg bg-[#E4590F]/10 hover:bg-[#E4590F]/20 text-[#E4590F] transition-colors cursor-pointer"
+                        title={t("agent.edit", "Edit Agent")}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={() => handleSendPasswordReset(user.id)} 
                         disabled={isResettingPassword}
@@ -536,6 +721,403 @@ const CreateUser: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Agent Dialog */}
+      {isFormDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center items-start p-4">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 shadow-2xl max-w-2xl w-full my-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[#E4590F] text-xl font-semibold">{formDialogTitle}</h3>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
+                aria-label={t("common.close", "Close")}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField
+                  type="text"
+                  placeholder={t("agent.firstName", "First Name") + " *"}
+                  value={formData.firstName}
+                  onChange={(value) => handleInputChange('firstName', value)}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.lastName", "Last Name") + " *"}
+                  value={formData.lastName}
+                  onChange={(value) => handleInputChange('lastName', value)}
+                />
+                <InputField
+                  type="email"
+                  placeholder={t("agent.email", "Email") + " *"}
+                  value={formData.email}
+                  onChange={(value) => handleInputChange('email', value)}
+                  readOnly={!!editingUser}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.companyName", "Partner's company name") + " *"}
+                  value={formData.companyName}
+                  onChange={(value) => handleInputChange('companyName', value)}
+                />
+                <div className="relative" ref={partnershipDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setPartnershipDropdownOpen(!partnershipDropdownOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
+                  >
+                    <span className={formData.partnershipType ? "text-[#2B2B2B]" : "text-[#2B2B2B]/50"}>
+                      {formData.partnershipType || t("agent.partnershipType", "Type of partnership") + " *"}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 ${partnershipDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {partnershipDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
+                      {PARTNERSHIP_TYPES.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => { handleInputChange("partnershipType", opt); setPartnershipDropdownOpen(false); }}
+                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#E4590F]/10 ${formData.partnershipType === opt ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative" ref={countryDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
+                  >
+                    <span className={formData.countryOfResidence ? "text-[#2B2B2B]" : "text-[#2B2B2B]/50"}>
+                      {formData.countryOfResidence || t("agent.countryOfResidence", "Country of residence") + " *"}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 ${countryDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {countryDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
+                      {COUNTRIES.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => { handleInputChange("countryOfResidence", c); setCountryDropdownOpen(false); }}
+                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#E4590F]/10 ${formData.countryOfResidence === c ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <InputField
+                  type="text"
+                  placeholder={t("agent.iataNumber", "N° IATA")}
+                  value={formData.iataNumber}
+                  onChange={(value) => handleInputChange('iataNumber', value)}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.geographicalLocation", "Geographical location")}
+                  value={formData.geographicalLocation}
+                  onChange={(value) => handleInputChange('geographicalLocation', value)}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.workPhone", "Work phone number")}
+                  value={formData.workPhone}
+                  onChange={(value) => handleInputChange('workPhone', value)}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.whatsappPhone", "WhatsApp phone number") + " *"}
+                  value={formData.whatsappPhone}
+                  onChange={(value) => handleInputChange('whatsappPhone', value)}
+                />
+                <div className="md:col-span-2 relative" ref={plansDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setPlansDropdownOpen(!plansDropdownOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
+                  >
+                    <span className="text-[#2B2B2B]">
+                      {formData.assignedPlanIds.length
+                        ? t("agent.assignedPlansCount", "{{count}} plan(s) selected", { count: formData.assignedPlanIds.length })
+                        : t("agent.assignedPlans", "Assigned plans (multi-select)")}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 ${plansDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {plansDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
+                      {plans.map((p) => {
+                        const selected = formData.assignedPlanIds.includes(p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              const next = selected
+                                ? formData.assignedPlanIds.filter((id) => id !== p.id)
+                                : [...formData.assignedPlanIds, p.id];
+                              setFormData((prev) => ({ ...prev, assignedPlanIds: next }));
+                            }}
+                            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-[#E4590F]/10 ${selected ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
+                          >
+                            {selected && <Check className="w-4 h-4" />}
+                            {p.name}
+                          </button>
+                        );
+                      })}
+                      {plans.length === 0 && (
+                        <div className="px-4 py-3 text-[#2B2B2B]/60 text-sm">{t("agent.noPlans", "No plans available")}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={resetForm} className="cursor-pointer px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors">
+                  {t("agent.discard", "Discard")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFormSubmit}
+                  disabled={isCreating || isUpdating}
+                  className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] disabled:bg-[#E4590F]/50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
+                >
+                  {(isCreating || isUpdating) && (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  )}
+                  {editingUser ? t("agent.update", "Update Agent") : t("agent.create", "Create Agent")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Agent Details Dialog */}
+      {isViewDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeViewDialog()}>
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 shadow-2xl max-w-2xl w-full my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[#E4590F] text-xl font-semibold">{t("agent.agentDetails", "Agent details")}</h3>
+              <button
+                type="button"
+                onClick={closeViewDialog}
+                className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
+                aria-label={t("common.close", "Close")}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {loadingViewAgent && (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-2 border-[#E4590F]/30 border-t-[#E4590F] rounded-full animate-spin" />
+              </div>
+            )}
+            {!loadingViewAgent && viewAgentData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-[#2B2B2B]">
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.name", "Name")}</div>
+                  <div>{viewAgentData.name || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.email", "Email")}</div>
+                  <div>{viewAgentData.email || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.companyName", "Partner's company name")}</div>
+                  <div>{viewAgentData.company_name || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.partnershipType", "Type of partnership")}</div>
+                  <div>{viewAgentData.partnership_type || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.countryOfResidence", "Country of residence")}</div>
+                  <div>{viewAgentData.country_of_residence || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.iataNumber", "N° IATA")}</div>
+                  <div>{viewAgentData.iata_number || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.geographicalLocation", "Geographical location")}</div>
+                  <div>{viewAgentData.geographical_location || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.workPhone", "Work phone number")}</div>
+                  <div>{viewAgentData.work_phone || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.whatsappPhone", "WhatsApp phone number")}</div>
+                  <div>{viewAgentData.whatsapp_phone || "—"}</div>
+                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.status", "Status")}</div>
+                  <div><StatusBadge status={(viewAgentData.status as "active" | "inactive") || "active"} /></div>
+                  <div className="font-medium text-[#2B2B2B]/80 sm:col-span-2">{t("agent.assignedPlans", "Assigned plans")}</div>
+                  <div className="sm:col-span-2">
+                    {viewAgentData.assigned_plan_ids && viewAgentData.assigned_plan_ids.length > 0
+                      ? plans.filter((p) => viewAgentData.assigned_plan_ids!.includes(p.id)).map((p) => p.name).join(", ") || viewAgentData.assigned_plan_ids.join(", ")
+                      : "—"}
+                  </div>
+                </div>
+
+                {viewAgentData.parent_agent_id == null && (
+                  <div className="mt-6 pt-6 border-t border-[#D9D9D9]">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-[#E4590F] font-semibold">{t("agent.subAgents", "Sub-agents")}</h4>
+                      <button
+                        type="button"
+                        onClick={openAddSubAgentDialog}
+                        className="px-4 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white text-sm font-medium transition-colors"
+                      >
+                        {t("agent.addSubAgent", "Add sub-agent")}
+                      </button>
+                    </div>
+                    {viewAgentData.sub_agents && viewAgentData.sub_agents.length > 0 ? (
+                      <ul className="space-y-2">
+                        {viewAgentData.sub_agents.map((s) => (
+                          <li key={s.id} className="flex justify-between items-center py-2 px-3 bg-[#D9D9D9]/20 rounded-xl text-[#2B2B2B]">
+                            <span className="font-medium">{s.name}</span>
+                            <span className="text-sm text-[#2B2B2B]/80">{s.email}</span>
+                            <StatusBadge status={(s.status as "active" | "inactive") || "active"} />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-[#2B2B2B]/60 text-sm">{t("agent.noSubAgents", "No sub-agents yet.")}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Sub-agent Dialog */}
+      {isSubAgentDialogOpen && viewAgentData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[60] flex justify-center items-start p-4">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 shadow-2xl max-w-lg w-full my-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[#E4590F] text-xl font-semibold">{t("agent.addSubAgent", "Add sub-agent")}</h3>
+              <button
+                type="button"
+                onClick={() => setIsSubAgentDialogOpen(false)}
+                className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
+                aria-label={t("common.close", "Close")}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField
+                  type="text"
+                  placeholder={t("agent.firstName", "First Name") + " *"}
+                  value={subAgentFormData.firstName}
+                  onChange={(v) => setSubAgentFormData((p) => ({ ...p, firstName: v }))}
+                />
+                <InputField
+                  type="text"
+                  placeholder={t("agent.lastName", "Last Name") + " *"}
+                  value={subAgentFormData.lastName}
+                  onChange={(v) => setSubAgentFormData((p) => ({ ...p, lastName: v }))}
+                />
+              </div>
+              <InputField
+                type="email"
+                placeholder={t("agent.email", "Email") + " *"}
+                value={subAgentFormData.email}
+                onChange={(v) => setSubAgentFormData((p) => ({ ...p, email: v }))}
+              />
+              <InputField
+                type="text"
+                placeholder={t("agent.workPhone", "Work phone number")}
+                value={subAgentFormData.workPhone}
+                onChange={(v) => setSubAgentFormData((p) => ({ ...p, workPhone: v }))}
+              />
+              <InputField
+                type="text"
+                placeholder={t("agent.whatsappPhone", "WhatsApp phone number") + " *"}
+                value={subAgentFormData.whatsappPhone}
+                onChange={(v) => setSubAgentFormData((p) => ({ ...p, whatsappPhone: v }))}
+              />
+              <div className="relative" ref={subAgentPlansRef}>
+                <button
+                  type="button"
+                  onClick={() => setSubAgentPlansDropdownOpen(!subAgentPlansDropdownOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
+                >
+                  <span className="text-[#2B2B2B]">
+                    {subAgentFormData.assignedPlanIds.length
+                      ? t("agent.assignedPlansCount", "{{count}} plan(s) selected", { count: subAgentFormData.assignedPlanIds.length })
+                      : t("agent.assignedPlans", "Assigned plans") + " *"}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 ${subAgentPlansDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {subAgentPlansDropdownOpen && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
+                    {plans.map((p) => {
+                      const selected = subAgentFormData.assignedPlanIds.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            const next = selected
+                              ? subAgentFormData.assignedPlanIds.filter((id) => id !== p.id)
+                              : [...subAgentFormData.assignedPlanIds, p.id];
+                            setSubAgentFormData((prev) => ({ ...prev, assignedPlanIds: next }));
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-[#E4590F]/10 ${selected ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
+                        >
+                          {selected && <Check className="w-4 h-4" />}
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                    {plans.length === 0 && (
+                      <div className="px-4 py-3 text-[#2B2B2B]/60 text-sm">{t("agent.noPlans", "No plans available")}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setIsSubAgentDialogOpen(false)} className="cursor-pointer px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors">
+                  {t("agent.discard", "Discard")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubAgentFormSubmit}
+                  disabled={creatingSubAgent}
+                  className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] disabled:bg-[#E4590F]/50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
+                >
+                  {creatingSubAgent && (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  )}
+                  {t("agent.createSubAgent", "Create sub-agent")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-agent password modal */}
+      {subAgentPasswordModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70]">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-[90%] max-w-md">
+            <h2 className="text-xl font-semibold text-[#E4590F] mb-4 text-center">
+              {t("agent.subAgentCreated", "Sub-agent created successfully!")}
+            </h2>
+            <p className="text-[#2B2B2B] font-medium text-center bg-[#E4590F]/10 rounded-xl p-2 mb-4">{subAgentPasswordModal.userEmail}</p>
+            <label className="block text-[#2B2B2B]/70 text-sm mb-2">{t("user.tempPassword", "Temporary Password:")}</label>
+            <div className="flex items-center gap-2 mb-4">
+              <input type="text" value={subAgentPasswordModal.password} readOnly className="flex-1 bg-white border border-[#D9D9D9] rounded-xl px-3 py-2 font-mono text-sm" />
+              <button onClick={() => navigator.clipboard.writeText(subAgentPasswordModal.password).then(() => toast.success(t("user.passwordCopied", "Password copied!")))} className="px-3 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white text-sm font-medium">
+                {t("user.copy", "Copy")}
+              </button>
+            </div>
+            <p className="text-[#E4590F] text-sm text-center mb-4">{t("user.savePassword", "⚠️ Please save this password securely. It won't be shown again.")}</p>
+            <button onClick={() => setSubAgentPasswordModal({ open: false, password: "", userEmail: "" })} className="w-full py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium">
+              {t("user.gotIt", "Got it!")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {confirmModal.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-[90%] max-w-md text-center">
