@@ -18,6 +18,7 @@ import AdminChangePassword from './pages/AdminChangePassword'
 import Layout from './components/Layout'
 import AdminDashboard from './pages/AdminDashboard'
 import CreateUser from './pages/CreateUser'
+import SupervisorView from './pages/SupervisorView'
 import CreateCase from './pages/CreateCase'
 import CreatePlan from './pages/CreatePlan'
 import CasesManagement from './pages/CasesManagement'
@@ -126,6 +127,7 @@ function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<CreateUser />} />
+            <Route path="supervisors/:id" element={<SupervisorView />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="createCase" element={<CreateCase />} />
             <Route path="CreatePlan" element={<CreatePlan />} />

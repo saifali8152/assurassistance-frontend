@@ -511,7 +511,22 @@
     "subAgentCreated": "Sous-agent créé avec succès !",
     "subAgentRequired": "Le prénom, le nom, l'email et le numéro WhatsApp sont obligatoires.",
     "subAgentPlansRequired": "Au moins un forfait assigné est requis.",
-    "failedCreateSubAgent": "Échec de la création du sous-agent"
+    "failedCreateSubAgent": "Échec de la création du sous-agent",
+    "currentSupervisors": "Superviseurs actuels",
+    "addNewSupervisor": "Ajouter un superviseur",
+    "createNewSupervisor": "Créer un nouveau superviseur",
+    "editSupervisor": "Modifier le superviseur",
+    "supervisorDetails": "Détails du superviseur",
+    "agentDetailsTitle": "Détails de l'agent",
+    "subAgentDetails": "Détails du sous-agent",
+    "details": "Détails",
+    "agentsUnder": "Agents",
+    "addAgent": "Ajouter un agent",
+    "noAgentsYet": "Aucun agent pour le moment.",
+    "createAgent": "Créer l'agent",
+    "updateSupervisor": "Mettre à jour le superviseur",
+    "createSupervisor": "Créer le superviseur",
+    "supervisors": "superviseurs"
   },
   "common": {
     "cancel": "Annuler",

@@ -511,7 +511,22 @@
     "subAgentCreated": "Sub-agent created successfully!",
     "subAgentRequired": "First name, last name, email and WhatsApp phone are required.",
     "subAgentPlansRequired": "At least one assigned plan is required.",
-    "failedCreateSubAgent": "Failed to create sub-agent"
+    "failedCreateSubAgent": "Failed to create sub-agent",
+    "currentSupervisors": "Current Supervisors",
+    "addNewSupervisor": "Add New Supervisor",
+    "createNewSupervisor": "Create a New Supervisor",
+    "editSupervisor": "Edit Supervisor",
+    "supervisorDetails": "Supervisor details",
+    "agentDetailsTitle": "Agent details",
+    "subAgentDetails": "Sub-agent details",
+    "details": "Details",
+    "agentsUnder": "Agents",
+    "addAgent": "Add Agent",
+    "noAgentsYet": "No agents yet.",
+    "createAgent": "Create Agent",
+    "updateSupervisor": "Update Supervisor",
+    "createSupervisor": "Create Supervisor",
+    "supervisors": "supervisors"
   },
   "common": {
     "cancel": "Cancel",

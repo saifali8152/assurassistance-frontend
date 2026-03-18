@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X } from "lucide-react";
 import InputField from "../components/InputFields";
-import { createAgentApi, getAgentApi, updateAgentApi, createSubAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, type AgentProfile } from "../api/agentApi";
+import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -77,7 +78,8 @@ const PasswordChangeBadge = ({ forcePasswordChange }: { forcePasswordChange?: bo
 };
 
 const CreateUser: React.FC = () => {
-  const { t } = useTranslation(); // <-- Add this
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", temporaryPassword: "",
@@ -86,9 +88,6 @@ const CreateUser: React.FC = () => {
   });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [viewAgentData, setViewAgentData] = useState<AgentProfile | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [loadingViewAgent, setLoadingViewAgent] = useState(false);
   const [plans, setPlans] = useState<{ id: number; name: string }[]>([]);
   const [partnershipDropdownOpen, setPartnershipDropdownOpen] = useState(false);
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
@@ -123,15 +122,6 @@ const CreateUser: React.FC = () => {
     newStatus: "active" | "inactive" | null;
   }>({ open: false, userId: null, newStatus: null });
 
-  const [isSubAgentDialogOpen, setIsSubAgentDialogOpen] = useState(false);
-  const [subAgentFormData, setSubAgentFormData] = useState({
-    firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [] as number[],
-  });
-  const [subAgentPlansDropdownOpen, setSubAgentPlansDropdownOpen] = useState(false);
-  const [creatingSubAgent, setCreatingSubAgent] = useState(false);
-  const subAgentPlansRef = useRef<HTMLDivElement>(null);
-  const [subAgentPasswordModal, setSubAgentPasswordModal] = useState<{ open: boolean; password: string; userEmail: string }>({ open: false, password: "", userEmail: "" });
-
   // Load users and plans
   useEffect(() => {
     fetchUsers();
@@ -152,7 +142,6 @@ const CreateUser: React.FC = () => {
       if (partnershipDropdownRef.current && !partnershipDropdownRef.current.contains(e.target as Node)) setPartnershipDropdownOpen(false);
       if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) setCountryDropdownOpen(false);
       if (plansDropdownRef.current && !plansDropdownRef.current.contains(e.target as Node)) setPlansDropdownOpen(false);
-      if (subAgentPlansRef.current && !subAgentPlansRef.current.contains(e.target as Node)) setSubAgentPlansDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -357,71 +346,6 @@ const CreateUser: React.FC = () => {
     }
   };
 
-  const handleViewAgent = async (userId: string) => {
-    setLoadingViewAgent(true);
-    setIsViewDialogOpen(true);
-    setViewAgentData(null);
-    try {
-      const data = await getAgentApi(userId);
-      setViewAgentData(data);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || t("agent.failedFetch", "Failed to load agent"));
-      setIsViewDialogOpen(false);
-    } finally {
-      setLoadingViewAgent(false);
-    }
-  };
-
-  const closeViewDialog = () => {
-    setIsViewDialogOpen(false);
-    setViewAgentData(null);
-    setIsSubAgentDialogOpen(false);
-  };
-
-  const openAddSubAgentDialog = () => {
-    setSubAgentFormData({
-      firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [],
-    });
-    setIsSubAgentDialogOpen(true);
-  };
-
-  const handleSubAgentFormSubmit = async () => {
-    if (!viewAgentData) return;
-    const { firstName, lastName, email, workPhone, whatsappPhone, assignedPlanIds } = subAgentFormData;
-    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !whatsappPhone?.trim()) {
-      toast.error(t("agent.subAgentRequired", "First name, last name, email and WhatsApp phone are required."));
-      return;
-    }
-    if (!assignedPlanIds.length) {
-      toast.error(t("agent.subAgentPlansRequired", "At least one assigned plan is required."));
-      return;
-    }
-    setCreatingSubAgent(true);
-    try {
-      const res = await createSubAgentApi(String(viewAgentData.id), {
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email: email.trim(),
-        work_phone: workPhone?.trim() || undefined,
-        whatsapp_phone: whatsappPhone.trim(),
-        assigned_plan_ids: assignedPlanIds,
-      });
-      setSubAgentPasswordModal({
-        open: true,
-        password: res.data?.tempPassword || "",
-        userEmail: email.trim(),
-      });
-      const updated = await getAgentApi(String(viewAgentData.id));
-      setViewAgentData(updated);
-      setSubAgentFormData({ firstName: "", lastName: "", email: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [] });
-      setIsSubAgentDialogOpen(false);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || t("agent.failedCreateSubAgent", "Failed to create sub-agent"));
-    } finally {
-      setCreatingSubAgent(false);
-    }
-  };
-
   const openAddAgentDialog = () => {
     setEditingUser(null);
     setFormData({
@@ -463,7 +387,7 @@ const CreateUser: React.FC = () => {
   };
 
 
-  const formDialogTitle = editingUser ? t("agent.editAgent", "Edit Agent") : t("agent.createNew", "Create a New Agent");
+  const formDialogTitle = editingUser ? t("agent.editSupervisor", "Edit Supervisor") : t("agent.createNewSupervisor", "Create a New Supervisor");
 
   return (
     <div className="space-y-8">
@@ -471,12 +395,12 @@ const CreateUser: React.FC = () => {
       <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4 w-full sm:w-auto">
-            <h2 className="text-[#E4590F] text-xl sm:text-2xl font-semibold">{t("agent.currentAgents", "Current Agents")}</h2>
+            <h2 className="text-[#E4590F] text-xl sm:text-2xl font-semibold">{t("agent.currentSupervisors", "Current Supervisors")}</h2>
             <button
               onClick={openAddAgentDialog}
               className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors"
             >
-              {t("agent.addNew", "Add New Agent")}
+              {t("agent.addNewSupervisor", "Add New Supervisor")}
             </button>
           </div>
           
@@ -630,10 +554,9 @@ const CreateUser: React.FC = () => {
                   <td className="py-4 px-2">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleViewAgent(user.id)}
-                        disabled={loadingViewAgent}
-                        className="p-2 rounded-lg bg-[#D9D9D9]/50 hover:bg-[#E4590F]/20 text-[#2B2B2B] hover:text-[#E4590F] transition-colors cursor-pointer disabled:opacity-50"
-                        title={t("agent.viewDetails", "View agent details")}
+                        onClick={() => navigate(`/admin/supervisors/${user.id}`)}
+                        className="p-2 rounded-lg bg-[#D9D9D9]/50 hover:bg-[#E4590F]/20 text-[#2B2B2B] hover:text-[#E4590F] transition-colors cursor-pointer"
+                        title={t("agent.viewDetails", "View supervisor")}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -678,7 +601,7 @@ const CreateUser: React.FC = () => {
         {/* Pagination Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-[#D9D9D9]">
           <div className="text-[#2B2B2B]/70 text-sm">
-            {t("agent.showing", "Showing")} {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} - {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} {t("agent.of", "of")} {pagination.totalItems} {t("agent.agents", "agents")}
+            {t("agent.showing", "Showing")} {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} - {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} {t("agent.of", "of")} {pagination.totalItems} {t("agent.supervisors", "supervisors")}
           </div>
           
           <div className="flex items-center gap-2">
@@ -894,226 +817,10 @@ const CreateUser: React.FC = () => {
                   {(isCreating || isUpdating) && (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   )}
-                  {editingUser ? t("agent.update", "Update Agent") : t("agent.create", "Create Agent")}
+                  {editingUser ? t("agent.updateSupervisor", "Update Supervisor") : t("agent.createSupervisor", "Create Supervisor")}
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Agent Details Dialog */}
-      {isViewDialogOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeViewDialog()}>
-          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 shadow-2xl max-w-2xl w-full my-8" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[#E4590F] text-xl font-semibold">{t("agent.agentDetails", "Agent details")}</h3>
-              <button
-                type="button"
-                onClick={closeViewDialog}
-                className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
-                aria-label={t("common.close", "Close")}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {loadingViewAgent && (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-2 border-[#E4590F]/30 border-t-[#E4590F] rounded-full animate-spin" />
-              </div>
-            )}
-            {!loadingViewAgent && viewAgentData && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-[#2B2B2B]">
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.name", "Name")}</div>
-                  <div>{viewAgentData.name || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.email", "Email")}</div>
-                  <div>{viewAgentData.email || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.companyName", "Partner's company name")}</div>
-                  <div>{viewAgentData.company_name || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.partnershipType", "Type of partnership")}</div>
-                  <div>{viewAgentData.partnership_type || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.countryOfResidence", "Country of residence")}</div>
-                  <div>{viewAgentData.country_of_residence || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.iataNumber", "N° IATA")}</div>
-                  <div>{viewAgentData.iata_number || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.geographicalLocation", "Geographical location")}</div>
-                  <div>{viewAgentData.geographical_location || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.workPhone", "Work phone number")}</div>
-                  <div>{viewAgentData.work_phone || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.whatsappPhone", "WhatsApp phone number")}</div>
-                  <div>{viewAgentData.whatsapp_phone || "—"}</div>
-                  <div className="font-medium text-[#2B2B2B]/80">{t("agent.status", "Status")}</div>
-                  <div><StatusBadge status={(viewAgentData.status as "active" | "inactive") || "active"} /></div>
-                  <div className="font-medium text-[#2B2B2B]/80 sm:col-span-2">{t("agent.assignedPlans", "Assigned plans")}</div>
-                  <div className="sm:col-span-2">
-                    {viewAgentData.assigned_plan_ids && viewAgentData.assigned_plan_ids.length > 0
-                      ? plans.filter((p) => viewAgentData.assigned_plan_ids!.includes(p.id)).map((p) => p.name).join(", ") || viewAgentData.assigned_plan_ids.join(", ")
-                      : "—"}
-                  </div>
-                </div>
-
-                {viewAgentData.parent_agent_id == null && (
-                  <div className="mt-6 pt-6 border-t border-[#D9D9D9]">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-[#E4590F] font-semibold">{t("agent.subAgents", "Sub-agents")}</h4>
-                      <button
-                        type="button"
-                        onClick={openAddSubAgentDialog}
-                        className="px-4 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white text-sm font-medium transition-colors"
-                      >
-                        {t("agent.addSubAgent", "Add sub-agent")}
-                      </button>
-                    </div>
-                    {viewAgentData.sub_agents && viewAgentData.sub_agents.length > 0 ? (
-                      <ul className="space-y-2">
-                        {viewAgentData.sub_agents.map((s) => (
-                          <li key={s.id} className="flex justify-between items-center py-2 px-3 bg-[#D9D9D9]/20 rounded-xl text-[#2B2B2B]">
-                            <span className="font-medium">{s.name}</span>
-                            <span className="text-sm text-[#2B2B2B]/80">{s.email}</span>
-                            <StatusBadge status={(s.status as "active" | "inactive") || "active"} />
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-[#2B2B2B]/60 text-sm">{t("agent.noSubAgents", "No sub-agents yet.")}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Add Sub-agent Dialog */}
-      {isSubAgentDialogOpen && viewAgentData && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[60] flex justify-center items-start p-4">
-          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 shadow-2xl max-w-lg w-full my-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[#E4590F] text-xl font-semibold">{t("agent.addSubAgent", "Add sub-agent")}</h3>
-              <button
-                type="button"
-                onClick={() => setIsSubAgentDialogOpen(false)}
-                className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
-                aria-label={t("common.close", "Close")}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InputField
-                  type="text"
-                  placeholder={t("agent.firstName", "First Name") + " *"}
-                  value={subAgentFormData.firstName}
-                  onChange={(v) => setSubAgentFormData((p) => ({ ...p, firstName: v }))}
-                />
-                <InputField
-                  type="text"
-                  placeholder={t("agent.lastName", "Last Name") + " *"}
-                  value={subAgentFormData.lastName}
-                  onChange={(v) => setSubAgentFormData((p) => ({ ...p, lastName: v }))}
-                />
-              </div>
-              <InputField
-                type="email"
-                placeholder={t("agent.email", "Email") + " *"}
-                value={subAgentFormData.email}
-                onChange={(v) => setSubAgentFormData((p) => ({ ...p, email: v }))}
-              />
-              <InputField
-                type="text"
-                placeholder={t("agent.workPhone", "Work phone number")}
-                value={subAgentFormData.workPhone}
-                onChange={(v) => setSubAgentFormData((p) => ({ ...p, workPhone: v }))}
-              />
-              <InputField
-                type="text"
-                placeholder={t("agent.whatsappPhone", "WhatsApp phone number") + " *"}
-                value={subAgentFormData.whatsappPhone}
-                onChange={(v) => setSubAgentFormData((p) => ({ ...p, whatsappPhone: v }))}
-              />
-              <div className="relative" ref={subAgentPlansRef}>
-                <button
-                  type="button"
-                  onClick={() => setSubAgentPlansDropdownOpen(!subAgentPlansDropdownOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
-                >
-                  <span className="text-[#2B2B2B]">
-                    {subAgentFormData.assignedPlanIds.length
-                      ? t("agent.assignedPlansCount", "{{count}} plan(s) selected", { count: subAgentFormData.assignedPlanIds.length })
-                      : t("agent.assignedPlans", "Assigned plans") + " *"}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 ${subAgentPlansDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-                {subAgentPlansDropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
-                    {plans.map((p) => {
-                      const selected = subAgentFormData.assignedPlanIds.includes(p.id);
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            const next = selected
-                              ? subAgentFormData.assignedPlanIds.filter((id) => id !== p.id)
-                              : [...subAgentFormData.assignedPlanIds, p.id];
-                            setSubAgentFormData((prev) => ({ ...prev, assignedPlanIds: next }));
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-[#E4590F]/10 ${selected ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
-                        >
-                          {selected && <Check className="w-4 h-4" />}
-                          {p.name}
-                        </button>
-                      );
-                    })}
-                    {plans.length === 0 && (
-                      <div className="px-4 py-3 text-[#2B2B2B]/60 text-sm">{t("agent.noPlans", "No plans available")}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setIsSubAgentDialogOpen(false)} className="cursor-pointer px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors">
-                  {t("agent.discard", "Discard")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubAgentFormSubmit}
-                  disabled={creatingSubAgent}
-                  className="cursor-pointer px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] disabled:bg-[#E4590F]/50 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
-                >
-                  {creatingSubAgent && (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  )}
-                  {t("agent.createSubAgent", "Create sub-agent")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sub-agent password modal */}
-      {subAgentPasswordModal.open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70]">
-          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-[90%] max-w-md">
-            <h2 className="text-xl font-semibold text-[#E4590F] mb-4 text-center">
-              {t("agent.subAgentCreated", "Sub-agent created successfully!")}
-            </h2>
-            <p className="text-[#2B2B2B] font-medium text-center bg-[#E4590F]/10 rounded-xl p-2 mb-4">{subAgentPasswordModal.userEmail}</p>
-            <label className="block text-[#2B2B2B]/70 text-sm mb-2">{t("user.tempPassword", "Temporary Password:")}</label>
-            <div className="flex items-center gap-2 mb-4">
-              <input type="text" value={subAgentPasswordModal.password} readOnly className="flex-1 bg-white border border-[#D9D9D9] rounded-xl px-3 py-2 font-mono text-sm" />
-              <button onClick={() => navigator.clipboard.writeText(subAgentPasswordModal.password).then(() => toast.success(t("user.passwordCopied", "Password copied!")))} className="px-3 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white text-sm font-medium">
-                {t("user.copy", "Copy")}
-              </button>
-            </div>
-            <p className="text-[#E4590F] text-sm text-center mb-4">{t("user.savePassword", "⚠️ Please save this password securely. It won't be shown again.")}</p>
-            <button onClick={() => setSubAgentPasswordModal({ open: false, password: "", userEmail: "" })} className="w-full py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium">
-              {t("user.gotIt", "Got it!")}
-            </button>
           </div>
         </div>
       )}

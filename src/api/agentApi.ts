@@ -30,6 +30,8 @@ export type SubAgentItem = {
   whatsapp_phone?: string | null;
   created_at?: string;
   assigned_plan_ids?: number[];
+  type?: 'agent' | 'sub_agent';
+  sub_agents?: SubAgentItem[];
 };
 
 export type AgentProfile = {
@@ -49,6 +51,7 @@ export type AgentProfile = {
   whatsapp_phone?: string | null;
   assigned_plan_ids?: number[];
   parent_agent_id?: number | null;
+  type?: 'supervisor' | 'agent' | 'sub_agent';
   sub_agents?: SubAgentItem[];
 };
 
