@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Edit3, ArrowLeft, X } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, ChevronDown, Edit3, ArrowLeft, X, Trash2 } from "lucide-react";
 import InputField from "../components/InputFields";
 import {
   getAgentApi,
@@ -8,13 +8,13 @@ import {
   createSubAgentApi,
   updateUserStatusApi,
   sendPasswordResetLinkApi,
+  deleteAgentHierarchyApi,
   type AgentProfile,
   type SubAgentItem,
 } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { getPasswordChangeStatus } from "../utils/dateUtils";
 
 const PARTNERSHIP_TYPES = [
   "Insurance company",
@@ -65,19 +65,6 @@ const StatusBadge = ({ status }: { status: "active" | "inactive" }) => {
   );
 };
 
-const PasswordChangeBadge = ({ forcePasswordChange }: { forcePasswordChange?: boolean | number }) => {
-  const passwordStatus = getPasswordChangeStatus(forcePasswordChange);
-  const IconComponent = passwordStatus.status === "changed" ? ShieldCheck : Shield;
-  return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${passwordStatus.bgColor}`}>
-      <IconComponent className={`w-4 h-4 ${passwordStatus.color}`} />
-      <span className={`text-sm font-normal ${passwordStatus.color}`}>{passwordStatus.text}</span>
-    </div>
-  );
-};
-
-console.log(PasswordChangeBadge({ forcePasswordChange: true }));
-
 const SupervisorView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -122,6 +109,14 @@ const SupervisorView: React.FC = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [resettingPasswordFor, setResettingPasswordFor] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState<{ open: boolean; password: string; userEmail: string }>({ open: false, password: "", userEmail: "" });
+
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    kind: "supervisor" | "agent" | "sub";
+    targetId: number;
+    label: string;
+  }>({ open: false, kind: "supervisor", targetId: 0, label: "" });
+  const [isDeletingHierarchy, setIsDeletingHierarchy] = useState(false);
 
   const loadSupervisor = async () => {
     if (!id) return;
@@ -344,6 +339,27 @@ const SupervisorView: React.FC = () => {
     return "";
   };
 
+  const confirmDeleteHierarchy = async () => {
+    if (!deleteModal.open || !deleteModal.targetId) return;
+    const wasSupervisor = deleteModal.kind === "supervisor";
+    const targetId = deleteModal.targetId;
+    setIsDeletingHierarchy(true);
+    try {
+      await deleteAgentHierarchyApi(String(targetId));
+      toast.success(t("agent.deletedHierarchy", "Deleted successfully"));
+      setDeleteModal({ open: false, kind: "supervisor", targetId: 0, label: "" });
+      if (wasSupervisor) {
+        navigate("/admin/users");
+        return;
+      }
+      await loadSupervisor();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t("agent.failedDelete", "Failed to delete"));
+    } finally {
+      setIsDeletingHierarchy(false);
+    }
+  };
+
   const handleSendReset = async (userId: string) => {
     setResettingPasswordFor(userId);
     try {
@@ -413,6 +429,21 @@ const SupervisorView: React.FC = () => {
             >
               {supervisor.status === "active" ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
               {supervisor.status === "active" ? t("agent.lockAgent", "Lock") : t("agent.unlockAgent", "Unlock")}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setDeleteModal({
+                  open: true,
+                  kind: "supervisor",
+                  targetId: supervisor.id,
+                  label: supervisor.name || "",
+                })
+              }
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-600 font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              {t("agent.deleteSupervisor", "Delete supervisor")}
             </button>
           </div>
         </div>
@@ -499,6 +530,21 @@ const SupervisorView: React.FC = () => {
                     >
                       {agent.status === "active" ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDeleteModal({
+                          open: true,
+                          kind: "agent",
+                          targetId: agent.id,
+                          label: agent.name || "",
+                        })
+                      }
+                      className="p-2 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-600 transition-colors"
+                      title={t("agent.deleteAgentBranch", "Delete agent")}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 {agent.sub_agents && agent.sub_agents.length > 0 && (
@@ -533,6 +579,21 @@ const SupervisorView: React.FC = () => {
                             className={`p-2 rounded-lg transition-colors ${sub.status === "active" ? "bg-red-500/20 text-red-600" : "bg-green-500/20 text-green-600"}`}
                           >
                             {sub.status === "active" ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDeleteModal({
+                                open: true,
+                                kind: "sub",
+                                targetId: sub.id,
+                                label: sub.name || "",
+                              })
+                            }
+                            className="p-2 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-600 transition-colors"
+                            title={t("agent.deleteSubAgentUser", "Delete sub-agent")}
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </li>
@@ -756,6 +817,46 @@ const SupervisorView: React.FC = () => {
       )}
 
       {/* Child password modal (after create agent/sub-agent) */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70] p-4">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-full max-w-md text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">
+              {deleteModal.kind === "supervisor"
+                ? t("agent.deleteSupervisor", "Delete supervisor")
+                : deleteModal.kind === "agent"
+                  ? t("agent.deleteAgentBranch", "Delete agent")
+                  : t("agent.deleteSubAgentUser", "Delete sub-agent")}
+            </h2>
+            <p className="text-[#2B2B2B] font-medium mb-2">{deleteModal.label}</p>
+            <p className="text-[#2B2B2B]/80 mb-6 text-sm text-left">
+              {deleteModal.kind === "supervisor"
+                ? t("agent.deleteSupervisorConfirm", "")
+                : deleteModal.kind === "agent"
+                  ? t("agent.deleteAgentBranchConfirm", "")
+                  : t("agent.deleteSubAgentUserConfirm", "")}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ open: false, kind: "supervisor", targetId: 0, label: "" })}
+                className="px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium"
+              >
+                {t("common.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteHierarchy}
+                disabled={isDeletingHierarchy}
+                className="px-6 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-medium flex items-center gap-2"
+              >
+                {isDeletingHierarchy && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                {t("common.delete", "Delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {childPasswordModal.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70]">
           <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-[90%] max-w-md">

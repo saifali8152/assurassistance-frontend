@@ -526,7 +526,16 @@
     "createAgent": "Create Agent",
     "updateSupervisor": "Update Supervisor",
     "createSupervisor": "Create Supervisor",
-    "supervisors": "supervisors"
+    "supervisors": "supervisors",
+    "deleteSupervisor": "Delete supervisor",
+    "deleteSupervisorConfirm": "This will permanently delete this supervisor, all their agents, all sub-agents, and every case they created (including sales). This cannot be undone.",
+    "deleteAgentBranch": "Delete agent",
+    "deleteAgentBranchConfirm": "This will permanently delete this agent, all their sub-agents, and every case they created. This cannot be undone.",
+    "deleteSubAgentUser": "Delete sub-agent",
+    "deleteSubAgentUserConfirm": "This will permanently delete this sub-agent and every case they created. This cannot be undone.",
+    "deleting": "Deleting…",
+    "failedDelete": "Failed to delete",
+    "deletedHierarchy": "Deleted successfully"
   },
   "common": {
     "cancel": "Cancel",

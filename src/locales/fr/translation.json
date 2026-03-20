@@ -526,7 +526,16 @@
     "createAgent": "Créer l'agent",
     "updateSupervisor": "Mettre à jour le superviseur",
     "createSupervisor": "Créer le superviseur",
-    "supervisors": "superviseurs"
+    "supervisors": "superviseurs",
+    "deleteSupervisor": "Supprimer le superviseur",
+    "deleteSupervisorConfirm": "Cette action supprimera définitivement ce superviseur, tous ses agents, tous les sous-agents et chaque dossier qu'ils ont créé (y compris les ventes). Action irréversible.",
+    "deleteAgentBranch": "Supprimer l'agent",
+    "deleteAgentBranchConfirm": "Cette action supprimera définitivement cet agent, tous ses sous-agents et chaque dossier qu'ils ont créé. Action irréversible.",
+    "deleteSubAgentUser": "Supprimer le sous-agent",
+    "deleteSubAgentUserConfirm": "Cette action supprimera définitivement ce sous-agent et chaque dossier qu'il a créé. Action irréversible.",
+    "deleting": "Suppression…",
+    "failedDelete": "Échec de la suppression",
+    "deletedHierarchy": "Suppression réussie"
   },
   "common": {
     "cancel": "Annuler",

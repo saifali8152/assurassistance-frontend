@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X, Trash2 } from "lucide-react";
 import InputField from "../components/InputFields";
-import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi } from "../api/agentApi";
+import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, deleteAgentHierarchyApi } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -121,6 +121,9 @@ const CreateUser: React.FC = () => {
     userId: string | null;
     newStatus: "active" | "inactive" | null;
   }>({ open: false, userId: null, newStatus: null });
+
+  const [deleteUserModal, setDeleteUserModal] = useState<{ open: boolean; user: User | null }>({ open: false, user: null });
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
 
   // Load users and plans
   useEffect(() => {
@@ -364,6 +367,21 @@ const CreateUser: React.FC = () => {
     setConfirmModal({ open: true, userId, newStatus });
   };
 
+  const confirmDeleteSupervisor = async () => {
+    if (!deleteUserModal.user) return;
+    setIsDeletingUser(true);
+    try {
+      await deleteAgentHierarchyApi(deleteUserModal.user.id);
+      toast.success(t("agent.deletedHierarchy", "Deleted successfully"));
+      setDeleteUserModal({ open: false, user: null });
+      await fetchUsers(pagination.currentPage);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t("agent.failedDelete", "Failed to delete"));
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
   const confirmStatusChange = async () => {
     if (!confirmModal.userId || !confirmModal.newStatus) return;
 
@@ -589,6 +607,14 @@ const CreateUser: React.FC = () => {
                         title={user.status === 'active' ? t("agent.lockAgent", "Lock Agent") : t("agent.unlockAgent", "Unlock Agent")}
                       >
                         {user.status === 'active' ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteUserModal({ open: true, user })}
+                        className="p-2 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-600 transition-colors cursor-pointer"
+                        title={t("agent.deleteSupervisor", "Delete supervisor")}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -820,6 +846,38 @@ const CreateUser: React.FC = () => {
                   {editingUser ? t("agent.updateSupervisor", "Update Supervisor") : t("agent.createSupervisor", "Create Supervisor")}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteUserModal.open && deleteUserModal.user && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 w-full max-w-md text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">
+              {t("agent.deleteSupervisor", "Delete supervisor")}
+            </h2>
+            <p className="text-[#2B2B2B] font-medium mb-2">{deleteUserModal.user.firstName} {deleteUserModal.user.lastName}</p>
+            <p className="text-[#2B2B2B]/80 mb-6 text-sm text-left">
+              {t("agent.deleteSupervisorConfirm", "This will permanently delete this supervisor, all their agents, all sub-agents, and every case they created (including sales). This cannot be undone.")}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setDeleteUserModal({ open: false, user: null })}
+                className="px-6 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium"
+              >
+                {t("user.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteSupervisor}
+                disabled={isDeletingUser}
+                className="px-6 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-medium flex items-center gap-2"
+              >
+                {isDeletingUser && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                {t("common.delete", "Delete")}
+              </button>
             </div>
           </div>
         </div>

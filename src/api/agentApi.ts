@@ -1,5 +1,5 @@
 //src/agentApi.ts
-import { apiPost, apiGet, apiPatch } from "../lib/api";
+import { apiPost, apiGet, apiPatch, apiDelete } from "../lib/api";
 
 export type CreateAgentPayload = {
   name: string;
@@ -79,6 +79,11 @@ export const getAgentApi = async (id: string) => {
 
 export const updateAgentApi = async (id: string, data: Partial<CreateAgentPayload>) => {
   return apiPatch<{ success: boolean; message: string }>(`/admin/agents/${id}`, data);
+};
+
+/** Deletes supervisor + all agents + sub-agents, or agent + sub-agents, or a single sub-agent. Removes their cases (and linked sales). */
+export const deleteAgentHierarchyApi = async (id: string) => {
+  return apiDelete<{ success: boolean; message: string; deletedCount?: number }>(`/admin/agents/${id}`);
 };
 
 export const listAgentsApi = async (params?: {
