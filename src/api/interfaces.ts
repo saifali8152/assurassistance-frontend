@@ -29,6 +29,12 @@ export interface ChangePasswordResponse {
   message: string;
   caseId: number;
   }
+
+  export interface CreateGroupCasesResponse {
+    message: string;
+    groupId: string;
+    caseIds: number[];
+  }
 export interface CreateSaleRequest {
   case_id: number;
   premium_amount: number;

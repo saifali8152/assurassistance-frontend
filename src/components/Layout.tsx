@@ -12,7 +12,8 @@ import {
   FilePlus,
   Activity,
   Layers,
-  ReceiptText
+  ReceiptText,
+  UsersRound
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -175,6 +176,7 @@ const Layout: React.FC = () => {
                 <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
               )}
               <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
+              <NavLink to="/admin/createGroupCase" icon={UsersRound}>{t("sidebar.createGroupCase", "Create group case")}</NavLink>
               <NavLink to="/admin/cases" icon={FilePlus}>{t("sidebar.allCases", "All Cases")}</NavLink>
               <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>
               <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>

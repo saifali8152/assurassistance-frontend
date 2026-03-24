@@ -4,7 +4,7 @@ import DateField from "../components/DateField";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, Cake, MapPin, Users, Flag } from "lucide-react";
 import SelectField from "../components/SelectField";
 import MultiSelectField from "../components/MultiSelectField";
-import { createSaleApi, generateInvoiceApi, generateCertificateApi } from "../api/salesApi";
+import { createSaleApi, generateInvoiceApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { createCaseApi, changeCaseStatusApi, updateCaseApi } from "../api/caseApi";
@@ -13,6 +13,13 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useNavigate } from "react-router-dom";
+import {
+  computeTravelPlanPremium,
+  getAgeFromDateString,
+  getAgePremiumMultiplier,
+  getLegacyPricingTablePremium,
+  roundMoney
+} from "../utils/travelPricing";
 interface Tab {
   id: string;
   label: string;
@@ -157,66 +164,46 @@ const CreateCase: React.FC = () => {
   // Find selected plan first
   const selectedPlanObj = plans.find(p => p.id === selectedPlan);
 
-  // Calculate price from pricing table based on duration
-  const calculatePriceFromPricingTable = (plan: Plan, days: number): number | null => {
-    if (!plan.pricingTables || !plan.pricingTables.pricing || plan.pricingTables.pricing.length === 0) {
-      return null;
-    }
-
-    // Extract day numbers from pricing row labels (e.g., "10 Days" -> 10)
-    const parseDaysFromLabel = (label: string): number | null => {
-      const match = label.match(/(\d+)\s*(?:Days|Jours|days|jours)/i);
-      if (match) return parseInt(match[1]);
-      // Also check for "1 Year" or "1 an"
-      if (label.toLowerCase().includes('year') || label.toLowerCase().includes('an')) {
-        return 365;
+  /** Plan premium: Travel / Travel Inbound / Road travel → tier + age; other tables → legacy row match, no age factor. */
+  const getPlanPremiumBreakdown = (plan: Plan, stayDays: number, dob: string) => {
+    const travelLike = ["Travel", "Travel Inbound", "Road travel"].includes(plan.productType);
+    if (plan.pricingTables?.pricing?.length) {
+      if (travelLike) {
+        return computeTravelPlanPremium(plan.pricingTables, stayDays, dob);
       }
-      return null;
-    };
-
-    // Find the closest matching pricing row
-    let bestMatch: PricingRow | null = null;
-    let minDiff = Infinity;
-
-    for (const row of plan.pricingTables.pricing) {
-      const rowDays = parseDaysFromLabel(row.label);
-      if (rowDays !== null) {
-        const diff = Math.abs(rowDays - days);
-        if (diff < minDiff) {
-          minDiff = diff;
-          bestMatch = row;
-        }
-      }
+      const legacy = getLegacyPricingTablePremium(plan.pricingTables, stayDays);
+      if (legacy == null) return { error: "no_price" as const, planPremium: null };
+      return {
+        validityDays: stayDays,
+        basePremium: legacy,
+        ageInfo: { multiplier: 1, eligible: true, band: "non_travel" },
+        planPremium: legacy
+      };
     }
-
-    if (!bestMatch) {
-      // If no exact match, try to find the first row with a valid price
-      for (const row of plan.pricingTables.pricing) {
-        for (const columnName of plan.pricingTables.pricingColumns) {
-          const price = row.columns[columnName];
-          if (price !== null && price !== undefined) {
-            return price;
-          }
-        }
+    if (plan.flatPrice != null) {
+      const base = roundMoney(plan.flatPrice * stayDays);
+      if (!travelLike) {
+        return {
+          validityDays: stayDays,
+          basePremium: base,
+          ageInfo: { multiplier: 1, eligible: true, band: "flat" },
+          planPremium: base
+        };
       }
-      return null;
-    }
-
-    // Get price from the appropriate column
-    // For most product types, there's one price column
-    // For Health Evacuation, there are multiple columns (Classic, Basic, Advanced)
-    const columns = plan.pricingTables.pricingColumns;
-    
-    // For Health Evacuation, default to the first column (Classic) if available
-    // For others, use the first (and usually only) price column
-    for (const columnName of columns) {
-      const price = bestMatch.columns[columnName];
-      if (price !== null && price !== undefined) {
-        return price;
+      const age = getAgeFromDateString(dob);
+      const ageInfo = getAgePremiumMultiplier(age);
+      if (!ageInfo.eligible) {
+        return { error: "age_ineligible" as const, planPremium: null };
       }
+      return {
+        validityDays: stayDays,
+        basePremium: base,
+        age,
+        ageInfo,
+        planPremium: roundMoney(base * ageInfo.multiplier)
+      };
     }
-
-    return null;
+    return { error: "no_price" as const, planPremium: null };
   };
 
   // Show no plans message if no plans are available
@@ -314,15 +301,14 @@ const CreateCase: React.FC = () => {
       </div>
 
       {selectedPlanObj && (() => {
-        // Calculate price
         let calculatedPrice = 0;
+        let validityTierDays: number | null = null;
         if (durationDays && selectedPlanObj) {
           const days = parseInt(durationDays) || 1;
-          if (selectedPlanObj.pricingTables) {
-            const price = calculatePriceFromPricingTable(selectedPlanObj, days);
-            calculatedPrice = price !== null ? price : 0;
-          } else if (selectedPlanObj.flatPrice) {
-            calculatedPrice = selectedPlanObj.flatPrice * days;
+          const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
+          if ("planPremium" in br && br.planPremium != null) {
+            calculatedPrice = br.planPremium;
+            if ("validityDays" in br && br.validityDays != null) validityTierDays = br.validityDays;
           }
         }
 
@@ -355,6 +341,9 @@ const CreateCase: React.FC = () => {
               )}
               {selectedPlanObj.currency && (
                 <div><span className="font-semibold text-[#2B2B2B]">Currency:</span> {selectedPlanObj.currency}</div>
+              )}
+              {validityTierDays != null && (
+                <div><span className="font-semibold text-[#2B2B2B]">Validity (plan days):</span> {validityTierDays}</div>
               )}
               <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span> {formatCurrency(calculatedPrice)}</div>
             </div>
@@ -444,11 +433,15 @@ const CreateCase: React.FC = () => {
               (() => {
                 if (!durationDays || !selectedPlanObj) return formatCurrency(0);
                 const days = parseInt(durationDays) || 1;
-                if (selectedPlanObj.pricingTables) {
-                  const price = calculatePriceFromPricingTable(selectedPlanObj, days);
-                  return price !== null ? formatCurrency(price) : formatCurrency(0);
-                } else if (selectedPlanObj.flatPrice) {
-                  return formatCurrency(selectedPlanObj.flatPrice * days);
+                const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
+                if ("planPremium" in br && br.planPremium != null) {
+                  let gt = br.planPremium;
+                  if (selectedPlanObj.pricingTables?.guarantees) {
+                    selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
+                      if (g.amount != null) gt += g.amount;
+                    });
+                  }
+                  return formatCurrency(gt);
                 }
                 return formatCurrency(0);
               })()
@@ -458,11 +451,15 @@ const CreateCase: React.FC = () => {
               (() => {
                 if (!durationDays || !selectedPlanObj) return formatCurrency(0);
                 const days = parseInt(durationDays) || 1;
-                if (selectedPlanObj.pricingTables) {
-                  const price = calculatePriceFromPricingTable(selectedPlanObj, days);
-                  return price !== null ? formatCurrency(price) : formatCurrency(0);
-                } else if (selectedPlanObj.flatPrice) {
-                  return formatCurrency(selectedPlanObj.flatPrice * days);
+                const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
+                if ("planPremium" in br && br.planPremium != null) {
+                  let gt = br.planPremium;
+                  if (selectedPlanObj.pricingTables?.guarantees) {
+                    selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
+                      if (g.amount != null) gt += g.amount;
+                    });
+                  }
+                  return formatCurrency(gt);
                 }
                 return formatCurrency(0);
               })()
@@ -874,24 +871,16 @@ const CreateCase: React.FC = () => {
     }
     try {
       const days = parseInt(durationDays) || 1;
-      let premiumAmount = 0;
-
-      // Calculate price from pricing table if available
-      if (selectedPlanObj.pricingTables) {
-        const priceFromTable = calculatePriceFromPricingTable(selectedPlanObj, days);
-        if (priceFromTable !== null) {
-          premiumAmount = priceFromTable;
-        } else {
-          toast.error("No matching price found in pricing table for this duration!");
-          return;
-        }
-      } else if (selectedPlanObj.flatPrice) {
-        // Fallback to flatPrice if pricing table is not available (backward compatibility)
-        premiumAmount = selectedPlanObj.flatPrice * days;
-      } else {
-        toast.error("Plan pricing information is not available!");
+      const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
+      if ("error" in br && br.error === "age_ineligible") {
+        toast.error("Travel insurance is not available for travellers over 85 years of age.");
         return;
       }
+      if (!("planPremium" in br) || br.planPremium == null) {
+        toast.error("No matching price found in pricing table for this duration!");
+        return;
+      }
+      const premiumAmount = br.planPremium;
 
       // Calculate guarantees total and details
       let guaranteesTotal = 0;
@@ -979,29 +968,9 @@ const CreateCase: React.FC = () => {
     }
   };
 
-  const handleGenerateCertificate = async () => {
+  const handleOpenCertificate = () => {
     if (!createdSaleId) return;
-    try {
-      const response = await generateCertificateApi(createdSaleId);
-      
-      // Create blob from response data
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `certificate-${createdSaleId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to download certificate:', error);
-      toast.error('Failed to download certificate');
-    }
+    window.open(`/certificate/${createdSaleId}`, "_blank", "noopener,noreferrer");
   };
 
 
@@ -1134,7 +1103,7 @@ const CreateCase: React.FC = () => {
                 {t('sale.downloadInvoice')}
               </button>
               <button
-                onClick={handleGenerateCertificate}
+                onClick={handleOpenCertificate}
                 className="px-6 py-3 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors cursor-pointer"
               >
                 {t('sale.downloadCertificate')}

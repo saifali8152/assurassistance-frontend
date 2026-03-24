@@ -11,6 +11,7 @@ import {
   BarChart3,
   Layers,
   Activity,
+  UsersRound
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -165,6 +166,7 @@ const UserLayout: React.FC = () => {
             <nav className="space-y-2">
               <NavLink to="/user" icon={BarChart3}>{t("userLayout.dashboard", "Dashboard")}</NavLink>
               <NavLink to="/user/createCase" icon={Layers}>{t("userLayout.createCase", "Create Case")}</NavLink>
+              <NavLink to="/user/createGroupCase" icon={UsersRound}>{t("userLayout.createGroupCase", "Create group case")}</NavLink>
               <NavLink to="/user/cases" icon={Layers}>{t("userLayout.myCases", "My Cases")}</NavLink>
               <NavLink to="/user/ledger" icon={Activity}>{t("userLayout.salesLedger", "Sales Ledger")}</NavLink>
             </nav>

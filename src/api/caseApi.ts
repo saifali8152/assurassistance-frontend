@@ -1,11 +1,18 @@
 // src/api/caseApi.ts
 import { apiGet, apiPost, apiPatch, apiPut } from "../lib/api";
 import api from "../lib/api";
-import type { CreateCaseResponse } from "./interfaces";
+import type { CreateCaseResponse, CreateGroupCasesResponse } from "./interfaces";
 
 // Create a case with traveller
 export const createCaseApi = async (data: any): Promise<CreateCaseResponse> => {
   return await apiPost<CreateCaseResponse>("/cases", data);
+};
+
+export const createGroupCasesApi = async (data: {
+  travellers: any[];
+  caseData: any;
+}): Promise<CreateGroupCasesResponse> => {
+  return await apiPost<CreateGroupCasesResponse>("/cases/group", data);
 };
 
 // Get all cases for the logged-in agent
@@ -34,13 +41,13 @@ export const confirmSaleApi = (caseId: number, data: { premium_amount: number; t
 export const cancelCaseApi = (caseId: number) =>
   apiPost(`/cases/${caseId}/cancel`, {});
 
-// Generate and download invoice
-export const generateInvoiceApi = (caseId: number) =>
-  api.get(`/sales/invoice/${caseId}`, { responseType: 'blob' });
+// Generate and download invoice (id = sale id)
+export const generateInvoiceApi = (saleId: number) =>
+  api.get(`/sales/invoice/${saleId}`, { responseType: 'blob' });
 
-// Generate and download certificate
-export const generateCertificateApi = (caseId: number) =>
-  api.get(`/sales/certificate/${caseId}`, { responseType: 'blob' });
+/** Legacy PDF certificate download (id = sale id). Prefer printable page at /certificate/:saleId */
+export const generateCertificateApi = (saleId: number) =>
+  api.get(`/sales/certificate/${saleId}`, { responseType: 'blob' });
 
 // Update case
 export const updateCaseApi = (caseId: number, data: any) =>

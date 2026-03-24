@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi, generateCertificateApi } from '../api/caseApi';
+import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi } from '../api/caseApi';
 import { createSaleApi } from '../api/salesApi';
 import { ChevronLeft, ChevronRight, Download, CheckCircle, XCircle, Eye, Calendar, Phone, MapPin, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -334,17 +334,17 @@ const CasesManagement: React.FC = () => {
     }
   };
 
-  const handleDownloadInvoice = async (caseId: number) => {
+  const handleDownloadInvoice = async (saleId: number) => {
     try {
-      setActionLoading(caseId);
-      const response = await generateInvoiceApi(caseId);
+      setActionLoading(saleId);
+      const response = await generateInvoiceApi(saleId);
       
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `invoice-${caseId}.pdf`;
+      link.download = `invoice-${saleId}.pdf`;
       document.body.appendChild(link);
       link.click();
       
@@ -360,30 +360,8 @@ const CasesManagement: React.FC = () => {
     }
   };
 
-  const handleDownloadCertificate = async (caseId: number) => {
-    try {
-      setActionLoading(caseId);
-      const response = await generateCertificateApi(caseId);
-      
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `certificate-${caseId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Certificate downloaded successfully');
-    } catch (error) {
-      console.error('Failed to download certificate:', error);
-      toast.error('Failed to download certificate');
-    } finally {
-      setActionLoading(null);
-    }
+  const handleOpenCertificate = (saleId: number) => {
+    window.open(`/certificate/${saleId}`, "_blank", "noopener,noreferrer");
   };
 
   const openModal = (caseItem: Case) => {
@@ -618,28 +596,24 @@ const CasesManagement: React.FC = () => {
                           {caseItem.sale_id && (
                             <>
                               <button
-                                onClick={() => handleDownloadInvoice(caseItem.id)}
-                                disabled={actionLoading === caseItem.id}
+                                onClick={() => caseItem.sale_id && handleDownloadInvoice(caseItem.sale_id)}
+                                disabled={actionLoading === caseItem.sale_id}
                                 className="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 hover:text-purple-700 transition-colors disabled:opacity-50 border border-purple-500/20"
                                 title={t("cases.downloadInvoice")}
                               >
-                                {actionLoading === caseItem.id ? (
+                                {actionLoading === caseItem.sale_id ? (
                                   <div className="w-4 h-4 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin"></div>
                                 ) : (
                                   <Download className="w-4 h-4" />
                                 )}
                               </button>
                               <button
-                                onClick={() => handleDownloadCertificate(caseItem.id)}
-                                disabled={actionLoading === caseItem.id}
+                                onClick={() => caseItem.sale_id && handleOpenCertificate(caseItem.sale_id)}
+                                disabled={!caseItem.sale_id}
                                 className="p-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 hover:text-indigo-700 transition-colors disabled:opacity-50 border border-indigo-500/20"
                                 title={t("cases.downloadCertificate")}
                               >
-                                {actionLoading === caseItem.id ? (
-                                  <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin"></div>
-                                ) : (
-                                  <FileText className="w-4 h-4" />
-                                )}
+                                <FileText className="w-4 h-4" />
                               </button>
                             </>
                           )}

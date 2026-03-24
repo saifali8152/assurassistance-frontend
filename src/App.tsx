@@ -20,6 +20,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import CreateUser from './pages/CreateUser'
 import SupervisorView from './pages/SupervisorView'
 import CreateCase from './pages/CreateCase'
+import CreateGroupCase from './pages/CreateGroupCase'
 import CreatePlan from './pages/CreatePlan'
 import CasesManagement from './pages/CasesManagement'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -32,6 +33,7 @@ import ActivityLogPage from './pages/ActivityLogPage'
 // User Layout and Pages
 import UserLayout from './components/UserLayout'
 import UserDashboard from './pages/UserDashboard'
+import CertificatePrint from './pages/CertificatePrint'
 
 //const AnalyticsPage = () => <div className="p-6"><h1 className="text-white text-2xl">Analytics Page</h1></div>;
 
@@ -130,6 +132,7 @@ function App() {
             <Route path="supervisors/:id" element={<SupervisorView />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="createCase" element={<CreateCase />} />
+            <Route path="createGroupCase" element={<CreateGroupCase />} />
             <Route path="CreatePlan" element={<CreatePlan />} />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />
@@ -150,11 +153,23 @@ function App() {
           >
             <Route index element={<UserDashboard />} />
             <Route path="createCase" element={<CreateCase />} />
+            <Route path="createGroupCase" element={<CreateGroupCase />} />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />
             <Route path='profile' element={<EditProfile />} />
             <Route path='edit-password' element={<EditPassword />} />
           </Route>
+
+          <Route path="/certificate-public/:publicToken" element={<CertificatePrint />} />
+
+          <Route
+            path="/certificate/:saleId"
+            element={
+              <AuthGuard requireAuth={true} allowedRoles={['admin', 'agent']}>
+                <CertificatePrint />
+              </AuthGuard>
+            }
+          />
 
           {/* Default redirect - handles authentication state */}
           <Route path="/" element={<AuthRedirect />} />
