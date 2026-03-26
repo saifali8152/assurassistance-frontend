@@ -82,10 +82,11 @@ export async function parseGroupExcelFile(file: File): Promise<GroupMemberImport
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
   const sheet = wb.Sheets[wb.SheetNames[0]];
+  // raw: true so numeric Excel date cells stay as serials (or Date with cellDates), not locale strings like "04 December 1979"
   const matrix = XLSX.utils.sheet_to_json<(string | number | Date | null)[]>(sheet, {
     header: 1,
     defval: "",
-    raw: false
+    raw: true
   }) as unknown[][];
 
   if (!matrix.length) return [];

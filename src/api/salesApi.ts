@@ -28,6 +28,10 @@ export const getCertificatePageDataPublicApi = (token: string) =>
 export const downloadGroupCertificatesZipApi = (groupId: string) =>
   api.get(`/sales/group/${encodeURIComponent(groupId)}/certificates-zip`, { responseType: "blob" });
 
+/** ZIP of invoice PDFs for all sales in a group */
+export const downloadGroupInvoicesZipApi = (groupId: string) =>
+  api.get(`/sales/group/${encodeURIComponent(groupId)}/invoices-zip`, { responseType: "blob" });
+
 export const updatePaymentApi = (saleId: string, payment_status: string, payment_notes: string, received_amount: number) => {
   return apiPatch(`/sales/${saleId}/payment`, {
     payment_status,

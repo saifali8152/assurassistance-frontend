@@ -35,10 +35,12 @@
     "cancelled": "Dossiers du groupe annulés.",
     "cancelError": "Impossible d’annuler tous les dossiers.",
     "zipError": "Impossible de télécharger le ZIP des certificats.",
+    "invoicesZipError": "Impossible de télécharger le ZIP des factures.",
     "invoiceError": "Impossible de télécharger la facture.",
     "membersTitle": "Membres ({{n}})",
     "groupTotal": "Total groupe (estimé)",
     "downloadCertificatesZip": "Télécharger tous les certificats (ZIP)",
+    "downloadInvoicesZip": "Télécharger toutes les factures (ZIP)",
     "firstOnly": "première vente"
   },
   "caseTabs": {
@@ -111,6 +113,7 @@
     "plan": "Formule",
     "currency": "Devise",
     "pricingSectionTitle": "Prime et détail de la vente",
+    "ageSectionTitle": "Âge",
     "basePremium": "Prime de base (tranche de durée)",
     "ageAdjustment": "Ajustement âge (×{{mult}})",
     "planPriceAfterAge": "Prime formule (après âge)",

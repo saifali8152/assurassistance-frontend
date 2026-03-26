@@ -35,10 +35,12 @@
     "cancelled": "Group cases cancelled.",
     "cancelError": "Could not cancel all cases.",
     "zipError": "Could not download the certificate ZIP.",
+    "invoicesZipError": "Could not download the invoices ZIP.",
     "invoiceError": "Could not download the invoice.",
     "membersTitle": "Members ({{n}})",
     "groupTotal": "Group total (estimated)",
     "downloadCertificatesZip": "Download all certificates (ZIP)",
+    "downloadInvoicesZip": "Download all invoices (ZIP)",
     "firstOnly": "first sale"
   },
   "caseTabs": {
@@ -111,6 +113,7 @@
     "plan": "Plan",
     "currency": "Currency",
     "pricingSectionTitle": "Premium & sale details",
+    "ageSectionTitle": "Age",
     "basePremium": "Base premium (duration tier)",
     "ageAdjustment": "Age adjustment (×{{mult}})",
     "planPriceAfterAge": "Plan price (after age)",

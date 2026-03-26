@@ -3,7 +3,12 @@ import InputField from "../components/InputFields";
 import DateField from "../components/DateField";
 import { Globe2, CalendarIcon, ClockIcon, Upload, Download, Trash2, Plus } from "lucide-react";
 import MultiSelectField from "../components/MultiSelectField";
-import { createSaleApi, generateInvoiceApi, downloadGroupCertificatesZipApi } from "../api/salesApi";
+import {
+  createSaleApi,
+  generateInvoiceApi,
+  downloadGroupCertificatesZipApi,
+  downloadGroupInvoicesZipApi
+} from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { createGroupCasesApi, changeCaseStatusApi } from "../api/caseApi";
@@ -383,6 +388,24 @@ const CreateGroupCase: React.FC = () => {
       window.URL.revokeObjectURL(url);
     } catch {
       toast.error(t("groupCase.zipError"));
+    }
+  };
+
+  const handleDownloadInvoicesZip = async () => {
+    if (!groupId) return;
+    try {
+      const response = await downloadGroupInvoicesZipApi(groupId);
+      const blob = new Blob([response.data], { type: "application/zip" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoices-group-${groupId}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("groupCase.invoicesZipError"));
     }
   };
 
@@ -827,6 +850,13 @@ const CreateGroupCase: React.FC = () => {
                 className="px-6 py-3 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium"
               >
                 {t("sale.downloadInvoice")} ({t("groupCase.firstOnly")})
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadInvoicesZip}
+                className="px-6 py-3 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium"
+              >
+                {t("groupCase.downloadInvoicesZip")}
               </button>
               <button
                 type="button"

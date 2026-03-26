@@ -246,14 +246,14 @@ const CertificatePrint: React.FC = () => {
   };
 
   return (
-    <div className="certificate-shell cert-print-root bg-white min-h-screen py-2 print:py-0">
+    <div className="certificate-shell cert-print-root bg-white min-h-screen py-1 print:py-0">
       <style>{`
         .cert-print-root {
           font-family: Arial, Helvetica, sans-serif;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
-        @page { size: A4; margin: 14mm; }
+        @page { size: A4; margin: 10mm; }
         @media print {
           .no-print { display: none !important; }
           .certificate-shell { background: white !important; padding: 0 !important; }
@@ -265,33 +265,33 @@ const CertificatePrint: React.FC = () => {
           }
         }
         .cert-doc-max { max-width: min(1080px, calc(100vw - 24px)); }
-        .cert-doc { color: #000; font-size: 11px; line-height: 1.25; width: 100%; }
+        .cert-doc { color: #000; font-size: 10px; line-height: 1.2; width: 100%; }
         .cert-main-title {
           color: #E4590F;
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 700;
           letter-spacing: 0.03em;
-          line-height: 1.1;
+          line-height: 1.05;
           text-transform: uppercase;
           margin: 0;
         }
-        .cert-subtitle { font-size: 11px; margin: 4px 0 0; color: #000; font-weight: 400; }
-        .cert-orange-line { height: 3px; background: #E4590F; width: 100%; margin: 6px 0 8px; border: none; }
-        .cert-gray-line { height: 1px; background: #E0E0E0; width: 100%; margin: 8px 0; border: none; }
-        .cert-intro { margin: 0 0 8px; font-size: 11px; }
+        .cert-subtitle { font-size: 10px; margin: 2px 0 0; color: #000; font-weight: 400; }
+        .cert-orange-line { height: 2px; background: #E4590F; width: 100%; margin: 4px 0 5px; border: none; }
+        .cert-gray-line { height: 1px; background: #E0E0E0; width: 100%; margin: 5px 0; border: none; }
+        .cert-intro { margin: 0 0 5px; font-size: 10px; }
         .cert-inline-field { display: inline; }
-        .cert-lbl-i { font-size: 10px; font-style: italic; color: #222; }
-        .cert-val-i { font-size: 11px; font-weight: 700; }
+        .cert-lbl-i { font-size: 9px; font-style: italic; color: #222; }
+        .cert-val-i { font-size: 10px; font-weight: 700; }
         /* Insured / coverage / pricing: horizontal rules only (no vertical borders) */
-        .cert-split-table { width: 100%; border-collapse: collapse; margin: 0 0 10px; }
+        .cert-split-table { width: 100%; border-collapse: collapse; margin: 0 0 6px; }
         .cert-split-table td {
           border: none;
           border-bottom: 1px solid #E0E0E0;
-          padding: 4px 16px 4px 0;
+          padding: 2px 10px 2px 0;
           vertical-align: middle;
           width: 50%;
         }
-        .cert-split-table td + td { padding-left: 16px; padding-right: 0; }
+        .cert-split-table td + td { padding-left: 10px; padding-right: 0; }
         .cert-split-table td[colspan="2"] {
           width: 100%;
           padding-left: 0;
@@ -301,28 +301,28 @@ const CertificatePrint: React.FC = () => {
         .cert-mail-link { color: #1c398e; text-decoration: underline; word-break: break-all; }
         .cert-mail-link:hover { color: #153570; }
         .cert-lbl {
-          font-size: 10px;
+          font-size: 9px;
           font-style: italic;
           color: #222;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
-        .cert-val { font-size: 11px; font-weight: 700; }
-        .cert-val-normal { font-size: 11px; font-weight: 400; }
+        .cert-val { font-size: 10px; font-weight: 700; }
+        .cert-val-normal { font-size: 10px; font-weight: 400; }
         .cert-section-title {
-          font-size: 12px;
+          font-size: 10.5px;
           font-weight: 700;
-          margin: 0 0 4px;
+          margin: 0 0 2px;
           color: #000;
           text-align: left;
         }
-        .cert-section-title--spaced { margin-top: 10px; }
-        .cert-benefits-table { border-collapse: collapse; width: 100%; font-size: 10px; margin-bottom: 8px; }
+        .cert-section-title--spaced { margin-top: 6px; }
+        .cert-benefits-table { border-collapse: collapse; width: 100%; font-size: 9px; margin-bottom: 5px; }
         .cert-benefits-table th,
-        .cert-benefits-table td { border: 1px solid #E0E0E0; padding: 4px 6px; vertical-align: top; }
+        .cert-benefits-table td { border: 1px solid #E0E0E0; padding: 2px 4px; vertical-align: top; }
         .cert-benefits-table th {
           background: #f5f5f5;
           font-weight: 700;
-          font-size: 10px;
+          font-size: 9px;
           text-align: left;
         }
         .cert-benefits-table .levels { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -331,16 +331,16 @@ const CertificatePrint: React.FC = () => {
           transform: rotate(180deg);
           text-align: center;
           font-weight: 700;
-          font-size: 10px;
+          font-size: 9px;
           background: #fafafa;
-          width: 32px;
-          min-width: 32px;
+          width: 26px;
+          min-width: 26px;
         }
-        .cert-contact-block { margin: 0 0 6px; font-size: 10px; line-height: 1.35; }
-        .cert-contact-intro { margin: 0 0 4px; font-weight: 400; }
-        .cert-contact-line { margin: 0 0 1px; padding: 0; }
-        .cert-footer-bar { height: 4px; background: #E4590F; width: 100%; margin: 8px 0 6px; }
-        .cert-company-footer { font-size: 8px; color: #444; line-height: 1.35; text-align: center; }
+        .cert-contact-block { margin: 0 0 4px; font-size: 9px; line-height: 1.28; }
+        .cert-contact-intro { margin: 0 0 2px; font-weight: 400; }
+        .cert-contact-line { margin: 0; padding: 0; line-height: 1.25; }
+        .cert-footer-bar { height: 3px; background: #E4590F; width: 100%; margin: 5px 0 4px; }
+        .cert-company-footer { font-size: 7px; color: #444; line-height: 1.3; text-align: center; }
       `}</style>
 
       {/* Screen-only: language + actions */}
@@ -359,14 +359,14 @@ const CertificatePrint: React.FC = () => {
         </div>
       </div>
 
-      <article className="cert-doc cert-doc-max mx-auto min-h-0 px-4 sm:px-8 pt-1 pb-4 bg-white shadow-md print:shadow-none">
+      <article className="cert-doc cert-doc-max mx-auto min-h-0 px-3 sm:px-5 pt-0 pb-2 bg-white shadow-md print:shadow-none">
         {/* Header — logos + title */}
-        <header className="flex justify-between items-center gap-4 mb-0">
-          <div className="shrink-0 flex items-center min-w-[100px]">
+        <header className="flex justify-between items-center gap-2 mb-0">
+          <div className="shrink-0 flex items-center min-w-[88px]">
             <img
               src={MAIN_LOGO}
               alt="Assur Assistance"
-              className="cert-logo-main block max-h-[52px] max-w-[160px] w-auto object-contain object-left"
+              className="cert-logo-main block max-h-[44px] max-w-[140px] w-auto object-contain object-left"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
@@ -376,11 +376,11 @@ const CertificatePrint: React.FC = () => {
             <h1 className="cert-main-title">{t("certificatePrint.mainTitle")}</h1>
             <p className="cert-subtitle">{t("certificatePrint.subtitleTravel")}</p>
           </div>
-          <div className="shrink-0 flex items-center justify-end min-w-[100px]">
+          <div className="shrink-0 flex items-center justify-end min-w-[88px]">
             <img
               src={PARTNER_LOGO}
               alt={t("certificatePrint.partnerLogoAlt")}
-              className="cert-logo-partner block max-h-[48px] max-w-[140px] w-auto object-contain object-right"
+              className="cert-logo-partner block max-h-[40px] max-w-[120px] w-auto object-contain object-right"
             />
           </div>
         </header>
@@ -495,90 +495,44 @@ const CertificatePrint: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Premium / sale */}
-        <h2 className="cert-section-title cert-section-title--spaced">
-          {t("certificatePrint.pricingSectionTitle")}
-        </h2>
-        <table className="cert-split-table">
-          <tbody>
-            {data.pricing.basePremium != null && (
-              <tr>
-                <td colSpan={2}>
-                  <FieldInline label={t("certificatePrint.basePremium")}>
-                    {fmtNum(data.pricing.basePremium, locale)} {cur}
-                  </FieldInline>
-                </td>
-              </tr>
-            )}
-            {data.pricing.ageMultiplier != null && (
-              <tr>
-                <td>
-                  <FieldInline
-                    label={t("certificatePrint.ageAdjustment", { mult: data.pricing.ageMultiplier })}
-                  >
-                    {data.pricing.ageBand || "—"}
-                  </FieldInline>
-                </td>
-                <td>
-                  <FieldInline label={t("certificatePrint.planPriceAfterAge")}>
-                    {fmtNum(data.pricing.planPremium, locale)} {cur}
-                  </FieldInline>
-                </td>
-              </tr>
-            )}
-            {data.pricing.basePremium == null && data.pricing.ageMultiplier == null && (
-              <tr>
-                <td colSpan={2}>
-                  <FieldInline label={t("certificatePrint.planPriceAfterAge")}>
-                    {fmtNum(data.pricing.planPremium, locale)} {cur}
-                  </FieldInline>
-                </td>
-              </tr>
-            )}
-            {data.pricing.guaranteesTotal > 0 && (
-              <tr>
-                <td colSpan={2}>
-                  <FieldInline label={t("certificatePrint.guaranteesTotal")}>
-                    {fmtNum(data.pricing.guaranteesTotal, locale)} {cur}
-                  </FieldInline>
-                </td>
-              </tr>
-            )}
-            <tr>
-              <td>
-                <FieldInline label={t("certificatePrint.premiumSubtotal")}>
-                  {fmtNum(data.pricing.premiumAmount, locale)} {cur}
-                </FieldInline>
-              </td>
-              <td>
-                <FieldInline label={t("certificatePrint.tax")}>
-                  {fmtNum(data.pricing.tax, locale)} {cur}
-                </FieldInline>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2}>
-                <FieldInline label={t("certificatePrint.totalSale")}>
-                  {fmtNum(data.pricing.total, locale)} {cur}
-                </FieldInline>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Age rating only (no premium amounts on certificate) */}
+        {(data.pricing.ageMultiplier != null ||
+          (data.pricing.ageBand != null && String(data.pricing.ageBand).trim() !== "")) && (
+          <>
+            <h2 className="cert-section-title cert-section-title--spaced">
+              {t("certificatePrint.ageSectionTitle")}
+            </h2>
+            <table className="cert-split-table">
+              <tbody>
+                <tr>
+                  <td colSpan={2}>
+                    <FieldInline
+                      label={t("certificatePrint.ageAdjustment", {
+                        mult: data.pricing.ageMultiplier ?? 1
+                      })}
+                    >
+                      {data.pricing.ageBand?.trim() || "—"}
+                    </FieldInline>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </>
+        )}
         {data.pricing.pricingNote && (
           <p className="text-red-600 text-[10px] mb-1">{data.pricing.pricingNote}</p>
         )}
 
-        <p className="mb-1 mt-1" style={{ fontSize: 11 }}>
+        <p className="mb-0.5 mt-0.5" style={{ fontSize: 10 }}>
           {t("certificatePrint.benefitsIntro")}
         </p>
 
         <table className="cert-benefits-table">
           <thead>
             <tr>
-              <th style={{ width: 36 }}>{t("certificatePrint.colTravel")}</th>
+              <th style={{ width: 28 }}>{t("certificatePrint.colTravel")}</th>
               <th>{t("certificatePrint.colBenefits")}</th>
-              <th className="levels" style={{ width: 120 }}>
+              <th className="levels" style={{ width: 100 }}>
                 {t("certificatePrint.colLevels")}
               </th>
             </tr>
@@ -633,7 +587,7 @@ const CertificatePrint: React.FC = () => {
 
         <div className="cert-gray-line" role="presentation" />
 
-        <div className="space-y-0.5 mb-2" style={{ fontSize: 11 }}>
+        <div className="space-y-0 mb-1" style={{ fontSize: 10 }}>
           <div>
             <span className="font-bold">{t("certificatePrint.certificateNo")}</span>{" "}
             {data.certificateNumber}
@@ -648,30 +602,30 @@ const CertificatePrint: React.FC = () => {
           )}
         </div>
 
-        <div className="flex justify-between items-end gap-4 mb-2">
+        <div className="flex justify-between items-end gap-3 mb-1">
           <div>
-            <p className="mb-1" style={{ fontSize: 10 }}>
+            <p className="mb-0.5" style={{ fontSize: 9 }}>
               {t("certificatePrint.authQrCaption")}
             </p>
             {data.qrDataUrl ? (
               <img
                 src={data.qrDataUrl}
                 alt=""
-                className="w-[104px] h-[104px] border border-[#E0E0E0] object-contain"
+                className="w-[88px] h-[88px] border border-[#E0E0E0] object-contain"
               />
             ) : (
-              <div className="w-[104px] h-[104px] bg-[#f5f5f5] border border-[#E0E0E0]" />
+              <div className="w-[88px] h-[88px] bg-[#f5f5f5] border border-[#E0E0E0]" />
             )}
           </div>
-          <div className="text-right font-semibold pb-1" style={{ fontSize: 11 }}>
+          <div className="text-right font-semibold pb-0.5" style={{ fontSize: 10 }}>
             {t("certificatePrint.forAssur")}
           </div>
         </div>
 
-        <p className="text-center mb-1" style={{ fontSize: 11 }}>
+        <p className="text-center mb-0.5" style={{ fontSize: 10 }}>
           {t("certificatePrint.issuedLine1", { date: data.issuedOn })}
         </p>
-        <p className="text-center mb-0" style={{ fontSize: 10, color: "#333" }}>
+        <p className="text-center mb-0" style={{ fontSize: 9, color: "#333" }}>
           {t("certificatePrint.issuedLine2")}
         </p>
 
