@@ -288,17 +288,15 @@ const CasesManagement: React.FC = () => {
         }
 
         const tax = 0;
-        // premium_amount should be plan_price + guarantees_total (total before tax)
-        const premiumAmountTotal = premiumAmount + guaranteesTotal;
-        const grandTotal = premiumAmountTotal + tax;
-        
+        const grandTotal = premiumAmount + tax;
+
         const payload = {
           case_id: caseId,
-          premium_amount: premiumAmountTotal, // plan_price + guarantees_total
+          premium_amount: premiumAmount,
           tax: tax,
           total: grandTotal,
           currency: caseItem.currency || 'XOF',
-          plan_price: premiumAmount, // just the plan price
+          plan_price: premiumAmount,
           guarantees_total: guaranteesTotal,
           guarantees_details: guaranteesDetails.length > 0 ? guaranteesDetails : undefined,
         };
@@ -904,12 +902,6 @@ const CasesManagement: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
                       <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span></div>
                       <div className="text-left"><span className="text-[#E4590F] font-medium">{formatCurrency(calculatedPrice)}</span></div>
-                      {totalGuarantees > 0 && (
-                        <>
-                          <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("plan.guaranteeTables")} {t('createCase.total')}:</span></div>
-                          <div className="text-left"><span className="text-[#E4590F] font-medium">{formatCurrency(totalGuarantees)}</span></div>
-                        </>
-                      )}
                       <div className="col-span-2 border-t border-[#D9D9D9] pt-2 mt-2">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t('createCase.grandTotal')}:</span></div>

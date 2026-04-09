@@ -13,7 +13,8 @@ import {
   Activity,
   Layers,
   ReceiptText,
-  UsersRound
+  UsersRound,
+  GitBranch
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -172,6 +173,7 @@ const Layout: React.FC = () => {
             <nav className="space-y-2">
               <NavLink to="/admin" icon={BarChart3}>{t("sidebar.dashboard", "Dashboard")}</NavLink>
               <NavLink to="/admin/users" icon={Users}>{t("sidebar.agents", "Agents")}</NavLink>
+              <NavLink to="/admin/agent-hierarchy" icon={GitBranch}>{t("sidebar.agentHierarchy", "Agent hierarchy")}</NavLink>
               {user?.role === "admin" && (
                 <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
               )}

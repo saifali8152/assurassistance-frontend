@@ -2,8 +2,8 @@
 import axios from "axios";
 import i18n from "../i18n"; 
 
-// Use environment variable for API URL with fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://backend.acareeracademy.com/api";
+// Use environment variable for API URL with fallback (single source for axios + raw fetch URLs)
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://backend.acareeracademy.com/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -74,5 +74,19 @@ export const apiPatch = async <T>(url: string, data: any): Promise<T> => {
   return res.data;
 };
 
+/** Multipart form (e.g. file upload). Omits JSON Content-Type so the browser sets the boundary. */
+export const apiPostFormData = async <T>(url: string, data: FormData): Promise<T> => {
+  const res = await api.post<T>(url, data, {
+    transformRequest: [
+      (body: FormData, headers?: Record<string, string>) => {
+        if (headers && "Content-Type" in headers) {
+          delete headers["Content-Type"];
+        }
+        return body;
+      }
+    ]
+  });
+  return res.data;
+};
 
 export default api;

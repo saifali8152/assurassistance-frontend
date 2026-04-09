@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Check, Clock, Lock, Unlock, Key, ChevronDown, Edit3, ArrowLeft, X, Trash2 } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, ChevronDown, Edit3, ArrowLeft, X, Trash2, MapPin } from "lucide-react";
 import InputField from "../components/InputFields";
+import CountrySearchSelect from "../components/CountrySearchSelect";
+import { getCountryLabel } from "../utils/countryLabels";
 import {
   getAgentApi,
   updateAgentApi,
@@ -22,29 +24,6 @@ const PARTNERSHIP_TYPES = [
   "Travel agency",
   "Corporate desk",
   "Independent Agent",
-];
-
-const COUNTRIES = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
-  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada",
-  "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Côte-d'Ivoire", "Croatia",
-  "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
-  "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
-  "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-  "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
-  "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
-  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
-  "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
-  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
-  "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
-  "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
-  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
-  "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
-  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
-  "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
-  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela",
-  "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
 type SubAgentWithChildren = SubAgentItem & { sub_agents?: SubAgentItem[] };
@@ -68,7 +47,7 @@ const StatusBadge = ({ status }: { status: "active" | "inactive" }) => {
 const SupervisorView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [supervisor, setSupervisor] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<{ id: number; name: string }[]>([]);
@@ -79,10 +58,8 @@ const SupervisorView: React.FC = () => {
     iataNumber: "", geographicalLocation: "", workPhone: "", whatsappPhone: "", assignedPlanIds: [] as number[],
   });
   const [partnershipOpen, setPartnershipOpen] = useState(false);
-  const [countryOpen, setCountryOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
   const partnershipRef = useRef<HTMLDivElement>(null);
-  const countryRef = useRef<HTMLDivElement>(null);
   const plansRef = useRef<HTMLDivElement>(null);
   const [savingSupervisor, setSavingSupervisor] = useState(false);
 
@@ -156,7 +133,6 @@ const SupervisorView: React.FC = () => {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (partnershipRef.current && !partnershipRef.current.contains(e.target as Node)) setPartnershipOpen(false);
-      if (countryRef.current && !countryRef.current.contains(e.target as Node)) setCountryOpen(false);
       if (plansRef.current && !plansRef.current.contains(e.target as Node)) setPlansOpen(false);
       if (childPlansRef.current && !childPlansRef.current.contains(e.target as Node)) setChildPlansOpen(false);
       if (editChildPlansRef.current && !editChildPlansRef.current.contains(e.target as Node)) setEditChildPlansOpen(false);
@@ -457,7 +433,11 @@ const SupervisorView: React.FC = () => {
           <div className="font-medium text-[#2B2B2B]/80">{t("agent.partnershipType", "Type of partnership")}</div>
           <div>{supervisor.partnership_type || "—"}</div>
           <div className="font-medium text-[#2B2B2B]/80">{t("agent.countryOfResidence", "Country of residence")}</div>
-          <div>{supervisor.country_of_residence || "—"}</div>
+          <div>
+            {supervisor.country_of_residence
+              ? getCountryLabel(supervisor.country_of_residence, i18n.language)
+              : "—"}
+          </div>
           <div className="font-medium text-[#2B2B2B]/80">{t("agent.iataNumber", "N° IATA")}</div>
           <div>{supervisor.iata_number || "—"}</div>
           <div className="font-medium text-[#2B2B2B]/80">{t("agent.geographicalLocation", "Geographical location")}</div>
@@ -634,19 +614,14 @@ const SupervisorView: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className="relative" ref={countryRef}>
-                <button type="button" onClick={() => setCountryOpen(!countryOpen)} className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left">
-                  <span className={supervisorForm.countryOfResidence ? "text-[#2B2B2B]" : "text-[#2B2B2B]/50"}>{supervisorForm.countryOfResidence || t("agent.countryOfResidence", "Country of residence")}</span>
-                  <ChevronDown className={`w-4 h-4 ${countryOpen ? "rotate-180" : ""}`} />
-                </button>
-                {countryOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
-                    {COUNTRIES.map((c) => (
-                      <button key={c} type="button" onClick={() => { setSupervisorForm((p) => ({ ...p, countryOfResidence: c })); setCountryOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#E4590F]/10 ${supervisorForm.countryOfResidence === c ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}>{c}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <CountrySearchSelect
+                label={t("agent.countryOfResidence", "Country of residence")}
+                placeholder={t("plan.selectCountry")}
+                icon={<MapPin className="w-4 h-4" />}
+                value={supervisorForm.countryOfResidence}
+                onChange={(v) => setSupervisorForm((p) => ({ ...p, countryOfResidence: v }))}
+                required
+              />
               <InputField type="text" placeholder={t("agent.iataNumber", "N° IATA")} value={supervisorForm.iataNumber} onChange={(v) => setSupervisorForm((p) => ({ ...p, iataNumber: v }))} />
               <InputField type="text" placeholder={t("agent.geographicalLocation", "Geographical location")} value={supervisorForm.geographicalLocation} onChange={(v) => setSupervisorForm((p) => ({ ...p, geographicalLocation: v }))} />
               <InputField type="text" placeholder={t("agent.workPhone", "Work phone number")} value={supervisorForm.workPhone} onChange={(v) => setSupervisorForm((p) => ({ ...p, workPhone: v }))} />

@@ -1,6 +1,4 @@
-import { apiGet } from "../lib/api";
-
-const API_BASE_URL = "https://backend.acareeracademy.com/api"; // same as in lib/api.ts
+import { apiGet, API_BASE_URL } from "../lib/api";
 
 export interface LedgerFilters {
   startDate?: string;

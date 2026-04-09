@@ -27,7 +27,7 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import LedgerPage from './pages/LedgerPage'
 import Reconciliation from './pages/ReconciliationTable'
 import ActivityLogPage from './pages/ActivityLogPage'
-
+import AgentHierarchyPage from './pages/AgentHierarchyPage'
 
 
 // User Layout and Pages
@@ -129,6 +129,7 @@ function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<CreateUser />} />
+            <Route path="agent-hierarchy" element={<AgentHierarchyPage />} />
             <Route path="supervisors/:id" element={<SupervisorView />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="createCase" element={<CreateCase />} />

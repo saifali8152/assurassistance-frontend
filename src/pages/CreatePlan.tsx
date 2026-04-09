@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Trash2, Edit3, Save, X, Plus, Check, Info, ChevronDown } from "lucide-react";
-import { 
-  getAllCataloguesApi, 
-  createCatalogueApi, 
-  updateCatalogueApi, 
-  deleteCatalogueApi 
-
+import { Trash2, Edit3, Save, X, Plus, Check, Info, ChevronDown, MapPin } from "lucide-react";
+import CountrySearchSelect from "../components/CountrySearchSelect";
+import {
+  getAllCataloguesApi,
+  createCatalogueApi,
+  updateCatalogueApi,
+  deleteCatalogueApi,
+  uploadPlanPartnerLogoApi,
+  deletePlanPartnerLogoApi
 } from "../api/catalogueApi";
 import { toast } from "react-hot-toast"; // for notifications
 import { useTranslation } from "react-i18next";
@@ -20,6 +22,8 @@ interface Plan {
   countryOfResidence?: string;
   routeType?: string;
   currency?: string; // Currency code (XOF, USD, EUR)
+  /** Relative path e.g. /uploads/plan-logos/... */
+  partnerInsurerLogo?: string;
 }
 
 interface PricingRow {
@@ -48,6 +52,13 @@ interface FormData {
   countryOfResidence?: string;
   routeType?: string;
   pricingTables?: PricingTables;
+}
+
+const apiOrigin = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/i, "");
+function absoluteUploadUrl(rel?: string | null) {
+  if (!rel) return "";
+  if (/^https?:\/\//i.test(rel)) return rel;
+  return `${apiOrigin}${rel.startsWith("/") ? "" : "/"}${rel}`;
 }
 
 const CreatePlan: React.FC = () => {
@@ -203,40 +214,14 @@ const CreatePlan: React.FC = () => {
 
   const productTypes = ["Travel", "Bank", "Health Evacuation", "Travel Inbound", "Road travel"];
   const routeTypes = ["By Air", "By Road"];
-  
-  // Countries list
-  const countries = [
-    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-    "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
-    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada",
-    "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Côte-d'Ivoire", "Croatia",
-    "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
-    "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
-    "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-    "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
-    "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
-    "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
-    "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
-    "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
-    "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
-    "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
-    "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
-    "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
-    "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
-    "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
-    "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela",
-    "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-  ];
-  
+
   // Dropdown states
   const [productTypeDropdownOpen, setProductTypeDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [routeTypeDropdownOpen, setRouteTypeDropdownOpen] = useState(false);
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const productTypeDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const routeTypeDropdownRef = useRef<HTMLDivElement>(null);
-  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
 
   const fieldLabels: Record<keyof FormData, string> = {
@@ -276,6 +261,7 @@ const CreatePlan: React.FC = () => {
           routeType: plan.route_type || "",
           pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
           currency: plan.currency || 'XOF', // Load currency from database, default to XOF
+          partnerInsurerLogo: plan.partner_insurer_logo || undefined
         }));
         setPlans(plans);
       } catch (err) {
@@ -299,19 +285,16 @@ const CreatePlan: React.FC = () => {
       if (routeTypeDropdownRef.current && !routeTypeDropdownRef.current.contains(event.target as Node)) {
         setRouteTypeDropdownOpen(false);
       }
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
-        setCountryDropdownOpen(false);
-      }
     };
 
-    if (productTypeDropdownOpen || statusDropdownOpen || routeTypeDropdownOpen || countryDropdownOpen) {
+    if (productTypeDropdownOpen || statusDropdownOpen || routeTypeDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [productTypeDropdownOpen, statusDropdownOpen, routeTypeDropdownOpen, countryDropdownOpen]);
+  }, [productTypeDropdownOpen, statusDropdownOpen, routeTypeDropdownOpen]);
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     if (field === 'active') return;
@@ -517,15 +500,16 @@ const CreatePlan: React.FC = () => {
     console.log('FormData values:', { countryOfResidence: formData.countryOfResidence, routeType: formData.routeType });
 
     setIsLoading(true);
+    let createdId: number | null = null;
     try {
       if (editingPlan) {
         await updateCatalogueApi(Number(editingPlan), payload);
         toast.success("Plan updated!");
       } else {
-        await createCatalogueApi(payload);
+        const createRes = (await createCatalogueApi(payload)) as { id?: number };
+        createdId = createRes?.id ?? null;
         toast.success("Plan created!");
       }
-      // Reload plans
       const res = await getAllCataloguesApi();
       const plans = (res as any).data.map((plan: any) => ({
         id: String(plan.id),
@@ -533,17 +517,44 @@ const CreatePlan: React.FC = () => {
         productType: plan.product_type,
         active: !!plan.active,
         flatPrice: plan.flat_price,
-          countryOfResidence: plan.country_of_residence || "",
-          routeType: plan.route_type || "",
-          pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
-          currency: plan.currency || 'XOF', // Load currency from database, default to XOF
+        countryOfResidence: plan.country_of_residence || "",
+        routeType: plan.route_type || "",
+        pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
+        currency: plan.currency || 'XOF',
+        partnerInsurerLogo: plan.partner_insurer_logo || undefined
       }));
       setPlans(plans);
+
+      if (!editingPlan && createdId != null) {
+        const np = plans.find((p: Plan) => p.id === String(createdId));
+        if (np) {
+          const pricingTables = (np as any).pricingTables || getDefaultPricingTables(np.productType);
+          setEditingPlan(np.id);
+          setFormData({
+            name: np.name,
+            productType: np.productType,
+            active: np.active,
+            countryOfResidence: np.countryOfResidence || "",
+            routeType: np.routeType || "",
+            pricingTables: pricingTables,
+          });
+          setPreviewData({
+            name: np.name,
+            productType: np.productType,
+            active: np.active,
+            countryOfResidence: np.countryOfResidence || "",
+            routeType: np.routeType || "",
+            pricingTables: pricingTables,
+          });
+          return;
+        }
+      }
+
       setEditingPlan(null);
       setFormData({
         name: "",
         productType: "",
-        active: true, // Always default to active for new plans
+        active: true,
         countryOfResidence: "",
         routeType: "",
         pricingTables: undefined
@@ -551,6 +562,45 @@ const CreatePlan: React.FC = () => {
       setPreviewData({});
     } catch (err) {
       toast.error("Failed to save plan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePartnerLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingPlan) return;
+    setIsLoading(true);
+    try {
+      const res = await uploadPlanPartnerLogoApi(Number(editingPlan), file);
+      if (res.success && res.partner_insurer_logo) {
+        toast.success(t("plan.partnerLogoUploaded"));
+        setPlans((prev) =>
+          prev.map((p) =>
+            p.id === editingPlan ? { ...p, partnerInsurerLogo: res.partner_insurer_logo } : p
+          )
+        );
+      }
+    } catch {
+      toast.error(t("plan.partnerLogoUploadFailed"));
+    } finally {
+      setIsLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemovePartnerLogo = async () => {
+    if (!editingPlan) return;
+    if (!window.confirm(t("plan.partnerLogoRemoveConfirm"))) return;
+    setIsLoading(true);
+    try {
+      await deletePlanPartnerLogoApi(Number(editingPlan));
+      toast.success(t("plan.partnerLogoRemoved"));
+      setPlans((prev) =>
+        prev.map((p) => (p.id === editingPlan ? { ...p, partnerInsurerLogo: undefined } : p))
+      );
+    } catch {
+      toast.error(t("plan.partnerLogoRemoveFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -692,50 +742,14 @@ const CreatePlan: React.FC = () => {
                     )}
                   </div>
                 ) : field === 'countryOfResidence' ? (
-                  <div className="relative" ref={countryDropdownRef}>
-                    <button
-                      onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                      className="w-full flex items-center justify-between gap-3 bg-white border border-[#D9D9D9] rounded-xl px-4 py-3 hover:border-[#E4590F] transition-all duration-200 cursor-pointer group"
-                      type="button"
-                    >
-                      <span className="text-[#2B2B2B] text-sm font-medium flex-1 text-left">
-                        {formData.countryOfResidence || t("plan.selectCountry")}
-                      </span>
-                      <ChevronDown 
-                        className={`w-4 h-4 text-[#2B2B2B]/60 group-hover:text-[#E4590F] transition-all duration-200 flex-shrink-0 ${
-                          countryDropdownOpen ? 'rotate-180' : ''
-                        }`} 
-                      />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {countryDropdownOpen && (
-                      <div className="absolute top-full mt-2 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg z-50 overflow-hidden animate-fadeIn max-h-60 overflow-y-auto">
-                        <div className="py-1.5">
-                          {countries.map((country) => (
-                            <button
-                              key={country}
-                              onClick={() => {
-                                handleInputChange('countryOfResidence', country);
-                                setCountryDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm font-normal transition-all duration-150 ${
-                                formData.countryOfResidence === country
-                                  ? 'bg-[#E4590F]/10 text-[#E4590F] font-medium'
-                                  : 'text-[#2B2B2B] hover:bg-[#D9D9D9]/30 hover:text-[#E4590F]'
-                              }`}
-                              type="button"
-                            >
-                              <span>{country}</span>
-                              {formData.countryOfResidence === country && (
-                                <Check className="w-4 h-4 text-[#E4590F] flex-shrink-0" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CountrySearchSelect
+                    label={t("plan.countryOfResidence")}
+                    placeholder={t("plan.selectCountry")}
+                    icon={<MapPin className="w-4 h-4" />}
+                    value={formData.countryOfResidence ?? ""}
+                    onChange={(v) => handleInputChange("countryOfResidence", v)}
+                    required
+                  />
                 ) : field === 'routeType' ? (
                   <div className="relative" ref={routeTypeDropdownRef}>
                     <button
@@ -856,6 +870,42 @@ const CreatePlan: React.FC = () => {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {editingPlan && (
+              <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
+                <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
+                  {t("plan.partnerInsurerLogo")}
+                </h3>
+                <p className="text-xs text-[#2B2B2B]/70 mb-3">{t("plan.partnerInsurerLogoHint")}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#D9D9D9] bg-white cursor-pointer text-sm hover:border-[#E4590F]">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/svg+xml,image/webp"
+                      className="hidden"
+                      onChange={handlePartnerLogoFile}
+                    />
+                    {t("plan.partnerInsurerLogoChoose")}
+                  </label>
+                  {plans.find((p) => p.id === editingPlan)?.partnerInsurerLogo ? (
+                    <>
+                      <img
+                        src={absoluteUploadUrl(plans.find((p) => p.id === editingPlan)?.partnerInsurerLogo)}
+                        alt=""
+                        className="h-10 max-w-[140px] object-contain border border-[#E0E0E0] rounded-lg bg-white p-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemovePartnerLogo}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        {t("plan.partnerInsurerLogoRemove")}
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             )}

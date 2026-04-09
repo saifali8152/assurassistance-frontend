@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import InputField from "../components/InputFields";
 import DateField from "../components/DateField";
-import { Globe2, CalendarIcon, ClockIcon, Upload, Download, Trash2, Plus } from "lucide-react";
-import MultiSelectField from "../components/MultiSelectField";
+import { Globe2, CalendarIcon, ClockIcon, Upload, Download, Trash2, Plus, Flag, MapPin } from "lucide-react";
+import CountrySearchMultiSelect from "../components/CountrySearchMultiSelect";
+import CountrySearchSelect from "../components/CountrySearchSelect";
+import { getCountryLabel } from "../utils/countryLabels";
 import {
   createSaleApi,
   generateInvoiceApi,
@@ -24,7 +26,6 @@ import {
   getLegacyPricingTablePremium,
   roundMoney
 } from "../utils/travelPricing";
-import { COUNTRIES } from "../constants/countries";
 import { downloadGroupTemplateFile, parseGroupExcelFile, type GroupMemberImport } from "../utils/groupCaseExcel";
 
 interface Plan {
@@ -73,7 +74,7 @@ const newMember = (data: Partial<GroupMemberImport> = {}): MemberRow => ({
 
 const CreateGroupCase: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -98,7 +99,6 @@ const CreateGroupCase: React.FC = () => {
     }
   }, [createdSaleIds, caseIds]);
 
-  const countries = COUNTRIES;
   const genders = ["Male", "Female", "Other"];
 
   useEffect(() => {
@@ -337,14 +337,13 @@ const CreateGroupCase: React.FC = () => {
         return;
       }
       const premiumAmount = br.planPremium;
-      const premiumAmountTotal = premiumAmount + guaranteesTotal;
       const tax = 0;
       try {
         const res = await createSaleApi({
           case_id: caseIds[i],
-          premium_amount: premiumAmountTotal,
+          premium_amount: premiumAmount,
           tax,
-          total: premiumAmountTotal + tax,
+          total: premiumAmount + tax,
           currency: selectedPlanObj.currency || "XOF",
           plan_price: premiumAmount,
           guarantees_total: guaranteesTotal,
@@ -448,7 +447,38 @@ const CreateGroupCase: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => downloadGroupTemplateFile()}
+              onClick={() =>
+                downloadGroupTemplateFile({
+                  headers: [
+                    t("groupCase.templateHeaderSurname"),
+                    t("groupCase.templateHeaderGivenNames"),
+                    t("groupCase.templateHeaderDateOfBirth"),
+                    t("groupCase.templateHeaderGender"),
+                    t("groupCase.templateHeaderNationality"),
+                    t("groupCase.templateHeaderCountryOfResidence"),
+                    t("groupCase.templateHeaderEmail"),
+                    t("groupCase.templateHeaderTelephone"),
+                    t("groupCase.templateHeaderPassportOrId"),
+                    t("groupCase.templateHeaderAddress")
+                  ],
+                  exampleRow: [
+                    t("groupCase.templateExampleSurname"),
+                    t("groupCase.templateExampleGivenNames"),
+                    t("groupCase.templateExampleDateOfBirth"),
+                    t("groupCase.templateExampleGender"),
+                    t("groupCase.templateExampleNationality"),
+                    t("groupCase.templateExampleCountryOfResidence"),
+                    t("groupCase.templateExampleEmail"),
+                    t("groupCase.templateExampleTelephone"),
+                    t("groupCase.templateExamplePassportOrId"),
+                    t("groupCase.templateExampleAddress")
+                  ],
+                  sheetName: t("groupCase.templateSheetName"),
+                  fileName: i18n.language.startsWith("fr")
+                    ? "modele-voyageurs-groupe.xlsx"
+                    : "group-travellers-template.xlsx"
+                })
+              }
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#D9D9D9] bg-white hover:bg-[#f8f8f8] text-sm"
             >
               <Download className="w-4 h-4" />
@@ -533,33 +563,25 @@ const CreateGroupCase: React.FC = () => {
                         ))}
                       </select>
                     </td>
-                    <td className="p-1">
-                      <select
-                        className="w-full min-w-[100px] border border-[#D9D9D9] rounded px-2 py-1"
+                    <td className="p-1 min-w-[148px] align-top">
+                      <CountrySearchSelect
+                        placeholder={t("createCase.nationalityPlaceholder")}
+                        icon={<Flag className="w-3.5 h-3.5" />}
                         value={m.nationality}
-                        onChange={(e) => updateMember(m.key, "nationality", e.target.value)}
-                      >
-                        <option value="">{t("createCase.nationalityPlaceholder")}</option>
-                        {countries.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => updateMember(m.key, "nationality", v)}
+                        dense
+                        required
+                      />
                     </td>
-                    <td className="p-1">
-                      <select
-                        className="w-full min-w-[100px] border border-[#D9D9D9] rounded px-2 py-1"
+                    <td className="p-1 min-w-[148px] align-top">
+                      <CountrySearchSelect
+                        placeholder={t("createCase.countryOfResidencePlaceholder")}
+                        icon={<MapPin className="w-3.5 h-3.5" />}
                         value={m.country_of_residence}
-                        onChange={(e) => updateMember(m.key, "country_of_residence", e.target.value)}
-                      >
-                        <option value="">{t("createCase.countryOfResidencePlaceholder")}</option>
-                        {countries.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => updateMember(m.key, "country_of_residence", v)}
+                        dense
+                        required
+                      />
                     </td>
                     <td className="p-1">
                       <input
@@ -656,9 +678,8 @@ const CreateGroupCase: React.FC = () => {
         <h2 className="text-xl font-semibold text-[#E4590F] mb-6">{t("createCase.caseDetails")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <MultiSelectField
+            <CountrySearchMultiSelect
               label={t("createCase.destination")}
-              options={countries}
               placeholder={t("createCase.destinationPlaceholder")}
               icon={<Globe2 />}
               value={destination}
@@ -734,7 +755,10 @@ const CreateGroupCase: React.FC = () => {
           <h3 className="text-lg font-semibold text-[#E4590F] mb-2">{t("createCase.caseDetails")}</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <span className="font-semibold">{t("createCase.destination")}:</span> {destination.join(", ")}
+              <span className="font-semibold">{t("createCase.destination")}:</span>{" "}
+              {destination.length
+                ? destination.map((d) => getCountryLabel(d, i18n.language)).join(", ")
+                : ""}
             </div>
             <div>
               <span className="font-semibold">{t("createCase.plan")}:</span> {selectedPlanObj?.name}

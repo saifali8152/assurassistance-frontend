@@ -27,6 +27,7 @@ interface LedgerEntry {
   product_type: string;
   policy_number: string;
   certificate_number: string;
+  plan_price?: number;
   premium_amount: number;
   tax: number;
   total: number;
@@ -34,6 +35,15 @@ interface LedgerEntry {
   payment_notes: string;
   payment_status: string;
   confirmed_at: string;
+}
+
+/** Amount due: plan premium rate + tax (not sums of coverage limits). */
+function billableTotal(entry: LedgerEntry): number {
+  const pp = Number(entry.plan_price);
+  if (Number.isFinite(pp) && pp > 0) {
+    return pp + (Number(entry.tax) || 0);
+  }
+  return Number(entry.total) || 0;
 }
 
 const LedgerPage: React.FC = () => {
@@ -118,10 +128,14 @@ const LedgerPage: React.FC = () => {
 
       const res = await fetch(url, {
         method: "GET",
+        credentials: "include",
         headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
 
-      if (!res.ok) throw new Error("Failed to download");
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(errText || "Failed to download");
+      }
 
       const blob = await res.blob();
       const link = document.createElement("a");
@@ -139,8 +153,8 @@ const LedgerPage: React.FC = () => {
 
   const handlePaymentStatusChange = (entry: LedgerEntry, newStatus: string) => {
     if (newStatus === "Paid" && entry.payment_status === "Unpaid") {
-      // Auto-populate received amount with total amount when changing to paid
-      const updatedEntry = { ...entry, received_amount: entry.total };
+      const due = billableTotal(entry);
+      const updatedEntry = { ...entry, received_amount: due };
       setSelectedEntry(updatedEntry);
       setShowConfirmModal(true);
     } else {
@@ -408,7 +422,7 @@ const LedgerPage: React.FC = () => {
                       <td className="py-4 px-2 text-[#2B2B2B] hidden sm:table-cell">
                         <div className="text-center">
                           <div className="text-[#2B2B2B] font-semibold">
-                            {formatCurrency(entry.total)}
+                            {formatCurrency(billableTotal(entry))}
                           </div>
                         </div>
                       </td>
@@ -590,7 +604,7 @@ const LedgerPage: React.FC = () => {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-[#2B2B2B]/70 text-sm font-normal">Total Amount:</span>
                   <span className="text-[#2B2B2B] font-semibold">
-                    {formatCurrency(selectedEntry.total)}
+                    {formatCurrency(billableTotal(selectedEntry))}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

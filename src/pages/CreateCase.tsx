@@ -3,11 +3,13 @@ import InputField from "../components/InputFields";
 import DateField from "../components/DateField";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, Cake, MapPin, Users, Flag } from "lucide-react";
 import SelectField from "../components/SelectField";
-import MultiSelectField from "../components/MultiSelectField";
+import CountrySearchMultiSelect from "../components/CountrySearchMultiSelect";
+import CountrySearchSelect from "../components/CountrySearchSelect";
+import { getCountryLabel } from "../utils/countryLabels";
 import { createSaleApi, generateInvoiceApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
-import { createCaseApi, changeCaseStatusApi, updateCaseApi } from "../api/caseApi";
+import { createCaseApi, changeCaseStatusApi, updateCaseApi, getPolicyEditMetaApi, type PolicyEditMeta } from "../api/caseApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -56,7 +58,7 @@ interface Plan {
 
 const CreateCase: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("traveller");
@@ -81,6 +83,23 @@ const CreateCase: React.FC = () => {
   const [createdSaleId, setCreatedSaleId] = useState<number | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [policyMeta, setPolicyMeta] = useState<PolicyEditMeta | null>(null);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
+  useEffect(() => {
+    if (!createdCaseId || !createdSaleId) {
+      setPolicyMeta(null);
+      return;
+    }
+    let cancelled = false;
+    getPolicyEditMetaApi(createdCaseId).then((m) => {
+      if (!cancelled) setPolicyMeta(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [createdCaseId, createdSaleId]);
+
   useEffect(() => {
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -236,29 +255,6 @@ const CreateCase: React.FC = () => {
       </div>
     );
   }
-  // Countries list (same as in CreatePlan)
-  const countries = [
-    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-    "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
-    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada",
-    "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Côte-d'Ivoire", "Croatia",
-    "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
-    "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
-    "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-    "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
-    "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
-    "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
-    "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
-    "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
-    "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
-    "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
-    "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
-    "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
-    "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
-    "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
-    "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela",
-    "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-  ];
 
   const genders = ["Male", "Female", "Other"];
 
@@ -272,8 +268,8 @@ const CreateCase: React.FC = () => {
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.lastName')}:</span> {lastName}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.dateOfBirth')}:</span> {dateOfBirth}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.gender')}:</span> {gender}</div>
-          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.nationality')}:</span> {nationality}</div>
-          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.countryOfResidence')}:</span> {countryOfResidence}</div>
+          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.nationality')}:</span> {nationality ? getCountryLabel(nationality, i18n.language) : ""}</div>
+          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.countryOfResidence')}:</span> {countryOfResidence ? getCountryLabel(countryOfResidence, i18n.language) : ""}</div>
           {/* Contact Information */}
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.email')}:</span> {email}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.phone')}:</span> {phoneNumber}</div>
@@ -293,7 +289,7 @@ const CreateCase: React.FC = () => {
           )}
         </div>
         <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
-          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.destination')}:</span> {destination.length > 0 ? destination.join(", ") : "N/A"}</div>
+          <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.destination')}:</span> {destination.length > 0 ? destination.map((d) => getCountryLabel(d, i18n.language)).join(", ") : "N/A"}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.startDate')}:</span> {startDate}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.endDate')}:</span> {endDate}</div>
           <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.durationDays')}:</span> {durationDays} {t('createCase.durationDaysPlaceholder')}</div>
@@ -407,12 +403,6 @@ const CreateCase: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
                 <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span></div>
                 <div><span className="text-[#E4590F] font-medium">{formatCurrency(calculatedPrice)}</span></div>
-                {totalGuarantees > 0 && (
-                  <>
-                    <div><span className="font-semibold text-[#2B2B2B]">{t("plan.guaranteeTables")} {t('createCase.total')}:</span></div>
-                    <div><span className="text-[#E4590F] font-medium">{formatCurrency(totalGuarantees)}</span></div>
-                  </>
-                )}
                 <div className="col-span-2 border-t border-[#D9D9D9] pt-2 mt-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.grandTotal')}:</span></div>
@@ -469,6 +459,13 @@ const CreateCase: React.FC = () => {
       )}
     </div>
   );
+
+  const editAllConfirmed = !!(createdSaleId && policyMeta?.adminMayEditAllFields);
+  const editLimitedConfirmed = !!(createdSaleId && policyMeta?.agentMayEditLimitedFields);
+  const rnFirstLastDestDates = !!(createdSaleId && !editAllConfirmed && !editLimitedConfirmed);
+  const rnOtherTraveller = !!(createdSaleId && !editAllConfirmed);
+  const rnPlan = !!(createdSaleId && !editAllConfirmed);
+
   // Tab configuration
   const tabs: Tab[] = [
     {
@@ -489,6 +486,7 @@ const CreateCase: React.FC = () => {
                   value={firstName}
                   onChange={setFirstName}
                   required
+                  readOnly={rnFirstLastDestDates}
                 />
               </div>
               <div>
@@ -500,6 +498,7 @@ const CreateCase: React.FC = () => {
                   value={lastName}
                   onChange={setLastName}
                   required
+                  readOnly={rnFirstLastDestDates}
                 />
               </div>
               <div>
@@ -510,6 +509,7 @@ const CreateCase: React.FC = () => {
                   value={dateOfBirth}
                   onChange={setDateOfBirth}
                   required
+                  readOnly={rnOtherTraveller}
                 />
               </div>
               <div>
@@ -521,28 +521,29 @@ const CreateCase: React.FC = () => {
                   value={gender}
                   onChange={setGender}
                   required
+                  disabled={rnOtherTraveller}
                 />
               </div>
               <div>
-                <SelectField
+                <CountrySearchSelect
                   label={t('createCase.nationality')}
-                  options={countries}
                   placeholder={t('createCase.nationalityPlaceholder')}
                   icon={<Flag />}
                   value={nationality}
                   onChange={setNationality}
                   required
+                  disabled={rnOtherTraveller}
                 />
               </div>
               <div>
-                <SelectField
+                <CountrySearchSelect
                   label={t('createCase.countryOfResidence')}
-                  options={countries}
                   placeholder={t('createCase.countryOfResidencePlaceholder')}
                   icon={<MapPin />}
                   value={countryOfResidence}
                   onChange={setCountryOfResidence}
                   required
+                  disabled={rnOtherTraveller}
                 />
               </div>
               {/* Contact Information */}
@@ -555,6 +556,7 @@ const CreateCase: React.FC = () => {
                   value={email}
                   onChange={setEmail}
                   required
+                  readOnly={rnOtherTraveller}
                 />
               </div>
               <div>
@@ -566,6 +568,7 @@ const CreateCase: React.FC = () => {
                   value={phoneNumber}
                   onChange={setPhoneNumber}
                   required
+                  readOnly={rnOtherTraveller}
                 />
               </div>
               {/* Official Documents */}
@@ -578,6 +581,7 @@ const CreateCase: React.FC = () => {
                   value={passportId}
                   onChange={setPassportId}
                   required
+                  readOnly={rnOtherTraveller}
                 />
               </div>
               {/* Address */}
@@ -590,6 +594,7 @@ const CreateCase: React.FC = () => {
                   value={address}
                   onChange={setAddress}
                   required
+                  readOnly={rnOtherTraveller}
                 />
               </div>
             </div>
@@ -617,8 +622,8 @@ const CreateCase: React.FC = () => {
               {plans.map((plan) => (
                 <div key={plan.id} className="relative h-full flex flex-col min-h-[280px]">
                   <div
-                    className={`cursor-pointer transition-all duration-200 rounded-xl flex-1 flex flex-col min-h-0 ${selectedPlan === plan.id ? 'ring-2 ring-[#E4590F] ring-offset-2' : ''}`}
-                    onClick={() => setSelectedPlan(plan.id)}
+                    className={`transition-all duration-200 rounded-xl flex-1 flex flex-col min-h-0 ${selectedPlan === plan.id ? 'ring-2 ring-[#E4590F] ring-offset-2' : ''} ${rnPlan ? 'opacity-60 pointer-events-none' : 'cursor-pointer'}`}
+                    onClick={() => !rnPlan && setSelectedPlan(plan.id)}
                   >
                     <PlanCard plan={plan} />
                   </div>
@@ -646,14 +651,14 @@ const CreateCase: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="mb-4 md:col-span-2">
-                <MultiSelectField
+                <CountrySearchMultiSelect
                   label={t('createCase.destination')}
-                  options={countries}
                   placeholder={t('createCase.destinationPlaceholder')}
                   icon={<Globe2 />}
                   value={destination}
                   onChange={setDestination}
                   required
+                  disabled={rnFirstLastDestDates}
                 />
               </div>
               <div className="mb-4">
@@ -664,6 +669,7 @@ const CreateCase: React.FC = () => {
                   value={startDate}
                   onChange={setStartDate}
                   required
+                  readOnly={rnFirstLastDestDates}
                 />
               </div>
               <div className="mb-4">
@@ -674,6 +680,7 @@ const CreateCase: React.FC = () => {
                   value={endDate}
                   onChange={setEndDate}
                   required
+                  readOnly={rnFirstLastDestDates}
                 />
               </div>
               <div className="mb-4">
@@ -706,9 +713,6 @@ const CreateCase: React.FC = () => {
   let visibleTabs = tabs;
   if (createdCaseId) {
     visibleTabs = [...tabs, reviewTab];
-  }
-  if (createdSaleId) {
-    visibleTabs = [reviewTab];
   }
 
   const currentTab = visibleTabs.find(tab => tab.id === activeTab) || visibleTabs[0];
@@ -809,7 +813,7 @@ const CreateCase: React.FC = () => {
     }
   };
 
-  // Update case when user makes changes after creation
+  // Update case when user makes changes after creation (before sale only — debounced)
   const updateCase = async () => {
     if (!createdCaseId) return;
     
@@ -846,13 +850,64 @@ const CreateCase: React.FC = () => {
         }
       };
       
-      // Call update case API
       await updateCaseApi(createdCaseId, payload);
       setLastUpdated(new Date().toLocaleTimeString());
       toast.success("Case updated successfully!");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to update case:", err);
-      toast.error("Failed to update case");
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Failed to update case";
+      toast.error(msg);
+    }
+  };
+
+  /** After sale confirmed — same payload shape; server enforces role / limits */
+  const saveConfirmedPolicyChanges = async () => {
+    if (!createdCaseId || !createdSaleId) return;
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        toast.error(t("createCase.endDateBeforeStartDate", "End date cannot be before start date"));
+        return;
+      }
+    }
+    setSavingPolicy(true);
+    try {
+      const payload = {
+        traveller: {
+          first_name: firstName,
+          last_name: lastName,
+          date_of_birth: dateOfBirth,
+          country_of_residence: countryOfResidence,
+          gender: gender,
+          nationality: nationality,
+          passport_or_id: passportId,
+          phone: phoneNumber,
+          email,
+          address,
+        },
+        caseData: {
+          destination: destination.join(", "),
+          start_date: startDate,
+          end_date: endDate,
+          selected_plan_id: Number(selectedPlan),
+          status: "Confirmed",
+        },
+      };
+      await updateCaseApi(createdCaseId, payload);
+      const m = await getPolicyEditMetaApi(createdCaseId);
+      setPolicyMeta(m);
+      setLastUpdated(new Date().toLocaleTimeString());
+      toast.success(t("createCase.policySaveSuccess", "Policy changes saved"));
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        t("createCase.policySaveFailed", "Could not save policy changes");
+      toast.error(msg);
+    } finally {
+      setSavingPolicy(false);
     }
   };
 
@@ -899,17 +954,16 @@ const CreateCase: React.FC = () => {
       }
 
       const tax = 0; // No tax for now
-      // premium_amount should be plan_price + guarantees_total (total before tax)
-      const premiumAmountTotal = premiumAmount + guaranteesTotal;
-      const grandTotal = premiumAmountTotal + tax;
-      
+      // Billable premium is the plan rate only; guarantee amounts are coverage limits, not charges
+      const grandTotal = premiumAmount + tax;
+
       const payload = {
         case_id: createdCaseId,
-        premium_amount: premiumAmountTotal, // plan_price + guarantees_total
+        premium_amount: premiumAmount,
         tax: tax,
         total: grandTotal,
         currency: selectedPlanObj.currency || 'XOF',
-        plan_price: premiumAmount, // just the plan price
+        plan_price: premiumAmount,
         guarantees_total: guaranteesTotal,
         guarantees_details: guaranteesDetails.length > 0 ? guaranteesDetails : undefined,
       };
@@ -978,6 +1032,37 @@ const CreateCase: React.FC = () => {
     <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 lg:p-10 w-full">
       <h1 className="text-2xl font-semibold text-[#E4590F] mb-8">{t('case.create')}</h1>
 
+      {createdSaleId && policyMeta && (
+        <div
+          className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+            policyMeta.agentBlockedFromEditing
+              ? "border-amber-300 bg-amber-50 text-amber-900"
+              : "border-[#D9D9D9] bg-[#f8f9fa] text-[#2B2B2B]"
+          }`}
+        >
+          {policyMeta.adminMayEditAllFields && (
+            <p>{t("createCase.policyEditAdminHint", "As an administrator you may correct all fields on this confirmed policy.")}</p>
+          )}
+          {policyMeta.agentMayEditLimitedFields && (
+            <p>
+              {t("createCase.policyEditAgentHint", {
+                remaining: policyMeta.policyEditsRemaining,
+                defaultValue:
+                  "You may adjust first name, last name, destination, and travel dates (length of stay). Remaining corrections: {{remaining}} / 3.",
+              })}
+            </p>
+          )}
+          {policyMeta.agentBlockedFromEditing && (
+            <p>
+              {t(
+                "createCase.policyEditAgentBlocked",
+                "This confirmed policy can no longer be edited from your account (cut-off 24 hours before departure, maximum corrections reached, or trip already started). Contact an administrator if a change is required."
+              )}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="flex space-x-1 mb-8 bg-[#D9D9D9]/30 p-1 rounded-2xl">
         {visibleTabs.map((tab) => (
@@ -1023,7 +1108,7 @@ const CreateCase: React.FC = () => {
       {/* Navigation Buttons */}
       <div className="flex justify-between mt-8 pt-6 border-t border-[#D9D9D9]">
         {/* Previous Button */}
-        {!createdSaleId && (
+        {visibleTabs.length > 1 && (
           <button
             onClick={() => {
               const currentIndex = visibleTabs.findIndex(tab => tab.id === activeTab);
@@ -1032,13 +1117,12 @@ const CreateCase: React.FC = () => {
             disabled={activeTab === visibleTabs[0].id}
             className="px-6 py-3 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            {/*  Previous */}
             {t('case.previous')}
           </button>
         )}
         <div className="flex space-x-3">
           {/* Next Button */}
-          {!createdSaleId && activeTab !== visibleTabs[visibleTabs.length - 1].id && (
+          {visibleTabs.length > 1 && activeTab !== visibleTabs[visibleTabs.length - 1].id && (
             <button
               onClick={() => {
                 const currentIndex = visibleTabs.findIndex(tab => tab.id === activeTab);
@@ -1046,7 +1130,6 @@ const CreateCase: React.FC = () => {
               }}
               className="px-6 py-3 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors cursor-pointer"
             >
-              {/* Next */}
               {t('case.next')}
             </button>
           )}
@@ -1094,6 +1177,16 @@ const CreateCase: React.FC = () => {
           )}
 
           {/* Download Invoice & Certificate - after sale confirmed */}
+          {createdSaleId && (editAllConfirmed || editLimitedConfirmed) && (
+            <button
+              type="button"
+              onClick={saveConfirmedPolicyChanges}
+              disabled={savingPolicy}
+              className="px-6 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#1a1a1a] text-white font-medium transition-colors disabled:opacity-50"
+            >
+              {savingPolicy ? t("createCase.savingPolicy", "Saving…") : t("createCase.savePolicyChanges", "Save policy changes")}
+            </button>
+          )}
           {createdSaleId && (
             <>
               <button

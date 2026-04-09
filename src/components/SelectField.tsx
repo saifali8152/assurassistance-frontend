@@ -11,6 +11,7 @@ interface SelectFieldProps {
   className?: string;
   label?: string;
   id?: string;
+  disabled?: boolean;
 }
 
 const SelectField: React.FC<SelectFieldProps> = ({
@@ -22,6 +23,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
   required = false,
   className = "",
   label,
+  disabled = false,
   // id,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,8 +66,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 bg-white border border-[#D9D9D9] rounded-xl px-4 py-3 sm:py-4 transition-all duration-200 cursor-pointer group"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full flex items-center gap-3 bg-white border border-[#D9D9D9] rounded-xl px-4 py-3 sm:py-4 transition-all duration-200 group ${
+          disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+        }`}
       >
         {/* Left Icon */}
         <div className="h-4 w-4 sm:h-5 sm:w-5 transition-colors text-[#2B2B2B]/50 flex-shrink-0">
@@ -86,7 +91,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
       </button>
 
       {/* Dropdown Menu */}
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute top-full mt-2 left-0 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg z-50 overflow-hidden animate-fadeIn max-h-60 overflow-y-auto">
           <div className="py-1.5">
             {options.length === 0 ? (

@@ -65,28 +65,51 @@ function Reconciliation() {
 
 
   const exportToCSV = () => {
+    const csvEscape = (val: unknown): string => {
+      if (val == null) return "";
+      const s = typeof val === "number" && Number.isFinite(val) ? String(val) : String(val);
+      if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+
     const headers = [
-      'Agent Name', 'Month', 'Total Sales', 'Total Amount', 'Paid Amount', 'Unpaid Amount', 'Balance Due',
-      'Gross Collected'
+      "Agent Name",
+      "Month",
+      "Total Sales",
+      "Total Amount",
+      "Paid Amount",
+      "Unpaid Amount",
+      "Partial Amount",
+      "Balance Due",
+      "Gross Collected",
+      "Fees",
+      "Net Due"
     ];
-    const csvData = [
-      headers,
-      ...filteredData.map(row => [
-        row.agent_name,
-        row.month,
-        row.total_sales.toString(),
-        row.total_amount.toString(),
-        row.paid_amount.toString(),
-        row.unpaid_amount.toString(),
-        row.balance_due.toString(),
-        row.gross_collected.toString(),
-      ])
+    const lines = [
+      headers.map(csvEscape).join(","),
+      ...filteredData.map((row) =>
+        [
+          row.agent_name,
+          row.month,
+          row.total_sales ?? "",
+          row.total_amount ?? "",
+          row.paid_amount ?? "",
+          row.unpaid_amount ?? "",
+          row.partial_amount ?? "",
+          row.balance_due ?? "",
+          row.gross_collected ?? "",
+          row.fees ?? "",
+          row.net_due ?? ""
+        ]
+          .map(csvEscape)
+          .join(",")
+      )
     ];
 
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csvContent = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = `reconciliation-${selectedMonth}-${selectedYear}.csv`;
     link.click();

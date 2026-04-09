@@ -56,6 +56,8 @@ export interface CertificatePageData {
   }[];
   qrDataUrl: string;
   publicViewUrl?: string;
+  /** Absolute URL for partner insurer logo (plan), if configured */
+  partnerLogoUrl?: string | null;
   contact?: {
     emergencyHelpline: string;
     generalLine: string;
@@ -168,7 +170,6 @@ function translateBenefitLabel(
 }
 
 const MAIN_LOGO = "/full-logo.png";
-const PARTNER_LOGO = "/certificate-partner-logo.svg";
 
 const CertificatePrint: React.FC = () => {
   const { saleId, publicToken } = useParams<{ saleId?: string; publicToken?: string }>();
@@ -177,6 +178,15 @@ const CertificatePrint: React.FC = () => {
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const locale = i18n.language || "en";
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("lang")?.toLowerCase();
+    if (q === "fr" || q === "en") {
+      void i18n.changeLanguage(q);
+      localStorage.setItem("lang", q);
+    }
+  }, [i18n]);
 
   useEffect(() => {
     if (!publicToken && !saleId) return;
@@ -240,10 +250,12 @@ const CertificatePrint: React.FC = () => {
   const scopeLabel = t("certificatePrint.worldwide");
   const contact = data.contact ?? {
     emergencyHelpline: "+91 62916 62954",
-    generalLine: "",
-    whatsapp: "",
+    generalLine: "+225 27 22 22 82 60",
+    whatsapp: "+225 07 18 92 31 94",
     websiteUrl: "https://www.assurassistance.org"
   };
+
+  const partnerLogoSrc = data.partnerLogoUrl?.trim() || "";
 
   return (
     <div className="certificate-shell cert-print-root bg-white min-h-screen py-1 print:py-0">
@@ -265,7 +277,18 @@ const CertificatePrint: React.FC = () => {
           }
         }
         .cert-doc-max { max-width: min(1080px, calc(100vw - 24px)); }
-        .cert-doc { color: #000; font-size: 10px; line-height: 1.2; width: 100%; }
+        .cert-doc { color: #000; font-size: 10px; line-height: 1.25; width: 100%; position: relative; }
+        .cert-doc-content { position: relative; z-index: 1; }
+        .cert-watermark {
+          position: absolute;
+          bottom: 6mm;
+          right: 5mm;
+          width: min(130px, 32vw);
+          opacity: 0.09;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .cert-watermark img { width: 100%; height: auto; display: block; object-fit: contain; }
         .cert-main-title {
           color: #E4590F;
           font-size: 15px;
@@ -287,9 +310,10 @@ const CertificatePrint: React.FC = () => {
         .cert-split-table td {
           border: none;
           border-bottom: 1px solid #E0E0E0;
-          padding: 2px 10px 2px 0;
-          vertical-align: middle;
+          padding: 3px 10px 4px 0;
+          vertical-align: top;
           width: 50%;
+          word-break: break-word;
         }
         .cert-split-table td + td { padding-left: 10px; padding-right: 0; }
         .cert-split-table td[colspan="2"] {
@@ -316,25 +340,31 @@ const CertificatePrint: React.FC = () => {
           text-align: left;
         }
         .cert-section-title--spaced { margin-top: 6px; }
-        .cert-benefits-table { border-collapse: collapse; width: 100%; font-size: 9px; margin-bottom: 5px; }
+        .cert-benefits-table { border-collapse: collapse; width: 100%; font-size: 9px; margin-bottom: 5px; table-layout: fixed; }
         .cert-benefits-table th,
-        .cert-benefits-table td { border: 1px solid #E0E0E0; padding: 2px 4px; vertical-align: top; }
+        .cert-benefits-table td { border: 1px solid #E0E0E0; padding: 4px 5px; vertical-align: top; }
         .cert-benefits-table th {
           background: #f5f5f5;
           font-weight: 700;
           font-size: 9px;
           text-align: left;
         }
-        .cert-benefits-table .levels { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .cert-benefits-table .levels { text-align: right; white-space: normal; font-variant-numeric: tabular-nums; word-break: break-word; }
+        .cert-benefits-table td:not(.cert-cat-cell):not(.levels) {
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          hyphens: auto;
+        }
         .cert-cat-cell {
           writing-mode: vertical-rl;
           transform: rotate(180deg);
           text-align: center;
           font-weight: 700;
-          font-size: 9px;
+          font-size: 8px;
           background: #fafafa;
-          width: 26px;
-          min-width: 26px;
+          width: 28px;
+          min-width: 28px;
+          max-width: 28px;
         }
         .cert-contact-block { margin: 0 0 4px; font-size: 9px; line-height: 1.28; }
         .cert-contact-intro { margin: 0 0 2px; font-weight: 400; }
@@ -360,12 +390,16 @@ const CertificatePrint: React.FC = () => {
       </div>
 
       <article className="cert-doc cert-doc-max mx-auto min-h-0 px-3 sm:px-5 pt-0 pb-2 bg-white shadow-md print:shadow-none">
+        <div className="cert-watermark" aria-hidden>
+          <img src={MAIN_LOGO} alt="" />
+        </div>
+        <div className="cert-doc-content">
         {/* Header — logos + title */}
         <header className="flex justify-between items-center gap-2 mb-0">
           <div className="shrink-0 flex items-center min-w-[88px]">
             <img
               src={MAIN_LOGO}
-              alt="Assur Assistance"
+              alt="Assur'Assistance"
               className="cert-logo-main block max-h-[44px] max-w-[140px] w-auto object-contain object-left"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
@@ -376,12 +410,17 @@ const CertificatePrint: React.FC = () => {
             <h1 className="cert-main-title">{t("certificatePrint.mainTitle")}</h1>
             <p className="cert-subtitle">{t("certificatePrint.subtitleTravel")}</p>
           </div>
-          <div className="shrink-0 flex items-center justify-end min-w-[88px]">
-            <img
-              src={PARTNER_LOGO}
-              alt={t("certificatePrint.partnerLogoAlt")}
-              className="cert-logo-partner block max-h-[40px] max-w-[120px] w-auto object-contain object-right"
-            />
+          <div className="shrink-0 flex items-center justify-end min-w-[88px] min-h-[36px]">
+            {partnerLogoSrc ? (
+              <img
+                src={partnerLogoSrc}
+                alt={t("certificatePrint.partnerLogoAlt")}
+                className="cert-logo-partner block max-h-[40px] max-w-[120px] w-auto object-contain object-right"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : null}
           </div>
         </header>
         <div className="cert-orange-line" role="presentation" />
@@ -530,9 +569,9 @@ const CertificatePrint: React.FC = () => {
         <table className="cert-benefits-table">
           <thead>
             <tr>
-              <th style={{ width: 28 }}>{t("certificatePrint.colTravel")}</th>
-              <th>{t("certificatePrint.colBenefits")}</th>
-              <th className="levels" style={{ width: 100 }}>
+              <th style={{ width: "8%" }}>{t("certificatePrint.colTravel")}</th>
+              <th style={{ width: "62%" }}>{t("certificatePrint.colBenefits")}</th>
+              <th className="levels" style={{ width: "30%" }}>
                 {t("certificatePrint.colLevels")}
               </th>
             </tr>
@@ -632,6 +671,7 @@ const CertificatePrint: React.FC = () => {
         <div className="cert-footer-bar" role="presentation" />
 
         <footer className="cert-company-footer">{t("certificatePrint.companyFooter")}</footer>
+        </div>
       </article>
     </div>
   );

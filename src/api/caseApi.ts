@@ -52,3 +52,27 @@ export const generateCertificateApi = (saleId: number) =>
 // Update case
 export const updateCaseApi = (caseId: number, data: any) =>
   apiPut(`/cases/${caseId}/update`, data);
+
+export interface PolicyEditMeta {
+  hasSale: boolean;
+  saleId: number | null;
+  policyEditCount: number;
+  policyEditsRemaining: number;
+  departureDate: string;
+  operatorLimitedEditOpen: boolean;
+  inLast24HoursBeforeDeparture: boolean;
+  hasDeparted: boolean;
+  agentMayEditLimitedFields: boolean;
+  adminMayEditAllFields: boolean;
+  agentBlockedFromEditing: boolean;
+}
+
+export const getPolicyEditMetaApi = async (caseId: number): Promise<PolicyEditMeta | null> => {
+  try {
+    const res = await apiGet<{ success: boolean; data: PolicyEditMeta }>(`/cases/${caseId}/policy-edit-meta`);
+    const body = res as unknown as { data?: PolicyEditMeta };
+    return body?.data ?? null;
+  } catch {
+    return null;
+  }
+};

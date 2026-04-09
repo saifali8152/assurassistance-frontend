@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X, Trash2 } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X, Trash2, MapPin } from "lucide-react";
+import CountrySearchSelect from "../components/CountrySearchSelect";
 import InputField from "../components/InputFields";
 import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, deleteAgentHierarchyApi } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
@@ -14,29 +15,6 @@ const PARTNERSHIP_TYPES = [
   "Travel agency",
   "Corporate desk",
   "Independent Agent",
-];
-
-const COUNTRIES = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
-  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada",
-  "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Côte-d'Ivoire", "Croatia",
-  "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
-  "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
-  "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-  "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
-  "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
-  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
-  "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
-  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
-  "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
-  "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
-  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
-  "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
-  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
-  "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
-  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela",
-  "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ];
 
 type User = {
@@ -90,10 +68,8 @@ const CreateUser: React.FC = () => {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [plans, setPlans] = useState<{ id: number; name: string }[]>([]);
   const [partnershipDropdownOpen, setPartnershipDropdownOpen] = useState(false);
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [plansDropdownOpen, setPlansDropdownOpen] = useState(false);
   const partnershipDropdownRef = useRef<HTMLDivElement>(null);
-  const countryDropdownRef = useRef<HTMLDivElement>(null);
   const plansDropdownRef = useRef<HTMLDivElement>(null);
   
   // Pagination state
@@ -143,7 +119,6 @@ const CreateUser: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (partnershipDropdownRef.current && !partnershipDropdownRef.current.contains(e.target as Node)) setPartnershipDropdownOpen(false);
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) setCountryDropdownOpen(false);
       if (plansDropdownRef.current && !plansDropdownRef.current.contains(e.target as Node)) setPlansDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -739,32 +714,14 @@ const CreateUser: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="relative" ref={countryDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[#E4590F]"
-                  >
-                    <span className={formData.countryOfResidence ? "text-[#2B2B2B]" : "text-[#2B2B2B]/50"}>
-                      {formData.countryOfResidence || t("agent.countryOfResidence", "Country of residence") + " *"}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 ${countryDropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {countryDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-xl shadow-lg max-h-48 overflow-auto">
-                      {COUNTRIES.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => { handleInputChange("countryOfResidence", c); setCountryDropdownOpen(false); }}
-                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#E4590F]/10 ${formData.countryOfResidence === c ? "bg-[#E4590F]/10 text-[#E4590F]" : ""}`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <CountrySearchSelect
+                  label={t("agent.countryOfResidence", "Country of residence")}
+                  placeholder={t("plan.selectCountry")}
+                  icon={<MapPin className="w-4 h-4" />}
+                  value={formData.countryOfResidence}
+                  onChange={(v) => handleInputChange("countryOfResidence", v)}
+                  required
+                />
                 <InputField
                   type="text"
                   placeholder={t("agent.iataNumber", "N° IATA")}
