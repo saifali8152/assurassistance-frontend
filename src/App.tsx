@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
@@ -20,6 +20,12 @@ import AdminDashboard from './pages/AdminDashboard'
 import CreateUser from './pages/CreateUser'
 import SupervisorView from './pages/SupervisorView'
 import CreateCase from './pages/CreateCase'
+
+function CreateCaseRoute() {
+  const [sp] = useSearchParams()
+  const k = sp.get('editCase') || 'new'
+  return <CreateCase key={k} />
+}
 import CreateGroupCase from './pages/CreateGroupCase'
 import CreatePlan from './pages/CreatePlan'
 import CasesManagement from './pages/CasesManagement'
@@ -132,7 +138,7 @@ function App() {
             <Route path="agent-hierarchy" element={<AgentHierarchyPage />} />
             <Route path="supervisors/:id" element={<SupervisorView />} />
             <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="createCase" element={<CreateCase />} />
+            <Route path="createCase" element={<CreateCaseRoute />} />
             <Route path="createGroupCase" element={<CreateGroupCase />} />
             <Route path="CreatePlan" element={<CreatePlan />} />
             <Route path="cases" element={<CasesManagement />} />
@@ -153,7 +159,7 @@ function App() {
             }
           >
             <Route index element={<UserDashboard />} />
-            <Route path="createCase" element={<CreateCase />} />
+            <Route path="createCase" element={<CreateCaseRoute />} />
             <Route path="createGroupCase" element={<CreateGroupCase />} />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />

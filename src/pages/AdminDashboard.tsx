@@ -24,9 +24,20 @@ import {
 export type TrendPoint = {
   periodLabel: string;
   salesCount: number;
-  totalAmount: number;
+  /** Billable premiums: plan_price + tax when set, else legacy sale total */
+  premiumAmount: number;
   collectedAmount: number;
 };
+
+function normalizeTrendPoints(arr: unknown[] | undefined): TrendPoint[] {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((raw: any) => ({
+    periodLabel: String(raw?.periodLabel ?? ""),
+    salesCount: Number(raw?.salesCount) || 0,
+    premiumAmount: Number(raw?.premiumAmount ?? raw?.totalAmount) || 0,
+    collectedAmount: Number(raw?.collectedAmount) || 0,
+  }));
+}
 
 function ProductionTrendChart({
   title,
@@ -84,8 +95,8 @@ function ProductionTrendChart({
               if (name === "salesCount") {
                 return [v, t("policiesCount")];
               }
-              if (name === "totalAmount") {
-                return [formatCurrency(v), t("salesVolume")];
+              if (name === "premiumAmount") {
+                return [formatCurrency(v), t("premiums")];
               }
               if (name === "collectedAmount") {
                 return [formatCurrency(v), t("collections")];
@@ -97,7 +108,7 @@ function ProductionTrendChart({
             wrapperStyle={{ paddingTop: "12px" }}
             formatter={(value: string) => {
               if (value === "salesCount") return t("policiesCount");
-              if (value === "totalAmount") return t("salesVolume");
+              if (value === "premiumAmount") return t("premiums");
               if (value === "collectedAmount") return t("collections");
               return value;
             }}
@@ -115,10 +126,10 @@ function ProductionTrendChart({
           <Line
             yAxisId="left"
             type="monotone"
-            dataKey="totalAmount"
+            dataKey="premiumAmount"
             stroke="#10B981"
             strokeWidth={2}
-            name="totalAmount"
+            name="premiumAmount"
             dot={{ fill: "#10B981", r: 3 }}
             activeDot={{ r: 5 }}
           />
@@ -163,8 +174,8 @@ const AdminDashboard = () => {
           currentYear?: TrendPoint[];
         } | null;
         if (td && typeof td === "object" && !Array.isArray(td)) {
-          setTrendMonth(Array.isArray(td.currentMonth) ? td.currentMonth : []);
-          setTrendYear(Array.isArray(td.currentYear) ? td.currentYear : []);
+          setTrendMonth(normalizeTrendPoints(td.currentMonth));
+          setTrendYear(normalizeTrendPoints(td.currentYear));
         } else {
           setTrendMonth([]);
           setTrendYear([]);
@@ -289,7 +300,7 @@ const AdminDashboard = () => {
                   {t("plan")}
                 </th>
                 <th className="px-2 py-4 text-center font-normal text-text-secondary/70">
-                  {t("total")}
+                  {t("premium")}
                 </th>
                 <th className="px-2 py-4 text-center font-normal text-text-secondary/70">
                   {t("paymentStatus")}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import InputField from "../components/InputFields";
 import DateField from "../components/DateField";
 import { User as UserIcon, Mail, Contact, IdCard, Home, Globe2, CalendarIcon, ClockIcon, Cake, MapPin, Users, Flag } from "lucide-react";
@@ -9,12 +9,12 @@ import { getCountryLabel } from "../utils/countryLabels";
 import { createSaleApi, generateInvoiceApi } from "../api/salesApi";
 import PlanCard from "../components/Plans";
 import { getAllCataloguesApi } from "../api/catalogueApi";
-import { createCaseApi, changeCaseStatusApi, updateCaseApi, getPolicyEditMetaApi, type PolicyEditMeta } from "../api/caseApi";
+import { createCaseApi, changeCaseStatusApi, updateCaseApi, getPolicyEditMetaApi, getCaseByIdApi, type PolicyEditMeta } from "../api/caseApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   computeTravelPlanPremium,
   getAgeFromDateString,
@@ -61,6 +61,9 @@ const CreateCase: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editCaseKey = searchParams.get("editCase") ?? "";
+  const policyEditKey = searchParams.get("policyEdit") ?? "";
   const [activeTab, setActiveTab] = useState<string>("traveller");
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -85,15 +88,87 @@ const CreateCase: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [policyMeta, setPolicyMeta] = useState<PolicyEditMeta | null>(null);
   const [savingPolicy, setSavingPolicy] = useState(false);
+  const [policyEditMode, setPolicyEditMode] = useState(false);
+  const [loadingRemoteCase, setLoadingRemoteCase] = useState(() => editCaseKey.length > 0);
+  const pendingAutoPolicyEditRef = useRef(false);
+
+  const applyCaseRowToForm = useCallback((row: Record<string, unknown>) => {
+    const di = (v: unknown) => (v != null && String(v).trim() !== "" ? String(v).slice(0, 10) : "");
+    setFirstName(String(row.first_name ?? ""));
+    setLastName(String(row.last_name ?? ""));
+    setDateOfBirth(di(row.date_of_birth));
+    setCountryOfResidence(String(row.country_of_residence ?? ""));
+    setGender(String(row.gender ?? ""));
+    setNationality(String(row.nationality ?? ""));
+    setEmail(String(row.email ?? ""));
+    setPhoneNumber(String(row.phone ?? ""));
+    setPassportId(String(row.passport_or_id ?? ""));
+    setAddress(String(row.address ?? ""));
+    const dest = String(row.destination ?? "");
+    setDestination(dest.split(",").map((x) => x.trim()).filter(Boolean));
+    setStartDate(di(row.start_date));
+    setEndDate(di(row.end_date));
+    setSelectedPlan(row.selected_plan_id != null ? String(row.selected_plan_id) : null);
+    if (row.duration_days != null && String(row.duration_days).trim() !== "") {
+      setDurationDays(String(row.duration_days));
+    }
+    setCreatedCaseId(Number(row.id));
+    const sid = row.sale_id;
+    setCreatedSaleId(sid != null && sid !== "" ? Number(sid) : null);
+  }, []);
+
+  useEffect(() => {
+    if (!editCaseKey) return;
+    const caseId = parseInt(editCaseKey, 10);
+    if (Number.isNaN(caseId)) return;
+
+    pendingAutoPolicyEditRef.current = policyEditKey === "1";
+
+    let cancelled = false;
+    (async () => {
+      setLoadingRemoteCase(true);
+      try {
+        const row = await getCaseByIdApi(caseId);
+        if (cancelled || !row) {
+          toast.error(t("createCase.loadCaseFailed", "Could not load this case"));
+          return;
+        }
+        applyCaseRowToForm(row);
+        if (!row.sale_id) pendingAutoPolicyEditRef.current = false;
+        setPolicyEditMode(false);
+        setActiveTab(pendingAutoPolicyEditRef.current ? "traveller" : "review");
+      } catch {
+        if (!cancelled) toast.error(t("createCase.loadCaseFailed", "Could not load this case"));
+      } finally {
+        if (!cancelled) setLoadingRemoteCase(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editCaseKey, policyEditKey, t, applyCaseRowToForm]);
 
   useEffect(() => {
     if (!createdCaseId || !createdSaleId) {
       setPolicyMeta(null);
+      if (!createdSaleId) setPolicyEditMode(false);
       return;
     }
     let cancelled = false;
     getPolicyEditMetaApi(createdCaseId).then((m) => {
-      if (!cancelled) setPolicyMeta(m);
+      if (cancelled) return;
+      setPolicyMeta(m);
+      if (pendingAutoPolicyEditRef.current && m && (m.adminMayEditAllFields || m.agentMayEditLimitedFields)) {
+        setPolicyEditMode(true);
+      } else if (pendingAutoPolicyEditRef.current && m && !m.adminMayEditAllFields && !m.agentMayEditLimitedFields) {
+        toast.error(
+          t(
+            "createCase.policyEditAgentBlocked",
+            "This confirmed policy can no longer be edited from your account (cut-off 24 hours before departure, maximum corrections reached, or trip already started). Contact an administrator if a change is required."
+          )
+        );
+      }
+      pendingAutoPolicyEditRef.current = false;
     });
     return () => {
       cancelled = true;
@@ -460,11 +535,12 @@ const CreateCase: React.FC = () => {
     </div>
   );
 
-  const editAllConfirmed = !!(createdSaleId && policyMeta?.adminMayEditAllFields);
-  const editLimitedConfirmed = !!(createdSaleId && policyMeta?.agentMayEditLimitedFields);
-  const rnFirstLastDestDates = !!(createdSaleId && !editAllConfirmed && !editLimitedConfirmed);
-  const rnOtherTraveller = !!(createdSaleId && !editAllConfirmed);
-  const rnPlan = !!(createdSaleId && !editAllConfirmed);
+  const adminPolicyFieldsUnlocked = !!(createdSaleId && policyMeta?.adminMayEditAllFields && policyEditMode);
+  const agentPolicyLimitedUnlocked = !!(createdSaleId && policyMeta?.agentMayEditLimitedFields && policyEditMode);
+  const rnFirstLastDestDates = !!(createdSaleId && !adminPolicyFieldsUnlocked && !agentPolicyLimitedUnlocked);
+  const rnOtherTraveller = !!(createdSaleId && !adminPolicyFieldsUnlocked);
+  const rnPlan = !!(createdSaleId && !adminPolicyFieldsUnlocked);
+  const canStartPolicyEdit = !!(policyMeta?.hasSale && (policyMeta.adminMayEditAllFields || policyMeta.agentMayEditLimitedFields));
 
   // Tab configuration
   const tabs: Tab[] = [
@@ -862,6 +938,21 @@ const CreateCase: React.FC = () => {
     }
   };
 
+  const cancelPolicyEditMode = async () => {
+    if (!createdCaseId) return;
+    setPolicyEditMode(false);
+    try {
+      const row = await getCaseByIdApi(createdCaseId);
+      if (row) applyCaseRowToForm(row);
+      if (createdSaleId) {
+        const m = await getPolicyEditMetaApi(createdCaseId);
+        setPolicyMeta(m);
+      }
+    } catch {
+      toast.error(t("createCase.loadCaseFailed", "Could not load this case"));
+    }
+  };
+
   /** After sale confirmed — same payload shape; server enforces role / limits */
   const saveConfirmedPolicyChanges = async () => {
     if (!createdCaseId || !createdSaleId) return;
@@ -899,6 +990,7 @@ const CreateCase: React.FC = () => {
       await updateCaseApi(createdCaseId, payload);
       const m = await getPolicyEditMetaApi(createdCaseId);
       setPolicyMeta(m);
+      setPolicyEditMode(false);
       setLastUpdated(new Date().toLocaleTimeString());
       toast.success(t("createCase.policySaveSuccess", "Policy changes saved"));
     } catch (err: unknown) {
@@ -1028,9 +1120,20 @@ const CreateCase: React.FC = () => {
   };
 
 
+  if (loadingRemoteCase && editCaseKey) {
+    return (
+      <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 lg:p-10 w-full flex flex-col items-center justify-center min-h-[280px]" aria-busy="true">
+        <div className="w-10 h-10 border-2 border-[#E4590F]/30 border-t-[#E4590F] rounded-full animate-spin mb-4" />
+        <p className="text-[#2B2B2B]/70 text-sm">{t("common.loading", "Loading...")}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 lg:p-10 w-full">
-      <h1 className="text-2xl font-semibold text-[#E4590F] mb-8">{t('case.create')}</h1>
+      <h1 className="text-2xl font-semibold text-[#E4590F] mb-8">
+        {editCaseKey ? t("createCase.editCaseTitle", "Edit case") : t("case.create")}
+      </h1>
 
       {createdSaleId && policyMeta && (
         <div
@@ -1040,6 +1143,14 @@ const CreateCase: React.FC = () => {
               : "border-[#D9D9D9] bg-[#f8f9fa] text-[#2B2B2B]"
           }`}
         >
+          {policyMeta.hasSale && (
+            <p className="mb-2 font-medium text-[#2B2B2B]">
+              {t(
+                "createCase.policyEditPencilHint",
+                "After downloading the invoice or certificate, use the ✏️ button below to unlock the form, then save your changes."
+              )}
+            </p>
+          )}
           {policyMeta.adminMayEditAllFields && (
             <p>{t("createCase.policyEditAdminHint", "As an administrator you may correct all fields on this confirmed policy.")}</p>
           )}
@@ -1176,17 +1287,51 @@ const CreateCase: React.FC = () => {
             </button>
           )}
 
-          {/* Download Invoice & Certificate - after sale confirmed */}
-          {createdSaleId && (editAllConfirmed || editLimitedConfirmed) && (
+          {createdSaleId && (
             <button
               type="button"
-              onClick={saveConfirmedPolicyChanges}
-              disabled={savingPolicy}
-              className="px-6 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#1a1a1a] text-white font-medium transition-colors disabled:opacity-50"
+              onClick={() => setPolicyEditMode(true)}
+              disabled={!policyMeta || policyEditMode || !canStartPolicyEdit}
+              title={
+                !policyMeta
+                  ? t("common.loading", "Loading…")
+                  : !canStartPolicyEdit
+                    ? t(
+                        "createCase.policyEditAgentBlocked",
+                        "This confirmed policy can no longer be edited from your account (cut-off 24 hours before departure, maximum corrections reached, or trip already started). Contact an administrator if a change is required."
+                      )
+                    : t("createCase.modifyPolicy", "Modify policy")
+              }
+              className="px-6 py-3 rounded-xl border border-[#D9D9D9] bg-white hover:bg-[#f0f0f0] text-[#2B2B2B] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {savingPolicy ? t("createCase.savingPolicy", "Saving…") : t("createCase.savePolicyChanges", "Save policy changes")}
+              <span className="text-lg leading-none" aria-hidden>
+                ✏️
+              </span>
+              {t("createCase.modifyPolicy", "Modify policy")}
             </button>
           )}
+
+          {createdSaleId && policyEditMode && (adminPolicyFieldsUnlocked || agentPolicyLimitedUnlocked) && (
+            <>
+              <button
+                type="button"
+                onClick={saveConfirmedPolicyChanges}
+                disabled={savingPolicy}
+                className="px-6 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#1a1a1a] text-white font-medium transition-colors disabled:opacity-50"
+              >
+                {savingPolicy ? t("createCase.savingPolicy", "Saving…") : t("createCase.savePolicyChanges", "Save policy changes")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void cancelPolicyEditMode()}
+                disabled={savingPolicy}
+                className="px-6 py-3 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium transition-colors disabled:opacity-50"
+              >
+                {t("createCase.cancelPolicyEdit", "Cancel")}
+              </button>
+            </>
+          )}
+
           {createdSaleId && (
             <>
               <button

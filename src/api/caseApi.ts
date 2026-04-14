@@ -76,3 +76,13 @@ export const getPolicyEditMetaApi = async (caseId: number): Promise<PolicyEditMe
     return null;
   }
 };
+
+/** Full case row for resuming / editing (same access rules as update) */
+export const getCaseByIdApi = async (caseId: number): Promise<Record<string, unknown> | null> => {
+  try {
+    const res = await apiGet<{ success: boolean; data: Record<string, unknown> }>(`/cases/${caseId}`);
+    return res?.data ?? null;
+  } catch {
+    return null;
+  }
+};

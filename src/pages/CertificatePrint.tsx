@@ -395,12 +395,12 @@ const CertificatePrint: React.FC = () => {
         </div>
         <div className="cert-doc-content">
         {/* Header — logos + title */}
-        <header className="flex justify-between items-center gap-2 mb-0">
-          <div className="shrink-0 flex items-center min-w-[88px]">
+        <header className="flex justify-between items-center gap-3 mb-0">
+          <div className="shrink-0 flex items-center min-w-[120px]">
             <img
               src={MAIN_LOGO}
               alt="Assur'Assistance"
-              className="cert-logo-main block max-h-[44px] max-w-[140px] w-auto object-contain object-left"
+              className="cert-logo-main block max-h-[64px] max-w-[200px] w-auto object-contain object-left"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
@@ -410,12 +410,12 @@ const CertificatePrint: React.FC = () => {
             <h1 className="cert-main-title">{t("certificatePrint.mainTitle")}</h1>
             <p className="cert-subtitle">{t("certificatePrint.subtitleTravel")}</p>
           </div>
-          <div className="shrink-0 flex items-center justify-end min-w-[88px] min-h-[36px]">
+          <div className="shrink-0 flex items-center justify-end min-w-[120px] min-h-[48px]">
             {partnerLogoSrc ? (
               <img
                 src={partnerLogoSrc}
                 alt={t("certificatePrint.partnerLogoAlt")}
-                className="cert-logo-partner block max-h-[40px] max-w-[120px] w-auto object-contain object-right"
+                className="cert-logo-partner block max-h-[56px] max-w-[180px] w-auto object-contain object-right"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}

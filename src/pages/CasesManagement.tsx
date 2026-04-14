@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi } from '../api/caseApi';
@@ -55,6 +56,7 @@ interface Case {
 
 const CasesManagement: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { formatCurrency } = useCurrency();
   const [cases, setCases] = useState<Case[]>([]);
@@ -362,6 +364,16 @@ const CasesManagement: React.FC = () => {
     window.open(`/certificate/${saleId}`, "_blank", "noopener,noreferrer");
   };
 
+  const casesBasePath = user?.role === 'admin' ? '/admin' : '/user';
+
+  const goEditCase = (caseItem: Case) => {
+    if (caseItem.status === 'Cancelled') return;
+    const qs = new URLSearchParams();
+    qs.set('editCase', String(caseItem.id));
+    if (caseItem.sale_id) qs.set('policyEdit', '1');
+    navigate(`${casesBasePath}/createCase?${qs.toString()}`);
+  };
+
   const openModal = (caseItem: Case) => {
     setSelectedCase(caseItem);
     setShowModal(true);
@@ -553,6 +565,18 @@ const CasesManagement: React.FC = () => {
                       )}
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-2">
+                          {caseItem.status !== 'Cancelled' && (
+                            <button
+                              type="button"
+                              onClick={() => goEditCase(caseItem)}
+                              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-500/25 transition-colors"
+                              title={t("cases.modifyCase", "Open case to view or modify")}
+                            >
+                              <span className="text-base leading-none" aria-hidden>
+                                ✏️
+                              </span>
+                            </button>
+                          )}
                           <button
                             onClick={() => openModal(caseItem)}
                             className="p-2 rounded-lg bg-[#D9D9D9]/30 hover:bg-[#E4590F] text-[#2B2B2B] hover:text-white transition-colors"
