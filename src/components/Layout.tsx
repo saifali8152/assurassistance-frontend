@@ -15,7 +15,8 @@ import {
   ReceiptText,
   UsersRound,
   GitBranch,
-  Shield
+  Shield,
+  Globe2
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -201,6 +202,7 @@ const Layout: React.FC = () => {
               )}
               <NavLink to="/admin/cases" icon={FilePlus}>{t("sidebar.allCases", "All Cases")}</NavLink>
               <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>
+              <NavLink to="/admin/invoices-by-region" icon={Globe2}>{t("sidebar.invoicesByRegion", "Invoices by region")}</NavLink>
               {user?.role === "admin" && (
                 <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>
               )}

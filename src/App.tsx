@@ -44,6 +44,7 @@ import Reconciliation from './pages/ReconciliationTable'
 import ActivityLogPage from './pages/ActivityLogPage'
 import AgentHierarchyPage from './pages/AgentHierarchyPage'
 import SubAdminManagement from './pages/SubAdminManagement'
+import InvoicesByRegionPage from './pages/InvoicesByRegionPage'
 
 
 // User Layout and Pages
@@ -182,6 +183,7 @@ function App() {
             />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />
+            <Route path='invoices-by-region' element={<InvoicesByRegionPage />} />
             <Route
               path='Reconciliation'
               element={
