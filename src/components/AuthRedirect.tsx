@@ -25,8 +25,8 @@ const AuthRedirect: React.FC = () => {
     return <Navigate to="/change-password" replace />;
   }
 
-  // Redirect based on user role (only for root path)
-  if (user.role === 'admin') {
+  // Redirect based on user role (only for root path). Sub-administrators share the admin shell.
+  if (user.role === 'admin' || user.role === 'sub_admin') {
     return <Navigate to="/admin" replace />;
   } else if (user.role === 'agent') {
     return <Navigate to="/user" replace />;

@@ -1077,8 +1077,8 @@ const CreateCase: React.FC = () => {
       await changeCaseStatusApi(createdCaseId, "Cancelled");
       toast.success("Case cancelled.");
       
-      // Redirect to All Cases page based on user role
-      if (user?.role === 'admin') {
+      // Redirect to All Cases page based on user role (sub-administrators share the admin shell).
+      if (user?.role === 'admin' || user?.role === 'sub_admin') {
         navigate('/admin/cases');
       } else {
         navigate('/user/cases');

@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import AuthRedirect from "./components/AuthRedirect";
 import AuthGuard from "./components/AuthGuard";
+import { useAuth } from "./context/AuthContext";
 // import AuthDebug from "./components/AuthDebug";
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
@@ -26,6 +27,14 @@ function CreateCaseRoute() {
   const k = sp.get('editCase') || 'new'
   return <CreateCase key={k} />
 }
+
+function AdminLandingRoute() {
+  const { user } = useAuth()
+  if (user?.role === 'sub_admin') {
+    return <Navigate to="/admin/cases" replace />
+  }
+  return <AdminDashboard />
+}
 import CreateGroupCase from './pages/CreateGroupCase'
 import CreatePlan from './pages/CreatePlan'
 import CasesManagement from './pages/CasesManagement'
@@ -34,6 +43,7 @@ import LedgerPage from './pages/LedgerPage'
 import Reconciliation from './pages/ReconciliationTable'
 import ActivityLogPage from './pages/ActivityLogPage'
 import AgentHierarchyPage from './pages/AgentHierarchyPage'
+import SubAdminManagement from './pages/SubAdminManagement'
 
 
 // User Layout and Pages
@@ -124,27 +134,70 @@ function App() {
             } 
           />
 
-          {/* Admin routes with protection */}
+          {/* Admin routes (shared with sub-administrators); sensitive sub-routes are gated below. */}
           <Route
             path="/admin"
             element={
-              <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin']}>
                 <Layout />
               </AuthGuard>
             }
           >
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminLandingRoute />} />
             <Route path="users" element={<CreateUser />} />
-            <Route path="agent-hierarchy" element={<AgentHierarchyPage />} />
+            <Route
+              path="sub-admins"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <SubAdminManagement />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="agent-hierarchy"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <AgentHierarchyPage />
+                </AuthGuard>
+              }
+            />
             <Route path="supervisors/:id" element={<SupervisorView />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route
+              path="analytics"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <AnalyticsPage />
+                </AuthGuard>
+              }
+            />
             <Route path="createCase" element={<CreateCaseRoute />} />
             <Route path="createGroupCase" element={<CreateGroupCase />} />
-            <Route path="CreatePlan" element={<CreatePlan />} />
+            <Route
+              path="CreatePlan"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <CreatePlan />
+                </AuthGuard>
+              }
+            />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />
-            <Route path='Reconciliation' element={<Reconciliation />} />
-            <Route path='activity-log' element={<ActivityLogPage />} />
+            <Route
+              path='Reconciliation'
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <Reconciliation />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path='activity-log'
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <ActivityLogPage />
+                </AuthGuard>
+              }
+            />
             <Route path='profile' element={<AdminEditProfile />} />
             <Route path='change-password' element={<AdminChangePassword />} />
           </Route>
@@ -172,7 +225,7 @@ function App() {
           <Route
             path="/certificate/:saleId"
             element={
-              <AuthGuard requireAuth={true} allowedRoles={['admin', 'agent']}>
+              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin', 'agent']}>
                 <CertificatePrint />
               </AuthGuard>
             }

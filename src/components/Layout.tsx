@@ -14,7 +14,8 @@ import {
   Layers,
   ReceiptText,
   UsersRound,
-  GitBranch
+  GitBranch,
+  Shield
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -29,6 +30,14 @@ const Layout: React.FC = () => {
   const { t } = useTranslation(); // <-- Add this
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  /** Human-readable role label (handles the `sub_admin` enum value). */
+  const roleLabel = (() => {
+    if (!user?.role) return t("role.admin", "Admin");
+    if (user.role === "sub_admin") return t("role.subAdmin", "Sub-administrator");
+    if (user.role === "admin") return t("role.admin", "Admin");
+    return t("role.agent", "Agent");
+  })();
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -84,8 +93,8 @@ const Layout: React.FC = () => {
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-3">
             <div className="hidden md:flex items-center">
-              <span className="text-[#2B2B2B]/60 text-xs capitalize font-normal px-3 py-1.5 bg-[#E4590F]/10 rounded-lg border border-[#E4590F]/20">
-                {user?.role || "Admin"}
+              <span className="text-[#2B2B2B]/60 text-xs font-normal px-3 py-1.5 bg-[#E4590F]/10 rounded-lg border border-[#E4590F]/20">
+                {roleLabel}
               </span>
             </div>
             <CurrencySelector />
@@ -137,7 +146,7 @@ const Layout: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-text-secondary text-sm font-medium truncate">{user?.name || t("user.name", "Name")}</p>
                         <p className="text-text-secondary/60 text-xs font-normal truncate">{user?.email || t("user.email", "Email")}</p>
-                        <p className="text-[#E4590F] text-xs font-normal capitalize mt-0.5">{user?.role || "Admin"}</p>
+                        <p className="text-[#E4590F] text-xs font-normal mt-0.5">{roleLabel}</p>
                       </div>
                     </div>
                   </div>
@@ -171,18 +180,33 @@ const Layout: React.FC = () => {
               <button type="button" onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-secondary/30 transition-colors"><X className="w-5 h-5 text-text-secondary" /></button>
             </div> */}
             <nav className="space-y-2">
-              <NavLink to="/admin" icon={BarChart3}>{t("sidebar.dashboard", "Dashboard")}</NavLink>
+              {user?.role === "admin" && (
+                <NavLink to="/admin" icon={BarChart3}>{t("sidebar.dashboard", "Dashboard")}</NavLink>
+              )}
               <NavLink to="/admin/users" icon={Users}>{t("sidebar.agents", "Agents")}</NavLink>
-              <NavLink to="/admin/agent-hierarchy" icon={GitBranch}>{t("sidebar.agentHierarchy", "Agent hierarchy")}</NavLink>
+              {user?.role === "admin" && (
+                <NavLink to="/admin/sub-admins" icon={Shield}>{t("sidebar.subAdmins", "Sub-administrators")}</NavLink>
+              )}
+              {user?.role === "admin" && (
+                <NavLink to="/admin/agent-hierarchy" icon={GitBranch}>{t("sidebar.agentHierarchy", "Agent hierarchy")}</NavLink>
+              )}
               {user?.role === "admin" && (
                 <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
               )}
-              <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
-              <NavLink to="/admin/createGroupCase" icon={UsersRound}>{t("sidebar.createGroupCase", "Create group case")}</NavLink>
+              {user?.role === "admin" && (
+                <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
+              )}
+              {user?.role === "admin" && (
+                <NavLink to="/admin/createGroupCase" icon={UsersRound}>{t("sidebar.createGroupCase", "Create group case")}</NavLink>
+              )}
               <NavLink to="/admin/cases" icon={FilePlus}>{t("sidebar.allCases", "All Cases")}</NavLink>
               <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>
-              <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>
-              <NavLink to="/admin/activity-log" icon={Activity}>{t("sidebar.activityLog", "Activity Log")}</NavLink>
+              {user?.role === "admin" && (
+                <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>
+              )}
+              {user?.role === "admin" && (
+                <NavLink to="/admin/activity-log" icon={Activity}>{t("sidebar.activityLog", "Activity Log")}</NavLink>
+              )}
             </nav>
           </div>
         </aside>

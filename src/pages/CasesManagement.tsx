@@ -169,7 +169,8 @@ const CasesManagement: React.FC = () => {
   const fetchCases = async (page: number = 1, search: string = '', status: string = '') => {
     try {
       setLoading(true);
-      const response = user?.role === 'admin' 
+      const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin';
+      const response = isPrivileged
         ? await getAllCasesApi(page, itemsPerPage)
         : await getMyCasesWithPaginationApi(page, itemsPerPage);
       const data = response as any;
@@ -364,7 +365,7 @@ const CasesManagement: React.FC = () => {
     window.open(`/certificate/${saleId}`, "_blank", "noopener,noreferrer");
   };
 
-  const casesBasePath = user?.role === 'admin' ? '/admin' : '/user';
+  const casesBasePath = (user?.role === 'admin' || user?.role === 'sub_admin') ? '/admin' : '/user';
 
   const goEditCase = (caseItem: Case) => {
     if (caseItem.status === 'Cancelled') return;

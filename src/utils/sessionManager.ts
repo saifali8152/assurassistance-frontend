@@ -5,7 +5,7 @@ export interface SessionData {
     id: number;
     name: string;
     email: string;
-    role: "admin" | "agent";
+    role: "admin" | "sub_admin" | "agent";
     force_password_change?: boolean;
   };
   expiresAt: number;

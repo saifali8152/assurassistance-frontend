@@ -10,7 +10,7 @@ export interface LoginResponse {
     id: number;
     name: string;
     email: string;
-    role: "admin" | "agent";
+    role: "admin" | "sub_admin" | "agent";
     force_password_change?: boolean;
   };
 }
@@ -21,7 +21,7 @@ export interface ChangePasswordResponse {
     id: number;
     name: string;
     email: string;
-    role: "admin" | "agent";
+    role: "admin" | "sub_admin" | "agent";
     force_password_change?: boolean;
   };
 }

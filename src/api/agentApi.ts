@@ -113,6 +113,45 @@ export const sendPasswordResetLinkApi = async (userId: string) => {
   return apiPost<{ success: boolean; message: string; tempPassword: string }>("/admin/send-reset-link", { userId });
 };
 
+export type SubAdminItem = {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  force_password_change: boolean;
+  last_login: string | null;
+  created_at: string;
+  work_phone: string | null;
+  whatsapp_phone: string | null;
+  owned_agency_count: number;
+};
+
+export type CreateSubAdminPayload = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  work_phone?: string;
+  whatsapp_phone?: string;
+  tempPassword?: string;
+};
+
+export const listSubAdminsApi = async () => {
+  const res = await apiGet<{ success: boolean; data: SubAdminItem[] }>("/admin/sub-admins");
+  return (res as any).data as SubAdminItem[];
+};
+
+export const createSubAdminApi = async (data: CreateSubAdminPayload) => {
+  return apiPost<{
+    success: boolean;
+    data: { id: number; email: string; tempPassword: string };
+    message: string;
+  }>("/admin/create-sub-admin", data);
+};
+
+export const deleteSubAdminApi = async (id: number) => {
+  return apiDelete<{ success: boolean; message: string }>(`/admin/sub-admins/${id}`);
+};
+
 export const getAgentDashboardApi = async () => {
   const res = await apiGet("/users/dashboard");
   return (res as any).data;
