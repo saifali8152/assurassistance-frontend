@@ -24,6 +24,10 @@ interface Plan {
   currency?: string; // Currency code (XOF, USD, EUR)
   /** Relative path e.g. /uploads/plan-logos/... */
   partnerInsurerLogo?: string;
+  /** "#RRGGBB" applied to certificate/invoice accents. Default brand orange. */
+  themeColor?: string;
+  /** When true, certificate shows "N° Passport / N° Laissez-passer / N° GPGL". */
+  extraIdFields?: boolean;
 }
 
 interface PricingRow {
@@ -52,6 +56,14 @@ interface FormData {
   countryOfResidence?: string;
   routeType?: string;
   pricingTables?: PricingTables;
+  themeColor: string;
+  extraIdFields: boolean;
+}
+
+const DEFAULT_THEME_COLOR = "#E4590F";
+
+function isValidHex(s: string): boolean {
+  return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s.trim());
 }
 
 const apiOrigin = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/i, "");
@@ -203,7 +215,9 @@ const CreatePlan: React.FC = () => {
     active: true, // Always default to active for new plans
     countryOfResidence: "",
     routeType: "",
-    pricingTables: undefined
+    pricingTables: undefined,
+    themeColor: DEFAULT_THEME_COLOR,
+    extraIdFields: false
   });
   const [previewData, setPreviewData] = useState<Partial<FormData>>({});
 
@@ -230,7 +244,9 @@ const CreatePlan: React.FC = () => {
     active: t("plan.active"),
     countryOfResidence: t("plan.countryOfResidence"),
     routeType: t("plan.routeType"),
-    pricingTables: t("plan.pricingTables")
+    pricingTables: t("plan.pricingTables"),
+    themeColor: t("plan.themeColor", "Certificate / invoice color"),
+    extraIdFields: t("plan.extraIdFields", "Show extended ID labels")
   };
 
   const fieldOrder: (keyof FormData)[] = [
@@ -261,7 +277,9 @@ const CreatePlan: React.FC = () => {
           routeType: plan.route_type || "",
           pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
           currency: plan.currency || 'XOF', // Load currency from database, default to XOF
-          partnerInsurerLogo: plan.partner_insurer_logo || undefined
+          partnerInsurerLogo: plan.partner_insurer_logo || undefined,
+          themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
+          extraIdFields: !!plan.extra_id_fields
         }));
         setPlans(plans);
       } catch (err) {
@@ -485,15 +503,21 @@ const CreatePlan: React.FC = () => {
       ? formData.routeType.trim() 
       : null;
     
+    const themeColorValue = isValidHex(formData.themeColor)
+      ? formData.themeColor.trim().toUpperCase()
+      : DEFAULT_THEME_COLOR;
+
     const payload = {
       product_type: formData.productType,
       name: formData.name.trim(),
-      pricing_rules: formData.pricingTables || { pricing: [], guarantees: [] }, 
+      pricing_rules: formData.pricingTables || { pricing: [], guarantees: [] },
       flat_price: null,
       active: formData.active,
       country_of_residence: countryValue,
       route_type: routeValue,
       currency: currency, // Save the current currency from context
+      theme_color: themeColorValue,
+      extra_id_fields: !!formData.extraIdFields
     };
     
     console.log('Payload being sent:', payload);
@@ -521,7 +545,9 @@ const CreatePlan: React.FC = () => {
         routeType: plan.route_type || "",
         pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
         currency: plan.currency || 'XOF',
-        partnerInsurerLogo: plan.partner_insurer_logo || undefined
+        partnerInsurerLogo: plan.partner_insurer_logo || undefined,
+        themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
+        extraIdFields: !!plan.extra_id_fields
       }));
       setPlans(plans);
 
@@ -537,6 +563,8 @@ const CreatePlan: React.FC = () => {
             countryOfResidence: np.countryOfResidence || "",
             routeType: np.routeType || "",
             pricingTables: pricingTables,
+            themeColor: np.themeColor || DEFAULT_THEME_COLOR,
+            extraIdFields: !!np.extraIdFields
           });
           setPreviewData({
             name: np.name,
@@ -545,6 +573,8 @@ const CreatePlan: React.FC = () => {
             countryOfResidence: np.countryOfResidence || "",
             routeType: np.routeType || "",
             pricingTables: pricingTables,
+            themeColor: np.themeColor || DEFAULT_THEME_COLOR,
+            extraIdFields: !!np.extraIdFields
           });
           return;
         }
@@ -557,7 +587,9 @@ const CreatePlan: React.FC = () => {
         active: true,
         countryOfResidence: "",
         routeType: "",
-        pricingTables: undefined
+        pricingTables: undefined,
+        themeColor: DEFAULT_THEME_COLOR,
+        extraIdFields: false
       });
       setPreviewData({});
     } catch (err) {
@@ -632,6 +664,8 @@ const CreatePlan: React.FC = () => {
       countryOfResidence: plan.countryOfResidence || "",
       routeType: plan.routeType || "",
       pricingTables: pricingTables,
+      themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
+      extraIdFields: !!plan.extraIdFields
     });
     setPreviewData({
       name: plan.name,
@@ -640,6 +674,8 @@ const CreatePlan: React.FC = () => {
       countryOfResidence: plan.countryOfResidence || "",
       routeType: plan.routeType || "",
       pricingTables: pricingTables,
+      themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
+      extraIdFields: !!plan.extraIdFields
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -650,9 +686,11 @@ const CreatePlan: React.FC = () => {
       name: "",
       productType: "",
       active: true, // Always default to active for new plans
-        countryOfResidence: "",
-        routeType: "",
-        pricingTables: undefined
+      countryOfResidence: "",
+      routeType: "",
+      pricingTables: undefined,
+      themeColor: DEFAULT_THEME_COLOR,
+      extraIdFields: false
     });
     setPreviewData({});
   };
@@ -873,6 +911,80 @@ const CreatePlan: React.FC = () => {
                 </div>
               </div>
             )}
+
+            <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
+              <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
+                {t("plan.themeColor", "Certificate / invoice color")}
+              </h3>
+              <p className="text-xs text-[#2B2B2B]/70 mb-3">
+                {t(
+                  "plan.themeColorHint",
+                  "Used for the colored title, header rule, and footer bar on this plan's certificate and invoice. Default is the brand orange."
+                )}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="color"
+                  value={isValidHex(formData.themeColor) ? formData.themeColor.slice(0, 7) : DEFAULT_THEME_COLOR}
+                  onChange={(e) => handleInputChange("themeColor", e.target.value.toUpperCase())}
+                  className="h-10 w-12 rounded-lg border border-[#D9D9D9] bg-white cursor-pointer p-1"
+                  aria-label={t("plan.themeColor", "Certificate / invoice color")}
+                />
+                <input
+                  type="text"
+                  value={formData.themeColor}
+                  onChange={(e) => handleInputChange("themeColor", e.target.value)}
+                  placeholder="#E4590F"
+                  className={`px-3 py-2 bg-white border rounded-lg text-sm text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] focus:border-transparent w-32 ${
+                    isValidHex(formData.themeColor) ? "border-[#D9D9D9]" : "border-red-400"
+                  }`}
+                  aria-label={t("plan.themeColorHex", "Hex color")}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("themeColor", DEFAULT_THEME_COLOR)}
+                  className="text-xs text-[#2B2B2B]/70 hover:text-[#2B2B2B] underline"
+                >
+                  {t("plan.themeColorReset", "Reset to default orange")}
+                </button>
+                <span
+                  className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold text-white"
+                  style={{ backgroundColor: isValidHex(formData.themeColor) ? formData.themeColor : DEFAULT_THEME_COLOR }}
+                >
+                  {t("plan.themeColorPreview", "Preview")}
+                </span>
+              </div>
+              {!isValidHex(formData.themeColor) && (
+                <p className="text-xs text-red-600 mt-2">
+                  {t("plan.themeColorInvalid", "Enter a valid #RRGGBB hex color.")}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
+              <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
+                {t("plan.extraIdFields", "Show extended ID labels")}
+              </h3>
+              <p className="text-xs text-[#2B2B2B]/70 mb-3">
+                {t(
+                  "plan.extraIdFieldsHint",
+                  "When enabled, the certificate replaces 'N° Passport' with 'N° Passport / N° Laissez-passer / N° GPGL' (used for AGICO Travel via road)."
+                )}
+              </p>
+              <label className="inline-flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!formData.extraIdFields}
+                  onChange={(e) => handleInputChange("extraIdFields", e.target.checked)}
+                  className="h-4 w-4 rounded border-[#D9D9D9] text-[#E4590F] focus:ring-[#E4590F]"
+                />
+                <span className="text-sm text-[#2B2B2B]">
+                  {formData.extraIdFields
+                    ? t("plan.extraIdFieldsOn", "Enabled — passport label shows all three IDs")
+                    : t("plan.extraIdFieldsOff", "Disabled — only N° Passport (default)")}
+                </span>
+              </label>
+            </div>
 
             {editingPlan && (
               <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">

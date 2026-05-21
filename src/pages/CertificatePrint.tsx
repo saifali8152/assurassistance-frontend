@@ -58,6 +58,10 @@ export interface CertificatePageData {
   publicViewUrl?: string;
   /** Absolute URL for partner insurer logo (plan), if configured */
   partnerLogoUrl?: string | null;
+  /** Per-plan accent (#RRGGBB or #RRGGBBAA). Defaults to brand orange when missing. */
+  themeColor?: string | null;
+  /** When true, traveller passport label is rendered as "N° Passport / N° Laissez-passer / N° GPGL". */
+  extraIdFields?: boolean;
   contact?: {
     emergencyHelpline: string;
     generalLine: string;
@@ -170,6 +174,13 @@ function translateBenefitLabel(
 }
 
 const MAIN_LOGO = "/full-logo.png";
+const DEFAULT_THEME_COLOR = "#E4590F";
+
+function sanitizeThemeColor(input?: string | null): string {
+  if (!input) return DEFAULT_THEME_COLOR;
+  const s = input.trim();
+  return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s) ? s.toUpperCase() : DEFAULT_THEME_COLOR;
+}
 
 const CertificatePrint: React.FC = () => {
   const { saleId, publicToken } = useParams<{ saleId?: string; publicToken?: string }>();
@@ -256,9 +267,16 @@ const CertificatePrint: React.FC = () => {
   };
 
   const partnerLogoSrc = data.partnerLogoUrl?.trim() || "";
+  const themeColor = sanitizeThemeColor(data.themeColor);
+  const passportLabel = data.extraIdFields
+    ? t("certificatePrint.passportNoExtended", "N° Passport / N° Laissez-passer / N° GPGL")
+    : t("certificatePrint.passportNo");
 
   return (
-    <div className="certificate-shell cert-print-root bg-white min-h-screen py-1 print:py-0">
+    <div
+      className="certificate-shell cert-print-root bg-white min-h-screen py-1 print:py-0"
+      style={{ ["--cert-accent" as string]: themeColor }}
+    >
       <style>{`
         .cert-print-root {
           font-family: Arial, Helvetica, sans-serif;
@@ -290,7 +308,7 @@ const CertificatePrint: React.FC = () => {
         }
         .cert-watermark img { width: 100%; height: auto; display: block; object-fit: contain; }
         .cert-main-title {
-          color: #E4590F;
+          color: var(--cert-accent, #E4590F);
           font-size: 15px;
           font-weight: 700;
           letter-spacing: 0.03em;
@@ -299,7 +317,7 @@ const CertificatePrint: React.FC = () => {
           margin: 0;
         }
         .cert-subtitle { font-size: 10px; margin: 2px 0 0; color: #000; font-weight: 400; }
-        .cert-orange-line { height: 2px; background: #E4590F; width: 100%; margin: 4px 0 5px; border: none; }
+        .cert-orange-line { height: 2px; background: var(--cert-accent, #E4590F); width: 100%; margin: 4px 0 5px; border: none; }
         .cert-gray-line { height: 1px; background: #E0E0E0; width: 100%; margin: 5px 0; border: none; }
         .cert-intro { margin: 0 0 5px; font-size: 10px; }
         .cert-inline-field { display: inline; }
@@ -369,7 +387,7 @@ const CertificatePrint: React.FC = () => {
         .cert-contact-block { margin: 0 0 4px; font-size: 9px; line-height: 1.28; }
         .cert-contact-intro { margin: 0 0 2px; font-weight: 400; }
         .cert-contact-line { margin: 0; padding: 0; line-height: 1.25; }
-        .cert-footer-bar { height: 3px; background: #E4590F; width: 100%; margin: 5px 0 4px; }
+        .cert-footer-bar { height: 3px; background: var(--cert-accent, #E4590F); width: 100%; margin: 5px 0 4px; }
         .cert-company-footer { font-size: 7px; color: #444; line-height: 1.3; text-align: center; }
       `}</style>
 
@@ -449,7 +467,7 @@ const CertificatePrint: React.FC = () => {
                 </FieldInline>
               </td>
               <td>
-                <FieldInline label={t("certificatePrint.passportNo")}>
+                <FieldInline label={passportLabel}>
                   {data.traveller.passportOrId || "—"}
                 </FieldInline>
               </td>
