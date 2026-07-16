@@ -78,8 +78,14 @@ export const getPartnerInvoiceSummaryApi = async (startDate: string, endDate: st
     `/partner-invoices/summary?startDate=${startDate}&endDate=${endDate}`
   );
 
-/** PDF invoice download (blob). */
-export const downloadPartnerInvoicePdfApi = (partnerId: number, startDate: string, endDate: string) =>
-  api.get(`/partner-invoices/${partnerId}/pdf?startDate=${startDate}&endDate=${endDate}`, {
-    responseType: "blob",
-  });
+/** PDF invoice download (blob). Amounts convert from XOF to `currency` (XOF|USD|EUR). */
+export const downloadPartnerInvoicePdfApi = (
+  partnerId: number,
+  startDate: string,
+  endDate: string,
+  currency: string = "XOF"
+) =>
+  api.get(
+    `/partner-invoices/${partnerId}/pdf?startDate=${startDate}&endDate=${endDate}&currency=${encodeURIComponent(currency)}`,
+    { responseType: "blob" }
+  );

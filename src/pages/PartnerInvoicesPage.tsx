@@ -20,6 +20,7 @@ import {
   type PartnerInvoiceData,
   type PartnerInvoiceSummary,
 } from "../api/partnerInvoiceApi";
+import { useCurrency } from "../context/CurrencyContext";
 
 function monthRange(month: string): { startDate: string; endDate: string } {
   const [y, m] = month.split("-").map(Number);
@@ -33,10 +34,6 @@ function currentMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function fmtAmount(n: number): string {
-  return Math.round(n || 0).toLocaleString("fr-FR");
-}
-
 function fmtDate(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
@@ -45,6 +42,7 @@ function fmtDate(value: string): string {
 
 const PartnerInvoicesPage: React.FC = () => {
   const { t } = useTranslation();
+  const { formatCurrency, currency } = useCurrency();
 
   const [partners, setPartners] = useState<InvoicePartner[]>([]);
   const [partnerId, setPartnerId] = useState<number | "">("");
@@ -117,7 +115,12 @@ const PartnerInvoicesPage: React.FC = () => {
     if (!partnerId || !periodValid) return;
     try {
       setDownloading(true);
-      const res = await downloadPartnerInvoicePdfApi(Number(partnerId), period.startDate, period.endDate);
+      const res = await downloadPartnerInvoicePdfApi(
+        Number(partnerId),
+        period.startDate,
+        period.endDate,
+        currency
+      );
       const blob = new Blob([res.data], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -134,7 +137,7 @@ const PartnerInvoicesPage: React.FC = () => {
     } finally {
       setDownloading(false);
     }
-  }, [partnerId, period.startDate, period.endDate, periodValid, partners, t]);
+  }, [partnerId, period.startDate, period.endDate, periodValid, partners, currency, t]);
 
   const partnerLabel = (p: InvoicePartner) =>
     p.company_name ? `${p.company_name} (${p.name})` : p.name;
@@ -144,21 +147,21 @@ const PartnerInvoicesPage: React.FC = () => {
         {
           icon: Receipt,
           label: t("partnerInvoices.cardPremiums", "Total premiums"),
-          value: fmtAmount(summary.totalPremiums),
+          value: formatCurrency(summary.totalPremiums),
           sub: t("partnerInvoices.cardSales", "{{count}} sales", { count: summary.totalSales }),
         },
         {
           icon: Wallet,
           label: t("partnerInvoices.cardCollected", "Premiums collected"),
-          value: fmtAmount(summary.totalCollected),
+          value: formatCurrency(summary.totalCollected),
           sub: null,
         },
         {
           icon: Landmark,
           label: t("partnerInvoices.cardCommissions", "Commissions to pay"),
-          value: fmtAmount(summary.totalCommissions),
+          value: formatCurrency(summary.totalCommissions),
           sub: t("partnerInvoices.cardNet", "Net to transfer: {{amount}}", {
-            amount: fmtAmount(summary.netToTransfer),
+            amount: formatCurrency(summary.netToTransfer),
           }),
         },
       ]
@@ -188,7 +191,7 @@ const PartnerInvoicesPage: React.FC = () => {
                 <span className="text-xs font-medium">{card.label}</span>
               </div>
               <div className="mt-2 text-xl font-semibold text-[#1A1A1A]">
-                {card.value} <span className="text-xs font-normal text-text-secondary">XOF</span>
+                {card.value}
               </div>
               {card.sub && <div className="mt-0.5 text-xs text-text-secondary">{card.sub}</div>}
             </div>
@@ -360,9 +363,9 @@ const PartnerInvoicesPage: React.FC = () => {
                       </td>
                       <td className="px-3 py-2">{l.plan_name || "—"}</td>
                       <td className="px-3 py-2 whitespace-nowrap text-xs">{l.certificate_number}</td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap">{fmtAmount(l.plan_premium)}</td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap">{fmtAmount(l.tax)}</td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap font-medium">{fmtAmount(l.total)}</td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(l.plan_premium)}</td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(l.tax)}</td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap font-medium">{formatCurrency(l.total)}</td>
                       <td className="px-3 py-2">
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -379,7 +382,7 @@ const PartnerInvoicesPage: React.FC = () => {
                       <td className="px-3 py-2 whitespace-nowrap">{fmtDate(l.confirmed_at)}</td>
                       <td className="px-3 py-2">{l.created_by_name || "—"}</td>
                       <td className="px-3 py-2 text-right whitespace-nowrap font-medium text-[#E4590F]">
-                        {fmtAmount(l.commission)}
+                        {formatCurrency(l.commission)}
                       </td>
                     </tr>
                   ))
@@ -392,13 +395,13 @@ const PartnerInvoicesPage: React.FC = () => {
                       {t("partnerInvoices.totalIssued", "Total policies issued")}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold whitespace-nowrap">
-                      {fmtAmount(invoice.totals.totalPremiums)}
+                      {formatCurrency(invoice.totals.totalPremiums)}
                     </td>
                     <td colSpan={3} className="px-3 py-2 text-right font-medium">
                       {t("partnerInvoices.totalCommissions", "Total commissions to deduct")}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold whitespace-nowrap text-[#E4590F]">
-                      {fmtAmount(invoice.totals.totalCommissions)}
+                      {formatCurrency(invoice.totals.totalCommissions)}
                     </td>
                   </tr>
                   <tr>
@@ -406,7 +409,7 @@ const PartnerInvoicesPage: React.FC = () => {
                       {t("partnerInvoices.netToTransfer", "Net total to transfer")}
                     </td>
                     <td className="px-3 py-2 text-right font-bold whitespace-nowrap">
-                      {fmtAmount(invoice.totals.netToTransfer)}
+                      {formatCurrency(invoice.totals.netToTransfer)}
                     </td>
                   </tr>
                 </tfoot>
@@ -432,7 +435,7 @@ const PartnerInvoicesPage: React.FC = () => {
                   {t("partnerInvoices.tierDays", "{{days}} days", { days: tier.days })}
                 </span>
                 <span className="text-text-secondary">
-                  {fmtAmount(tier.premium)} XOF → {fmtAmount(tier.commission)} XOF
+                  {formatCurrency(tier.premium)} → {formatCurrency(tier.commission)}
                 </span>
               </span>
             ))}
