@@ -111,8 +111,14 @@ const CreateUser: React.FC = () => {
         const res = await getAllCataloguesApi();
         const data = (res as any)?.data ?? res;
         const list = Array.isArray(data) ? data : (data?.data ?? []);
-        setPlans(list.map((p: any) => ({ id: p.id, name: p.name || `Plan ${p.id}` })));
-      } catch (_) {}
+        setPlans(
+          list
+            .filter((p: any) => p.active !== false && p.active !== 0)
+            .map((p: any) => ({ id: p.id, name: p.name || `Plan ${p.id}` }))
+        );
+      } catch (_) {
+        toast.error(t("agent.loadPlansFailed", "Could not load plans"));
+      }
     };
     loadPlans();
   }, []);

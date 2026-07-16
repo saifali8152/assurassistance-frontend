@@ -45,6 +45,8 @@ import ActivityLogPage from './pages/ActivityLogPage'
 import AgentHierarchyPage from './pages/AgentHierarchyPage'
 import SubAdminManagement from './pages/SubAdminManagement'
 import InvoicesByRegionPage from './pages/InvoicesByRegionPage'
+import PartnersByTypePage from './pages/PartnersByTypePage'
+import PartnerInvoicesPage from './pages/PartnerInvoicesPage'
 
 
 // User Layout and Pages
@@ -159,6 +161,22 @@ function App() {
               element={
                 <AuthGuard requireAuth={true} allowedRoles={['admin']}>
                   <AgentHierarchyPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="partners"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <PartnersByTypePage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="partner-invoices"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin']}>
+                  <PartnerInvoicesPage />
                 </AuthGuard>
               }
             />

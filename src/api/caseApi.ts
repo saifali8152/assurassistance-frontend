@@ -18,13 +18,30 @@ export const createGroupCasesApi = async (data: {
 // Get all cases for the logged-in agent
 export const getMyCasesApi = () => apiGet("/cases");
 
-// Get all cases with pagination (admin only)
-export const getAllCasesApi = (page: number = 1, limit: number = 10) => 
-  apiGet(`/cases/all?page=${page}&limit=${limit}`);
+export interface CaseListFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+function caseListQs(filters: CaseListFilters) {
+  const qs = new URLSearchParams();
+  Object.entries(filters).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+  });
+  return qs.toString();
+}
+
+// Get all cases with pagination (admin / sub-admin)
+export const getAllCasesApi = (filters: CaseListFilters = {}) =>
+  apiGet(`/cases/all?${caseListQs(filters)}`);
 
 // Get cases for agent with pagination
-export const getMyCasesWithPaginationApi = (page: number = 1, limit: number = 10) => 
-  apiGet(`/cases/my-cases?page=${page}&limit=${limit}`);
+export const getMyCasesWithPaginationApi = (filters: CaseListFilters = {}) =>
+  apiGet(`/cases/my-cases?${caseListQs(filters)}`);
 
 // Get pending sales (cases without sales)
 export const getPendingSalesApi = () => apiGet("/cases/pending-sales");

@@ -16,7 +16,8 @@ import {
   UsersRound,
   GitBranch,
   Shield,
-  Globe2
+  Globe2,
+  Building2
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -192,17 +193,23 @@ const Layout: React.FC = () => {
                 <NavLink to="/admin/agent-hierarchy" icon={GitBranch}>{t("sidebar.agentHierarchy", "Agent hierarchy")}</NavLink>
               )}
               {user?.role === "admin" && (
+                <NavLink to="/admin/partners" icon={Building2}>{t("sidebar.partnersByType", "Partners by type")}</NavLink>
+              )}
+              {user?.role === "admin" && (
                 <NavLink to="/admin/createPlan" icon={FilePlus}>{t("sidebar.createPlan", "Create Plan")}</NavLink>
               )}
-              {user?.role === "admin" && (
+              {(user?.role === "admin" || user?.role === "sub_admin") && (
                 <NavLink to="/admin/createCase" icon={Layers}>{t("sidebar.createCase", "Create Case")}</NavLink>
               )}
-              {user?.role === "admin" && (
+              {(user?.role === "admin" || user?.role === "sub_admin") && (
                 <NavLink to="/admin/createGroupCase" icon={UsersRound}>{t("sidebar.createGroupCase", "Create group case")}</NavLink>
               )}
               <NavLink to="/admin/cases" icon={FilePlus}>{t("sidebar.allCases", "All Cases")}</NavLink>
               <NavLink to="/admin/ledger" icon={Activity}>{t("sidebar.salesLedger", "Sales Ledger")}</NavLink>
               <NavLink to="/admin/invoices-by-region" icon={Globe2}>{t("sidebar.invoicesByRegion", "Invoices by region")}</NavLink>
+              {(user?.role === "admin" || user?.role === "sub_admin") && (
+                <NavLink to="/admin/partner-invoices" icon={ReceiptText}>{t("sidebar.partnerInvoices", "Partner invoices")}</NavLink>
+              )}
               {user?.role === "admin" && (
                 <NavLink to="/admin/Reconciliation" icon={ReceiptText}>{t("sidebar.reconciliation", "Reconciliation Table")}</NavLink>
               )}

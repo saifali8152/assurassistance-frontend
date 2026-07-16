@@ -3,7 +3,7 @@ import axios from "axios";
 import i18n from "../i18n"; 
 
 // Use environment variable for API URL with fallback (single source for axios + raw fetch URLs)
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://backend.acareeracademy.com/api";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://backend-api.assurassistancepro.org/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

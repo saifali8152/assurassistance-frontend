@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi } from '../api/caseApi';
+import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi, type CaseListFilters } from '../api/caseApi';
 import { createSaleApi } from '../api/salesApi';
 import { ChevronLeft, ChevronRight, Download, CheckCircle, XCircle, Eye, Calendar, Phone, MapPin, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -69,8 +69,10 @@ const CasesManagement: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 25;
 
   // Calculate price from pricing table based on duration
   const calculatePriceFromPricingTable = (caseItem: Case, days: number): number | null => {
@@ -166,85 +168,89 @@ const CasesManagement: React.FC = () => {
     return calculatePlanPrice(caseItem) + calculateGuaranteesTotal(caseItem);
   };
 
-  const fetchCases = async (page: number = 1, search: string = '', status: string = '') => {
+  const mapCaseRows = (raw: any[]): Case[] =>
+    raw.map((caseItem: any) => {
+      let pricingTables: PricingTables | undefined;
+      if (caseItem.pricing_rules) {
+        try {
+          pricingTables =
+            typeof caseItem.pricing_rules === 'string'
+              ? JSON.parse(caseItem.pricing_rules)
+              : caseItem.pricing_rules;
+        } catch (e) {
+          console.error('Failed to parse pricing_rules:', e);
+        }
+      }
+      return { ...caseItem, pricingTables };
+    });
+
+  const fetchCases = async (
+    page: number = 1,
+    search: string = '',
+    status: string = '',
+    start: string = '',
+    end: string = ''
+  ) => {
     try {
       setLoading(true);
       const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin';
+      const filters: CaseListFilters = {
+        page,
+        limit: itemsPerPage,
+        ...(search.trim() ? { search: search.trim() } : {}),
+        ...(status ? { status } : {}),
+        ...(start ? { startDate: start } : {}),
+        ...(end ? { endDate: end } : {}),
+      };
       const response = isPrivileged
-        ? await getAllCasesApi(page, itemsPerPage)
-        : await getMyCasesWithPaginationApi(page, itemsPerPage);
-      const data = response as any;
-      let filteredCases = (data.cases || []).map((caseItem: any) => {
-        // Parse pricing_rules if it's a string
-        let pricingTables: PricingTables | undefined;
-        if (caseItem.pricing_rules) {
-          try {
-            pricingTables = typeof caseItem.pricing_rules === 'string' 
-              ? JSON.parse(caseItem.pricing_rules) 
-              : caseItem.pricing_rules;
-          } catch (e) {
-            console.error('Failed to parse pricing_rules:', e);
-          }
-        }
-        
-        return {
-          ...caseItem,
-          pricingTables,
-        };
-      });
-      
-      // Apply search filter
-      if (search.trim()) {
-        const searchLower = search.toLowerCase();
-        filteredCases = filteredCases.filter((caseItem: Case) => 
-          caseItem.full_name.toLowerCase().includes(searchLower) ||
-          caseItem.destination.toLowerCase().includes(searchLower) ||
-          caseItem.plan_name.toLowerCase().includes(searchLower) ||
-          caseItem.email.toLowerCase().includes(searchLower) ||
-          caseItem.phone.includes(search) ||
-          caseItem.id.toString().includes(search) ||
-          (caseItem.created_by_name && caseItem.created_by_name.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      // Apply status filter
-      if (status) {
-        filteredCases = filteredCases.filter((caseItem: Case) => 
-          caseItem.status === status
-        );
-      }
-      
-      // Apply pagination to filtered results
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedCases = filteredCases.slice(startIndex, endIndex);
-      
-      setCases(paginatedCases);
-      // Calculate pagination for filtered results
-      const totalFilteredCases = filteredCases.length;
-      const totalPagesForFiltered = Math.ceil(totalFilteredCases / itemsPerPage);
-      setTotalPages(totalPagesForFiltered);
-      setTotalCases(totalFilteredCases);
+        ? await getAllCasesApi(filters)
+        : await getMyCasesWithPaginationApi(filters);
+      const data = response as {
+        cases?: any[];
+        totalCases?: number;
+        totalPages?: number;
+      };
+      setCases(mapCaseRows(data.cases || []));
+      setTotalCases(Number(data.totalCases) || 0);
+      setTotalPages(Math.max(1, Number(data.totalPages) || 1));
     } catch (error) {
       console.error('Failed to fetch cases:', error);
-      toast.error('Failed to load cases');
+      toast.error(t('cases.loadFailed', 'Failed to load cases'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Debounced search effect
+  const runSearch = (page: number = 1) => {
+    setCurrentPage(page);
+    fetchCases(page, searchTerm, statusFilter, startDate, endDate);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
+    fetchCases(1, '', '', '', '');
+  };
+
+  const refreshList = () =>
+    fetchCases(currentPage, searchTerm, statusFilter, startDate, endDate);
+
+  // Debounced search — reset to page 1 when filters change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
-      fetchCases(1, searchTerm, statusFilter);
+      fetchCases(1, searchTerm, statusFilter, startDate, endDate);
     }, 500);
-
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, statusFilter, startDate, endDate]);
 
   useEffect(() => {
-    fetchCases(currentPage, searchTerm, statusFilter);
+    fetchCases(currentPage, searchTerm, statusFilter, startDate, endDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const handleConfirmSale = async (caseId: number) => {
@@ -310,7 +316,7 @@ const CasesManagement: React.FC = () => {
           toast.error('Failed to confirm sale');
         }
       }
-      await fetchCases(currentPage, searchTerm, statusFilter);
+      await refreshList();
       setShowModal(false);
     } catch (error) {
       console.error('Failed to confirm sale:', error);
@@ -325,7 +331,7 @@ const CasesManagement: React.FC = () => {
       setActionLoading(caseId);
       await cancelCaseApi(caseId);
       toast.success('Case cancelled successfully');
-      await fetchCases(currentPage, searchTerm, statusFilter);
+      await refreshList();
       setShowModal(false);
     } catch (error) {
       console.error('Failed to cancel case:', error);
@@ -365,7 +371,8 @@ const CasesManagement: React.FC = () => {
     window.open(`/certificate/${saleId}`, "_blank", "noopener,noreferrer");
   };
 
-  const casesBasePath = (user?.role === 'admin' || user?.role === 'sub_admin') ? '/admin' : '/user';
+  const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin';
+  const casesBasePath = isPrivileged ? '/admin' : '/user';
 
   const goEditCase = (caseItem: Case) => {
     if (caseItem.status === 'Cancelled') return;
@@ -383,6 +390,7 @@ const CasesManagement: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Confirmed': return 'bg-green-500/10 text-green-600 border border-green-500/20';
+      case 'Draft': return 'bg-amber-500/10 text-amber-700 border border-amber-500/20';
       case 'Pending': return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20';
       case 'Cancelled': return 'bg-red-500/10 text-red-600 border border-red-500/20';
       default: return 'bg-[#D9D9D9]/30 text-[#2B2B2B] border border-[#D9D9D9]';
@@ -411,35 +419,53 @@ const CasesManagement: React.FC = () => {
       <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 className="text-2xl font-semibold text-[#E4590F]">
-            {user?.role === 'admin' ? t("cases.allCases") : t("cases.myCases")}
+            {(user?.role === 'admin' || user?.role === 'sub_admin') ? t("cases.allCases") : t("cases.myCases")}
           </h2>
           
-          {/* Search and Filter Controls */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* Search and Filter Controls — server-side (Ledger theme) */}
+          <div className="flex flex-col lg:flex-row flex-wrap gap-3 w-full lg:w-auto lg:max-w-4xl lg:justify-end">
             <input
               type="text"
               placeholder={t("cases.search")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] placeholder-[#2B2B2B]/40 focus:outline-none focus:ring-2 focus:ring-[#E4590F] focus:border-transparent transition-all"
+              className="px-4 py-2 min-w-[12rem] flex-1 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] placeholder-[#2B2B2B]/40 focus:outline-none focus:ring-2 focus:ring-[#E4590F] font-normal"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] focus:border-transparent transition-all"
+              className="px-4 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] font-normal"
             >
               <option value="">{t("cases.allStatus")}</option>
+              <option value="Draft">{t("cases.statusDraft", "Draft")}</option>
               <option value="Confirmed">{t("cases.statusConfirmed")}</option>
               <option value="Cancelled">{t("cases.statusCancelled")}</option>
             </select>
+            <input
+              type="date"
+              aria-label={t("cases.startDate", "Start date")}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-4 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] font-normal"
+            />
+            <input
+              type="date"
+              aria-label={t("cases.endDate", "End date")}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-4 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] font-normal"
+            />
             <button
-              onClick={() => {
-                setSearchTerm("");
-                setStatusFilter("");
-                setCurrentPage(1);
-                fetchCases(1, "", "");
-              }}
-              className="px-4 py-2 bg-[#D9D9D9] hover:bg-[#D9D9D9]/80 text-[#2B2B2B] rounded-xl transition-colors font-medium"
+              type="button"
+              onClick={() => runSearch(1)}
+              className="px-4 py-2 bg-[#E4590F] hover:bg-[#C94A0D] text-white rounded-xl transition-colors font-medium"
+            >
+              {t("cases.searchButton", "Search")}
+            </button>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="px-4 py-2 bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] rounded-xl transition-colors font-medium"
             >
               {t("cases.clear")}
             </button>
@@ -461,10 +487,11 @@ const CasesManagement: React.FC = () => {
               <FileText className="mx-auto h-12 w-12 text-[#D9D9D9]" />
               <h3 className="mt-2 text-sm font-medium text-[#2B2B2B]">{t("cases.noCases")}</h3>
               <p className="mt-1 text-sm text-[#2B2B2B]/60">
-                {user?.role === 'admin' 
-                  ? t("cases.noCasesAdmin") 
-                  : t("cases.noCasesAgent")
-                }
+                {user?.role === 'admin'
+                  ? t("cases.noCasesAdmin")
+                  : user?.role === 'sub_admin'
+                    ? t("cases.noCasesSubAdmin", "No cases in your assigned agencies.")
+                    : t("cases.noCasesAgent")}
               </p>
             </div>
           ) : (
@@ -479,7 +506,7 @@ const CasesManagement: React.FC = () => {
                     <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("cases.price")}</th>
                     <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("plan.guaranteeTables")}</th>
                     <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("createCase.grandTotal")}</th>
-                    {user?.role === 'admin' && (
+                    {isPrivileged && (
                       <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden md:table-cell">{t("cases.createdBy")}</th>
                     )}
                     <th className="text-left text-[#2B2B2B]/70 font-medium py-4 px-2">{t("cases.actions")}</th>
@@ -555,7 +582,7 @@ const CasesManagement: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      {user?.role === 'admin' && (
+                      {isPrivileged && (
                         <td className="py-4 px-2 text-[#2B2B2B]/80 hidden md:table-cell">
                           <div className="text-center">
                             <div className="text-[#2B2B2B] font-medium">
@@ -647,45 +674,64 @@ const CasesManagement: React.FC = () => {
                 </tbody>
               </table>
 
-              {/* Pagination */}
+              {/* Pagination — server totals, sliding page window */}
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-[#D9D9D9]">
-                <div className="text-[#2B2B2B]/70 text-sm">
-                  {t("cases.showing")} <span className="font-medium text-[#2B2B2B]">{(currentPage - 1) * itemsPerPage + 1}</span> {t("cases.to")}{' '}
+                <div className="text-[#2B2B2B]/70 text-sm font-normal">
+                  {t("cases.showing")}{' '}
                   <span className="font-medium text-[#2B2B2B]">
-                    {Math.min(currentPage * itemsPerPage, totalCases)}
+                    {totalCases === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
                   </span>{' '}
-                  {t("cases.of")} <span className="font-medium text-[#2B2B2B]">{totalCases}</span> {t("cases.results")}
+                  {t("cases.to")}{' '}
+                  <span className="font-medium text-[#2B2B2B]">
+                    {totalCases === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalCases)}
+                  </span>{' '}
+                  {t("cases.of")}{' '}
+                  <span className="font-medium text-[#2B2B2B]">{totalCases}</span>{' '}
+                  {t("cases.results")}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] hover:bg-[#D9D9D9]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    disabled={currentPage === 1 || totalCases === 0}
+                    className="px-3 py-2 bg-[#D9D9D9] hover:bg-[#B8B8B8] border border-[#D9D9D9] rounded-xl text-[#2B2B2B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = i + 1;
-                    return (
+
+                  {(() => {
+                    const window = 5;
+                    const start = Math.max(
+                      1,
+                      Math.min(
+                        totalPages - window + 1,
+                        currentPage - Math.floor(window / 2)
+                      )
+                    );
+                    const end = Math.min(totalPages, start + window - 1);
+                    const pages: number[] = [];
+                    for (let p = start; p <= end; p++) pages.push(p);
+                    return pages.map((page) => (
                       <button
                         key={page}
+                        type="button"
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                           page === currentPage
                             ? 'bg-[#E4590F] text-white'
-                            : 'bg-white border border-[#D9D9D9] text-[#2B2B2B] hover:bg-[#D9D9D9]/30'
+                            : 'bg-[#D9D9D9] text-[#2B2B2B] hover:bg-[#B8B8B8]'
                         }`}
                       >
                         {page}
                       </button>
-                    );
-                  })}
-                  
+                    ));
+                  })()}
+
                   <button
+                    type="button"
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] hover:bg-[#D9D9D9]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    disabled={currentPage === totalPages || totalCases === 0}
+                    className="px-3 py-2 bg-[#D9D9D9] hover:bg-[#B8B8B8] border border-[#D9D9D9] rounded-xl text-[#2B2B2B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -800,7 +846,7 @@ const CasesManagement: React.FC = () => {
                     <div className="text-left"><span className="text-[#2B2B2B]/80">{selectedCase.currency}</span></div>
                   </>
                 )}
-                {user?.role === 'admin' && (
+                {isPrivileged && (
                   <>
                     <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("cases.createdBy")}:</span></div>
                     <div className="text-left"><span className="text-[#2B2B2B]">{selectedCase.created_by_name || 'Unknown'}</span></div>

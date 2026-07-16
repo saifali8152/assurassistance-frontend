@@ -312,13 +312,13 @@ const CreateCase: React.FC = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-[#E4590F] mb-2">
-              {user?.role === 'admin' ? t('createCase.noPlansAdmin') : t('createCase.noPlansAgent')}
+              {(user?.role === 'admin' || user?.role === 'sub_admin') ? t('createCase.noPlansAdmin') : t('createCase.noPlansAgent')}
             </h2>
             <p className="text-[#2B2B2B]/70 text-lg font-normal">
-              {user?.role === 'admin' ? t('createCase.noPlansAdminMessage') : t('createCase.noPlansAgentMessage')}
+              {(user?.role === 'admin' || user?.role === 'sub_admin') ? t('createCase.noPlansAdminMessage') : t('createCase.noPlansAgentMessage')}
             </p>
           </div>
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === 'sub_admin') && (
             <button
               onClick={() => window.location.href = '/admin'}
               className="px-6 py-3 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors cursor-pointer"

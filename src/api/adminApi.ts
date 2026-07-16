@@ -113,3 +113,64 @@ export const getAgentHierarchyExportUrl = (params: { search?: string; status?: s
   const q = qs.toString();
   return `${API_BASE_URL}/admin/agent-hierarchy/export${q ? `?${q}` : ""}`;
 };
+
+/** One partner (top-level agency / supervisor) for the partners-by-type view. */
+export type PartnerRow = {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  created_at: string | null;
+  last_login: string | null;
+  company_name: string | null;
+  partnership_type: string | null;
+  country_of_residence: string | null;
+  iata_number: string | null;
+  geographical_location: string | null;
+  work_phone: string | null;
+  whatsapp_phone: string | null;
+  /** Agent + sub-agent logins under this partner. */
+  account_count: number;
+  /** Direct child agents only. */
+  direct_agent_count: number;
+  /** Cases created by the partner or any descendant account. */
+  total_cases: number;
+};
+
+export type PartnerTypeSummary = {
+  partnership_type: string;
+  partner_count: number;
+};
+
+export type PartnersApiResponse = {
+  success: boolean;
+  data: {
+    partners: PartnerRow[];
+    typeSummary: PartnerTypeSummary[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
+};
+
+/** Superadmin: list partners once by type (ignores which agent login is used day-to-day). */
+export const getPartnersApi = async (params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  partnership_type?: string;
+}) => {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
+  if (params.partnership_type) qs.set("partnership_type", params.partnership_type);
+  return apiGet<PartnersApiResponse>(`/admin/partners?${qs.toString()}`);
+};
