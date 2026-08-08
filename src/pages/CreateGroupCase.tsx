@@ -24,7 +24,8 @@ import {
   getAgeFromDateString,
   getAgePremiumMultiplier,
   getLegacyPricingTablePremium,
-  roundMoney
+  roundMoney,
+  AGE_EXEMPTION_MESSAGE,
 } from "../utils/travelPricing";
 import { downloadGroupTemplateFile, parseGroupExcelFile, type GroupMemberImport } from "../utils/groupCaseExcel";
 
@@ -46,6 +47,7 @@ interface Plan {
     pricing: { id: string; label: string; columns: Record<string, number | null> }[];
     guarantees: any[];
   };
+  fixedDurationPremiums?: boolean;
 }
 
 interface MemberRow extends GroupMemberImport {
@@ -145,7 +147,8 @@ const CreateGroupCase: React.FC = () => {
               ? typeof plan.pricing_rules === "string"
                 ? JSON.parse(plan.pricing_rules)
                 : plan.pricing_rules
-              : undefined
+              : undefined,
+            fixedDurationPremiums: !!plan.fixed_duration_premiums
           }));
         setPlans(activePlans);
       } catch {
@@ -162,7 +165,11 @@ const CreateGroupCase: React.FC = () => {
   const getPlanPremiumBreakdown = (plan: Plan, stayDays: number, dob: string) => {
     const travelLike = ["Travel", "Travel Inbound", "Road travel"].includes(plan.productType);
     if (plan.pricingTables?.pricing?.length) {
-      if (travelLike) return computeTravelPlanPremium(plan.pricingTables, stayDays, dob);
+      if (travelLike) {
+        return computeTravelPlanPremium(plan.pricingTables, stayDays, dob, {
+          fixedDurationPremiums: !!plan.fixedDurationPremiums,
+        });
+      }
       const legacy = getLegacyPricingTablePremium(plan.pricingTables, stayDays);
       if (legacy == null) return { error: "no_price" as const, planPremium: null };
       return {
@@ -197,12 +204,10 @@ const CreateGroupCase: React.FC = () => {
   };
 
   const guaranteesPayload = () => {
-    let guaranteesTotal = 0;
     const guaranteesDetails: any[] = [];
     if (selectedPlanObj?.pricingTables?.guarantees) {
       selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
         if (g.amount != null && g.amount !== undefined) {
-          guaranteesTotal += g.amount;
           guaranteesDetails.push({
             category: g.category,
             coverageType: g.coverageType,
@@ -211,7 +216,7 @@ const CreateGroupCase: React.FC = () => {
         }
       });
     }
-    return { guaranteesTotal, guaranteesDetails };
+    return { guaranteesDetails };
   };
 
   const memberPremiumTotal = (dob: string) => {
@@ -219,8 +224,7 @@ const CreateGroupCase: React.FC = () => {
     const days = parseInt(durationDays, 10) || 1;
     const br = getPlanPremiumBreakdown(selectedPlanObj, days, dob);
     if (!("planPremium" in br) || br.planPremium == null) return 0;
-    const { guaranteesTotal } = guaranteesPayload();
-    return br.planPremium + guaranteesTotal;
+    return br.planPremium;
   };
 
   const groupGrandTotal = () =>
@@ -322,14 +326,19 @@ const CreateGroupCase: React.FC = () => {
       return;
     }
     const days = parseInt(durationDays, 10) || 1;
-    const { guaranteesTotal, guaranteesDetails } = guaranteesPayload();
+    const { guaranteesDetails } = guaranteesPayload();
     const saleIds: number[] = [];
 
     for (let i = 0; i < caseIds.length; i++) {
       const dob = members[i].date_of_birth;
       const br = getPlanPremiumBreakdown(selectedPlanObj, days, dob);
       if ("error" in br && br.error === "age_ineligible") {
-        toast.error(t("groupCase.ageIneligibleRow", { row: i + 1 }));
+        toast.error(
+          t("groupCase.ageIneligibleRow", {
+            row: i + 1,
+            defaultValue: `Row ${i + 1}: ${AGE_EXEMPTION_MESSAGE}`,
+          })
+        );
         return;
       }
       if (!("planPremium" in br) || br.planPremium == null) {
@@ -346,7 +355,7 @@ const CreateGroupCase: React.FC = () => {
           total: premiumAmount + tax,
           currency: selectedPlanObj.currency || "XOF",
           plan_price: premiumAmount,
-          guarantees_total: guaranteesTotal,
+          guarantees_total: 0,
           guarantees_details: guaranteesDetails.length ? guaranteesDetails : undefined
         });
         if (res?.saleId) saleIds.push(res.saleId);
@@ -732,7 +741,7 @@ const CreateGroupCase: React.FC = () => {
                   <th className="py-2 pr-2">{t("createCase.lastName")}</th>
                   <th className="py-2 pr-2">{t("createCase.firstName")}</th>
                   <th className="py-2 pr-2">{t("createCase.dateOfBirth")}</th>
-                  <th className="py-2 text-right">{t("createCase.grandTotal")}</th>
+                  <th className="py-2 text-right">{t("createCase.price")}</th>
                 </tr>
               </thead>
               <tbody>

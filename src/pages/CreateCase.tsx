@@ -20,7 +20,8 @@ import {
   getAgeFromDateString,
   getAgePremiumMultiplier,
   getLegacyPricingTablePremium,
-  roundMoney
+  roundMoney,
+  AGE_EXEMPTION_MESSAGE,
 } from "../utils/travelPricing";
 interface Tab {
   id: string;
@@ -54,6 +55,8 @@ interface Plan {
   routeType?: string;
   currency?: string;
   pricingTables?: PricingTables;
+  /** Exact duration-table premiums; print on certificate (Agico Burundi). */
+  fixedDurationPremiums?: boolean;
 }
 
 const CreateCase: React.FC = () => {
@@ -222,6 +225,7 @@ const CreateCase: React.FC = () => {
             routeType: plan.route_type || "",
             currency: plan.currency || "XOF",
             pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : undefined,
+            fixedDurationPremiums: !!plan.fixed_duration_premiums,
           }));
         setPlans(activePlans);
       } catch (err) {
@@ -263,7 +267,9 @@ const CreateCase: React.FC = () => {
     const travelLike = ["Travel", "Travel Inbound", "Road travel"].includes(plan.productType);
     if (plan.pricingTables?.pricing?.length) {
       if (travelLike) {
-        return computeTravelPlanPremium(plan.pricingTables, stayDays, dob);
+        return computeTravelPlanPremium(plan.pricingTables, stayDays, dob, {
+          fixedDurationPremiums: !!plan.fixedDurationPremiums,
+        });
       }
       const legacy = getLegacyPricingTablePremium(plan.pricingTables, stayDays);
       if (legacy == null) return { error: "no_price" as const, planPremium: null };
@@ -374,27 +380,20 @@ const CreateCase: React.FC = () => {
       {selectedPlanObj && (() => {
         let calculatedPrice = 0;
         let validityTierDays: number | null = null;
+        let ageBand: string | null = null;
+        let ageIneligible = false;
         if (durationDays && selectedPlanObj) {
           const days = parseInt(durationDays) || 1;
           const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
+          if ("error" in br && br.error === "age_ineligible") {
+            ageIneligible = true;
+          }
           if ("planPremium" in br && br.planPremium != null) {
             calculatedPrice = br.planPremium;
-            if ("validityDays" in br && br.validityDays != null) validityTierDays = br.validityDays;
           }
+          if ("validityDays" in br && br.validityDays != null) validityTierDays = br.validityDays;
+          if ("ageInfo" in br && br.ageInfo?.band) ageBand = br.ageInfo.band;
         }
-
-        // Calculate total guarantees amount
-        let totalGuarantees = 0;
-        if (selectedPlanObj.pricingTables && selectedPlanObj.pricingTables.guarantees) {
-          selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
-            if (g.amount !== null && g.amount !== undefined) {
-              totalGuarantees += g.amount;
-            }
-          });
-        }
-
-        // Calculate grand total
-        const grandTotal = calculatedPrice + totalGuarantees;
 
         return (
           <div className="bg-white rounded-2xl p-6 border border-[#D9D9D9]">
@@ -419,7 +418,16 @@ const CreateCase: React.FC = () => {
               <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span> {formatCurrency(calculatedPrice)}</div>
             </div>
 
-            {/* Guarantee Tables - Only show applicable guarantees (with non-null amounts) */}
+            {ageIneligible && (
+              <p className="mb-4 text-sm text-red-600 font-medium">{t("createCase.ageExemption", AGE_EXEMPTION_MESSAGE)}</p>
+            )}
+            {!ageIneligible && ageBand && ageBand !== "standard" && ageBand !== "unknown" && (
+              <p className="mb-4 text-xs text-text-secondary">
+                {t("createCase.ageBandApplied", "Age band: {{band}}", { band: ageBand })}
+              </p>
+            )}
+
+            {/* Guarantee Tables - individual benefit limits only (no coverage total) */}
             {selectedPlanObj.pricingTables && selectedPlanObj.pricingTables.guarantees && selectedPlanObj.pricingTables.guarantees.length > 0 && (() => {
               const applicableGuarantees = selectedPlanObj.pricingTables!.guarantees.filter(
                 (g: any) => g.amount !== null && g.amount !== undefined
@@ -431,7 +439,6 @@ const CreateCase: React.FC = () => {
                   <h4 className="text-sm font-semibold text-[#E4590F] uppercase tracking-wide mb-3">{t("plan.guaranteeTables")}</h4>
                   <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
                     {["MEDICAL", "TRAVEL", "JURIDICAL"].map((category) => {
-                      // Filter to only show guarantees with non-null amounts
                       const categoryGuarantees = selectedPlanObj.pricingTables!.guarantees.filter(
                         (g: any) => g.category === category && g.amount !== null && g.amount !== undefined
                       );
@@ -473,17 +480,11 @@ const CreateCase: React.FC = () => {
               );
             })()}
 
-            {/* Total Section */}
+            {/* Premium only — no coverage-amount “grand total” */}
             <div className="border-t border-[#D9D9D9] pt-4 mt-4">
               <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
-                <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span></div>
-                <div><span className="text-[#E4590F] font-medium">{formatCurrency(calculatedPrice)}</span></div>
-                <div className="col-span-2 border-t border-[#D9D9D9] pt-2 mt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.grandTotal')}:</span></div>
-                    <div><span className="text-[#E4590F] font-semibold">{formatCurrency(grandTotal)}</span></div>
-                  </div>
-                </div>
+                <div><span className="font-semibold text-[#2B2B2B]">{t('createCase.premiumDue', "Premium due")}:</span></div>
+                <div><span className="text-[#E4590F] font-semibold">{formatCurrency(calculatedPrice)}</span></div>
               </div>
             </div>
           </div>
@@ -500,13 +501,7 @@ const CreateCase: React.FC = () => {
                 const days = parseInt(durationDays) || 1;
                 const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
                 if ("planPremium" in br && br.planPremium != null) {
-                  let gt = br.planPremium;
-                  if (selectedPlanObj.pricingTables?.guarantees) {
-                    selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
-                      if (g.amount != null) gt += g.amount;
-                    });
-                  }
-                  return formatCurrency(gt);
+                  return formatCurrency(br.planPremium);
                 }
                 return formatCurrency(0);
               })()
@@ -518,13 +513,7 @@ const CreateCase: React.FC = () => {
                 const days = parseInt(durationDays) || 1;
                 const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
                 if ("planPremium" in br && br.planPremium != null) {
-                  let gt = br.planPremium;
-                  if (selectedPlanObj.pricingTables?.guarantees) {
-                    selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
-                      if (g.amount != null) gt += g.amount;
-                    });
-                  }
-                  return formatCurrency(gt);
+                  return formatCurrency(br.planPremium);
                 }
                 return formatCurrency(0);
               })()
@@ -987,12 +976,21 @@ const CreateCase: React.FC = () => {
           status: "Confirmed",
         },
       };
-      await updateCaseApi(createdCaseId, payload);
+      const res = await updateCaseApi(createdCaseId, payload);
       const m = await getPolicyEditMetaApi(createdCaseId);
       setPolicyMeta(m);
       setPolicyEditMode(false);
       setLastUpdated(new Date().toLocaleTimeString());
-      toast.success(t("createCase.policySaveSuccess", "Policy changes saved"));
+      const newPremium = res?.pricing?.plan_price;
+      if (newPremium != null) {
+        toast.success(
+          t("createCase.policySaveSuccessWithPremium", "Policy saved. Updated premium: {{amount}}", {
+            amount: formatCurrency(Number(newPremium)),
+          })
+        );
+      } else {
+        toast.success(t("createCase.policySaveSuccess", "Policy changes saved"));
+      }
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -1020,7 +1018,7 @@ const CreateCase: React.FC = () => {
       const days = parseInt(durationDays) || 1;
       const br = getPlanPremiumBreakdown(selectedPlanObj, days, dateOfBirth);
       if ("error" in br && br.error === "age_ineligible") {
-        toast.error("Travel insurance is not available for travellers over 85 years of age.");
+        toast.error(t("createCase.ageExemption", AGE_EXEMPTION_MESSAGE));
         return;
       }
       if (!("planPremium" in br) || br.planPremium == null) {
@@ -1029,13 +1027,11 @@ const CreateCase: React.FC = () => {
       }
       const premiumAmount = br.planPremium;
 
-      // Calculate guarantees total and details
-      let guaranteesTotal = 0;
+      // Guarantee rows are coverage limits (not charges). Store details for certificates; never sum into totals.
       const guaranteesDetails: any[] = [];
       if (selectedPlanObj.pricingTables && selectedPlanObj.pricingTables.guarantees) {
         selectedPlanObj.pricingTables.guarantees.forEach((g: any) => {
           if (g.amount !== null && g.amount !== undefined) {
-            guaranteesTotal += g.amount;
             guaranteesDetails.push({
               category: g.category,
               coverageType: g.coverageType,
@@ -1046,17 +1042,15 @@ const CreateCase: React.FC = () => {
       }
 
       const tax = 0; // No tax for now
-      // Billable premium is the plan rate only; guarantee amounts are coverage limits, not charges
-      const grandTotal = premiumAmount + tax;
 
       const payload = {
         case_id: createdCaseId,
         premium_amount: premiumAmount,
         tax: tax,
-        total: grandTotal,
+        total: premiumAmount + tax,
         currency: selectedPlanObj.currency || 'XOF',
         plan_price: premiumAmount,
-        guarantees_total: guaranteesTotal,
+        guarantees_total: 0,
         guarantees_details: guaranteesDetails.length > 0 ? guaranteesDetails : undefined,
       };
       const res = await createSaleApi(payload);

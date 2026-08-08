@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X, Trash2, MapPin } from "lucide-react";
+import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filter, Edit3, Eye, X, Trash2, MapPin, UserCog, History } from "lucide-react";
 import CountrySearchSelect from "../components/CountrySearchSelect";
 import InputField from "../components/InputFields";
+import AgencyReassignModal from "../components/AgencyReassignModal";
 import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, deleteAgentHierarchyApi } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
 import { formatDateTime, formatFullDateTime, getPasswordChangeStatus } from "../utils/dateUtils";
 
 const PARTNERSHIP_TYPES = [
@@ -25,6 +27,9 @@ type User = {
   status: "active" | "inactive";
   forcePasswordChange?: boolean | number;
   lastLogin?: string | null;
+  companyName?: string | null;
+  supervisorName?: string | null;
+  supervisorRole?: string | null;
 };
 
 const StatusBadge = ({ status }: { status: User["status"] }) => {
@@ -58,7 +63,14 @@ const PasswordChangeBadge = ({ forcePasswordChange }: { forcePasswordChange?: bo
 const CreateUser: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
+  const isAdmin = authUser?.role === "admin";
   const [users, setUsers] = useState<User[]>([]);
+  const [reassignModal, setReassignModal] = useState<{
+    open: boolean;
+    user: User | null;
+    tab: "reassign" | "history";
+  }>({ open: false, user: null, tab: "reassign" });
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", temporaryPassword: "",
     companyName: "", partnershipType: "", countryOfResidence: "", whatsappPhone: "",
@@ -178,6 +190,9 @@ const CreateUser: React.FC = () => {
             status: u.status || "pending",
             forcePasswordChange: u.force_password_change,
             lastLogin: u.last_login,
+            companyName: u.company_name || null,
+            supervisorName: u.supervisor_name || null,
+            supervisorRole: u.supervisor_role || null,
           };
         });
         setUsers(mappedUsers);
@@ -520,6 +535,11 @@ const CreateUser: React.FC = () => {
               <tr className="border-b border-[#D9D9D9]">
                 <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2">{t("agent.name", "Name")}</th>
                 <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2 hidden sm:table-cell">{t("agent.email", "Email")}</th>
+                {isAdmin && (
+                  <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden md:table-cell">
+                    {t("agencyReassign.managedBy", "Managed by")}
+                  </th>
+                )}
                 <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2 hidden lg:table-cell">{t("agent.passwordStatus", "Password")}</th>
                 <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2 hidden sm:table-cell">{t("agent.status", "Status")}</th>
                 <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2 hidden lg:table-cell">{t("agent.lastLogin", "Last Login")}</th>
@@ -535,6 +555,20 @@ const CreateUser: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-4 px-2 text-[#2B2B2B]/80 hidden sm:table-cell">{user.email}</td>
+                  {isAdmin && (
+                    <td className="py-4 px-2 text-[#2B2B2B]/80 hidden md:table-cell text-sm">
+                      {user.supervisorName || t("agencyReassign.unassigned", "Unassigned")}
+                      {user.supervisorRole === "sub_admin" ? (
+                        <span className="block text-xs text-[#2B2B2B]/50">
+                          {t("role.subAdmin", "Sub-administrator")}
+                        </span>
+                      ) : user.supervisorRole === "admin" ? (
+                        <span className="block text-xs text-[#2B2B2B]/50">
+                          {t("role.admin", "Admin")}
+                        </span>
+                      ) : null}
+                    </td>
+                  )}
                   <td className="py-4 px-2 hidden lg:table-cell">
                     <PasswordChangeBadge forcePasswordChange={user.forcePasswordChange} />
                   </td>
@@ -566,6 +600,30 @@ const CreateUser: React.FC = () => {
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
+                      {isAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReassignModal({ open: true, user, tab: "reassign" })
+                            }
+                            className="p-2 rounded-lg bg-[#E4590F]/10 hover:bg-[#E4590F]/20 text-[#E4590F] transition-colors cursor-pointer"
+                            title={t("agencyReassign.reassignAction", "Reassign supervisor")}
+                          >
+                            <UserCog className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReassignModal({ open: true, user, tab: "history" })
+                            }
+                            className="p-2 rounded-lg bg-[#D9D9D9]/50 hover:bg-[#E4590F]/20 text-[#2B2B2B] hover:text-[#E4590F] transition-colors cursor-pointer"
+                            title={t("agencyReassign.tabHistory", "Management history")}
+                          >
+                            <History className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                       <button 
                         onClick={() => handleSendPasswordReset(user.id)} 
                         disabled={isResettingPassword}
@@ -924,6 +982,7 @@ const CreateUser: React.FC = () => {
 
             <div className="flex justify-center mt-6">
               <button
+                type="button"
                 onClick={closePasswordModal}
                 className="px-6 py-2 rounded-xl bg-[#E4590F] hover:bg-[#C94A0D] text-white font-medium transition-colors cursor-pointer"
               >
@@ -933,6 +992,23 @@ const CreateUser: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AgencyReassignModal
+        open={reassignModal.open}
+        agency={
+          reassignModal.user
+            ? {
+                id: reassignModal.user.id,
+                name: `${reassignModal.user.firstName} ${reassignModal.user.lastName}`.trim(),
+                companyName: reassignModal.user.companyName,
+                currentSupervisorName: reassignModal.user.supervisorName,
+              }
+            : null
+        }
+        initialTab={reassignModal.tab}
+        onClose={() => setReassignModal({ open: false, user: null, tab: "reassign" })}
+        onReassigned={() => fetchUsers()}
+      />
     </div>
   );
 };

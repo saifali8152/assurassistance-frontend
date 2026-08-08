@@ -44,7 +44,12 @@ interface CurrencyContextType {
   currencyInfo: CurrencyInfo;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amount: number) => string;
-  convertCurrency: (amount: number) => number; // Convert from XOF (base) to selected currency
+  /** Convert amount from XOF (legacy base) to the selected display currency. */
+  convertCurrency: (amount: number) => number;
+  /** Convert amount from a source currency into the selected display currency. */
+  convertFrom: (amount: number, fromCurrency: string) => number;
+  /** Format an amount that is stored in `fromCurrency` (not necessarily XOF). */
+  formatFrom: (amount: number, fromCurrency?: string) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -103,34 +108,46 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Convert amount from XOF (base currency) to selected currency
   const convertCurrency = (amount: number): number => {
     if (!amount || isNaN(amount)) return 0;
-    // Amounts in database are stored in XOF (base currency)
-    // Convert to selected currency using current exchange rates
     return amount * exchangeRates[currency];
   };
 
-  const formatCurrency = (amount: number): string => {
-    if (!amount || isNaN(amount)) amount = 0;
-    
-    // Convert from XOF (base) to selected currency
-    const convertedAmount = convertCurrency(amount);
+  const convertFrom = (amount: number, fromCurrency: string = "XOF"): number => {
+    if (!amount || isNaN(amount)) return 0;
+    const from = (["XOF", "USD", "EUR"].includes(String(fromCurrency).toUpperCase())
+      ? String(fromCurrency).toUpperCase()
+      : "XOF") as Currency;
+    if (from === currency) return amount;
+    const inXof = from === "XOF" ? amount : amount / exchangeRates[from];
+    return inXof * exchangeRates[currency];
+  };
+
+  const formatConverted = (convertedAmount: number): string => {
     const currencyData = CURRENCIES[currency];
-    
-    // For XOF (CFA Franc), use custom formatting since Intl.NumberFormat doesn't support it well
     if (currency === "XOF") {
-      return new Intl.NumberFormat("fr-FR", {
-        style: "decimal",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(convertedAmount) + " FCFA";
+      return (
+        new Intl.NumberFormat("fr-FR", {
+          style: "decimal",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(convertedAmount) + " FCFA"
+      );
     }
-    
-    // For USD and EUR, use standard currency formatting
     return new Intl.NumberFormat(currencyData.locale, {
       style: "currency",
       currency: currencyData.code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(convertedAmount);
+  };
+
+  const formatCurrency = (amount: number): string => {
+    if (!amount || isNaN(amount)) amount = 0;
+    return formatConverted(convertCurrency(amount));
+  };
+
+  const formatFrom = (amount: number, fromCurrency: string = "XOF"): string => {
+    if (!amount || isNaN(amount)) amount = 0;
+    return formatConverted(convertFrom(amount, fromCurrency));
   };
 
   return (
@@ -141,6 +158,8 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
         setCurrency,
         formatCurrency,
         convertCurrency,
+        convertFrom,
+        formatFrom,
       }}
     >
       {children}

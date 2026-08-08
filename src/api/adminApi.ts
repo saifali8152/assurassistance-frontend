@@ -135,6 +135,11 @@ export type PartnerRow = {
   direct_agent_count: number;
   /** Cases created by the partner or any descendant account. */
   total_cases: number;
+  /** Supervising admin / sub-admin (users.created_by_id). */
+  supervisor_user_id?: number | null;
+  supervisor_name?: string | null;
+  supervisor_email?: string | null;
+  supervisor_role?: string | null;
 };
 
 export type PartnerTypeSummary = {

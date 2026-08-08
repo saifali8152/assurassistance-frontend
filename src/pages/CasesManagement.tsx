@@ -2,11 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, generateInvoiceApi, type CaseListFilters } from '../api/caseApi';
+import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, deleteCaseApi, generateInvoiceApi, type CaseListFilters } from '../api/caseApi';
 import { createSaleApi } from '../api/salesApi';
-import { ChevronLeft, ChevronRight, Download, CheckCircle, XCircle, Eye, Calendar, Phone, MapPin, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, CheckCircle, XCircle, Eye, Calendar, Phone, MapPin, FileText, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import {
+  computeTravelPlanPremium,
+  getLegacyPricingTablePremium,
+  roundMoney,
+  AGE_EXEMPTION_MESSAGE,
+} from '../utils/travelPricing';
 
 interface PricingRow {
   id: string;
@@ -49,9 +55,12 @@ interface Case {
   plan_country_of_residence?: string;
   route_type?: string;
   sale_id?: number;
+  sale_deleted_at?: string | null;
+  sale_deletion_reason?: string | null;
   invoice_generated?: boolean;
   certificate_generated?: boolean;
   created_by_name?: string;
+  fixed_duration_premiums?: boolean;
 }
 
 const CasesManagement: React.FC = () => {
@@ -74,98 +83,34 @@ const CasesManagement: React.FC = () => {
 
   const itemsPerPage = 25;
 
-  // Calculate price from pricing table based on duration
-  const calculatePriceFromPricingTable = (caseItem: Case, days: number): number | null => {
-    if (!caseItem.pricingTables || !caseItem.pricingTables.pricing || caseItem.pricingTables.pricing.length === 0) {
-      return null;
-    }
-
-    // Extract day numbers from pricing row labels (e.g., "10 Days" -> 10)
-    const parseDaysFromLabel = (label: string): number | null => {
-      const match = label.match(/(\d+)\s*(?:Days|Jours|days|jours)/i);
-      if (match) return parseInt(match[1]);
-      // Also check for "1 Year" or "1 an"
-      if (label.toLowerCase().includes('year') || label.toLowerCase().includes('an')) {
-        return 365;
-      }
-      return null;
-    };
-
-    // Find the closest matching pricing row
-    let bestMatch: PricingRow | null = null;
-    let minDiff = Infinity;
-
-    for (const row of caseItem.pricingTables.pricing) {
-      const rowDays = parseDaysFromLabel(row.label);
-      if (rowDays !== null) {
-        const diff = Math.abs(rowDays - days);
-        if (diff < minDiff) {
-          minDiff = diff;
-          bestMatch = row;
-        }
-      }
-    }
-
-    if (!bestMatch) {
-      // If no exact match, try to find the first row with a valid price
-      for (const row of caseItem.pricingTables.pricing) {
-        for (const columnName of caseItem.pricingTables.pricingColumns) {
-          const price = row.columns[columnName];
-          if (price !== null && price !== undefined) {
-            return price;
-          }
-        }
-      }
-      return null;
-    }
-
-    // Get price from the appropriate column
-    const columns = caseItem.pricingTables.pricingColumns;
-    for (const columnName of columns) {
-      const price = bestMatch.columns[columnName];
-      if (price !== null && price !== undefined) {
-        return price;
-      }
-    }
-
-    return null;
-  };
-
-  // Calculate plan price for display
+  // Age-aware premium from live plan catalogue (same rules for all packages)
   const calculatePlanPrice = (caseItem: Case): number => {
+    if (caseItem.sale_deleted_at) return 0;
     if (!caseItem.duration_days) return 0;
     const days = caseItem.duration_days;
-    
-    if (caseItem.pricingTables) {
-      const price = calculatePriceFromPricingTable(caseItem, days);
-      if (price !== null) return price;
+    const travelLike = ["Travel", "Travel Inbound", "Road travel"].includes(caseItem.product_type);
+
+    if (travelLike && caseItem.pricingTables?.pricing?.length) {
+      const comp = computeTravelPlanPremium(
+        caseItem.pricingTables,
+        days,
+        caseItem.date_of_birth,
+        { fixedDurationPremiums: !!caseItem.fixed_duration_premiums }
+      );
+      if (comp.planPremium != null) return comp.planPremium;
+      return 0;
     }
-    
-    // Fallback to flat_price if pricing table is not available
+
+    if (caseItem.pricingTables?.pricing?.length) {
+      const legacy = getLegacyPricingTablePremium(caseItem.pricingTables, days);
+      if (legacy != null) return legacy;
+    }
+
     if (caseItem.flat_price) {
-      return caseItem.flat_price * days;
+      return roundMoney(caseItem.flat_price * days);
     }
-    
+
     return 0;
-  };
-
-  // Calculate guarantees total
-  const calculateGuaranteesTotal = (caseItem: Case): number => {
-    if (!caseItem.pricingTables || !caseItem.pricingTables.guarantees) return 0;
-    
-    let total = 0;
-    caseItem.pricingTables.guarantees.forEach((g: any) => {
-      if (g.amount !== null && g.amount !== undefined) {
-        total += g.amount;
-      }
-    });
-    
-    return total;
-  };
-
-  // Calculate total price (plan price + guarantees)
-  const calculateTotalPrice = (caseItem: Case): number => {
-    return calculatePlanPrice(caseItem) + calculateGuaranteesTotal(caseItem);
   };
 
   const mapCaseRows = (raw: any[]): Case[] =>
@@ -181,7 +126,14 @@ const CasesManagement: React.FC = () => {
           console.error('Failed to parse pricing_rules:', e);
         }
       }
-      return { ...caseItem, pricingTables };
+      return {
+        ...caseItem,
+        pricingTables,
+        fixed_duration_premiums: !!(
+          caseItem.fixed_duration_premiums ??
+          caseItem.plan_fixed_duration_premiums
+        ),
+      };
     });
 
   const fetchCases = async (
@@ -258,35 +210,31 @@ const CasesManagement: React.FC = () => {
       setActionLoading(caseId);
       const caseItem = cases.find(c => c.id === caseId);
       if (caseItem) {
-        const days = caseItem.duration_days || 1;
-        let premiumAmount = 0;
-
-        // Calculate price from pricing table if available
-        if (caseItem.pricingTables) {
-          const priceFromTable = calculatePriceFromPricingTable(caseItem, days);
-          if (priceFromTable !== null) {
-            premiumAmount = priceFromTable;
-          } else {
-            toast.error("No matching price found in pricing table for this duration!");
-            setActionLoading(null);
-            return;
+        const premiumAmount = calculatePlanPrice(caseItem);
+        if (!premiumAmount) {
+          const travelLike = ["Travel", "Travel Inbound", "Road travel"].includes(caseItem.product_type);
+          if (travelLike && caseItem.date_of_birth && caseItem.pricingTables) {
+            const comp = computeTravelPlanPremium(
+              caseItem.pricingTables,
+              caseItem.duration_days || 1,
+              caseItem.date_of_birth,
+              { fixedDurationPremiums: !!caseItem.fixed_duration_premiums }
+            );
+            if (comp.error === "age_ineligible") {
+              toast.error(t("createCase.ageExemption", AGE_EXEMPTION_MESSAGE));
+              setActionLoading(null);
+              return;
+            }
           }
-        } else if (caseItem.flat_price) {
-          // Fallback to flatPrice if pricing table is not available
-          premiumAmount = caseItem.flat_price * days;
-        } else {
-          toast.error("Plan pricing information is not available!");
+          toast.error("No matching price found in pricing table for this duration!");
           setActionLoading(null);
           return;
         }
 
-        // Calculate guarantees total and details
-        let guaranteesTotal = 0;
         const guaranteesDetails: any[] = [];
         if (caseItem.pricingTables && caseItem.pricingTables.guarantees) {
           caseItem.pricingTables.guarantees.forEach((g: any) => {
             if (g.amount !== null && g.amount !== undefined) {
-              guaranteesTotal += g.amount;
               guaranteesDetails.push({
                 category: g.category,
                 coverageType: g.coverageType,
@@ -297,16 +245,14 @@ const CasesManagement: React.FC = () => {
         }
 
         const tax = 0;
-        const grandTotal = premiumAmount + tax;
-
         const payload = {
           case_id: caseId,
           premium_amount: premiumAmount,
           tax: tax,
-          total: grandTotal,
+          total: premiumAmount + tax,
           currency: caseItem.currency || 'XOF',
           plan_price: premiumAmount,
-          guarantees_total: guaranteesTotal,
+          guarantees_total: 0,
           guarantees_details: guaranteesDetails.length > 0 ? guaranteesDetails : undefined,
         };
         const res = await createSaleApi(payload);
@@ -336,6 +282,34 @@ const CasesManagement: React.FC = () => {
     } catch (error) {
       console.error('Failed to cancel case:', error);
       toast.error('Failed to cancel case');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteCase = async (caseItem: Case) => {
+    const label = caseItem.full_name || `#${caseItem.id}`;
+    const confirmed = window.confirm(
+      t(
+        "cases.deleteConfirm",
+        "Permanently delete case #{{id}} ({{name}})? This also removes any linked sale, invoice, and certificate. This cannot be undone.",
+        { id: caseItem.id, name: label }
+      )
+    );
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(caseItem.id);
+      await deleteCaseApi(caseItem.id);
+      toast.success(t("cases.deleteSuccess", "Case deleted successfully"));
+      await refreshList();
+      setShowModal(false);
+    } catch (error: any) {
+      console.error('Failed to delete case:', error);
+      toast.error(
+        error?.response?.data?.message ||
+          t("cases.deleteFailed", "Failed to delete case")
+      );
     } finally {
       setActionLoading(null);
     }
@@ -504,8 +478,6 @@ const CasesManagement: React.FC = () => {
                     <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("cases.plan")}</th>
                     <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden sm:table-cell">{t("cases.status")}</th>
                     <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("cases.price")}</th>
-                    <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("plan.guaranteeTables")}</th>
-                    <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("createCase.grandTotal")}</th>
                     {isPrivileged && (
                       <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden md:table-cell">{t("cases.createdBy")}</th>
                     )}
@@ -552,8 +524,17 @@ const CasesManagement: React.FC = () => {
                           </span>
                         </div>
                         {caseItem.sale_id ? (
-                          <div className="text-xs text-green-600 mt-1 text-center">
+                          <div
+                            className={`text-xs mt-1 text-center ${
+                              caseItem.sale_deleted_at ? "text-gray-400" : "text-green-600"
+                            }`}
+                          >
                             Sale #{caseItem.sale_id}
+                            {caseItem.sale_deleted_at ? (
+                              <span className="block uppercase text-[10px] tracking-wide">
+                                {t("ledger.deletedBadge", "Deleted")}
+                              </span>
+                            ) : null}
                           </div>
                         ) : (
                           <div className="text-xs text-red-600 mt-1 text-center">
@@ -563,22 +544,12 @@ const CasesManagement: React.FC = () => {
                       </td>
                       <td className="py-4 px-2 text-[#2B2B2B]/80 hidden lg:table-cell">
                         <div className="text-right">
-                          <div className="text-[#E4590F] font-semibold">
+                          <div
+                            className={`font-semibold ${
+                              caseItem.sale_deleted_at ? "text-gray-400" : "text-[#E4590F]"
+                            }`}
+                          >
                             {formatCurrency(calculatePlanPrice(caseItem))}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-2 text-[#2B2B2B]/80 hidden lg:table-cell">
-                        <div className="text-right">
-                          <div className="text-[#2B2B2B] font-medium">
-                            {formatCurrency(calculateGuaranteesTotal(caseItem))}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-2 text-[#2B2B2B]/80 hidden lg:table-cell">
-                        <div className="text-right">
-                          <div className="text-[#E4590F] font-semibold">
-                            {formatCurrency(calculateTotalPrice(caseItem))}
                           </div>
                         </div>
                       </td>
@@ -666,6 +637,22 @@ const CasesManagement: React.FC = () => {
                                 <FileText className="w-4 h-4" />
                               </button>
                             </>
+                          )}
+
+                          {user?.role === 'admin' && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCase(caseItem)}
+                              disabled={actionLoading === caseItem.id}
+                              className="p-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-700 hover:text-red-800 transition-colors disabled:opacity-50 border border-red-600/25"
+                              title={t("cases.deleteCase", "Delete case permanently")}
+                            >
+                              {actionLoading === caseItem.id ? (
+                                <div className="w-4 h-4 border-2 border-red-700/30 border-t-red-700 rounded-full animate-spin"></div>
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </button>
                           )}
                         </div>
                       </td>
@@ -857,30 +844,7 @@ const CasesManagement: React.FC = () => {
 
             {/* Plan Pricing and Guarantees Section */}
             {selectedCase.pricingTables && (() => {
-              // Calculate price
-              let calculatedPrice = 0;
-              if (selectedCase.duration_days) {
-                const days = selectedCase.duration_days;
-                if (selectedCase.pricingTables) {
-                  const price = calculatePriceFromPricingTable(selectedCase, days);
-                  calculatedPrice = price !== null ? price : 0;
-                } else if (selectedCase.flat_price) {
-                  calculatedPrice = selectedCase.flat_price * days;
-                }
-              }
-
-              // Calculate total guarantees amount
-              let totalGuarantees = 0;
-              if (selectedCase.pricingTables && selectedCase.pricingTables.guarantees) {
-                selectedCase.pricingTables.guarantees.forEach((g: any) => {
-                  if (g.amount !== null && g.amount !== undefined) {
-                    totalGuarantees += g.amount;
-                  }
-                });
-              }
-
-              // Calculate grand total
-              const grandTotal = calculatedPrice + totalGuarantees;
+              const calculatedPrice = calculatePlanPrice(selectedCase);
 
               return (
                 <div className="border-t border-[#D9D9D9] pt-6 mt-6">
@@ -914,7 +878,7 @@ const CasesManagement: React.FC = () => {
                     <div className="text-left"><span className="text-[#E4590F] font-medium">{formatCurrency(calculatedPrice)}</span></div>
                   </div>
 
-                  {/* Guarantee Tables - Only show applicable guarantees (with non-null amounts) */}
+                  {/* Guarantee Tables — individual benefit limits only (no coverage total) */}
                   {selectedCase.pricingTables && selectedCase.pricingTables.guarantees && selectedCase.pricingTables.guarantees.length > 0 && (() => {
                     const applicableGuarantees = selectedCase.pricingTables!.guarantees.filter(
                       (g: any) => g.amount !== null && g.amount !== undefined
@@ -926,7 +890,6 @@ const CasesManagement: React.FC = () => {
                         <h4 className="text-sm text-left font-semibold text-[#E4590F] uppercase tracking-wide mb-3">{t("plan.guaranteeTables")}</h4>
                         <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
                           {["MEDICAL", "TRAVEL", "JURIDICAL"].map((category) => {
-                            // Filter to only show guarantees with non-null amounts
                             const categoryGuarantees = selectedCase.pricingTables!.guarantees.filter(
                               (g: any) => g.category === category && g.amount !== null && g.amount !== undefined
                             );
@@ -968,17 +931,11 @@ const CasesManagement: React.FC = () => {
                     );
                   })()}
 
-                  {/* Total Section */}
+                  {/* Premium only — no coverage-amount “grand total” */}
                   <div className="border-t border-[#D9D9D9] pt-4 mt-4">
                     <div className="grid grid-cols-2 gap-4 text-[#2B2B2B] font-normal">
-                      <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t('createCase.price')}:</span></div>
-                      <div className="text-left"><span className="text-[#E4590F] font-medium">{formatCurrency(calculatedPrice)}</span></div>
-                      <div className="col-span-2 border-t border-[#D9D9D9] pt-2 mt-2">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t('createCase.grandTotal')}:</span></div>
-                          <div className="text-left"><span className="text-[#E4590F] font-semibold">{formatCurrency(grandTotal)}</span></div>
-                        </div>
-                      </div>
+                      <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t('createCase.premiumDue', "Premium due")}:</span></div>
+                      <div className="text-left"><span className="text-[#E4590F] font-semibold">{formatCurrency(calculatedPrice)}</span></div>
                     </div>
                   </div>
                 </div>
@@ -1017,6 +974,23 @@ const CasesManagement: React.FC = () => {
                     )}
                   </button>
                 </>
+              )}
+              {user?.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCase(selectedCase)}
+                  disabled={actionLoading === selectedCase.id}
+                  className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-xl transition-colors disabled:opacity-50 font-medium inline-flex items-center gap-2"
+                >
+                  {actionLoading === selectedCase.id ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      {t("cases.deleteCase", "Delete case")}
+                    </>
+                  )}
+                </button>
               )}
             </div>
           </div>

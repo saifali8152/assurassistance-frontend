@@ -1,5 +1,5 @@
 //src/api/salesApi.ts
-import { apiPost, apiPatch} from "../lib/api";
+import { apiPost, apiPatch } from "../lib/api";
 import api from "../lib/api";
 import type {
   CreateSaleRequest,
@@ -38,6 +38,24 @@ export const updatePaymentApi = (saleId: string, payment_status: string, payment
     payment_notes,
     received_amount
   });
+};
+
+export const POLICY_DELETION_REASONS = [
+  "Test policy",
+  "Customer desistement",
+  "Error or duplicate",
+  "Cancellation before reversal",
+] as const;
+
+export type PolicyDeletionReason = (typeof POLICY_DELETION_REASONS)[number];
+
+/** Admin soft-delete: policy remains visible with premium/commission shown as 0. */
+export const softDeleteSaleApi = (saleId: string | number, reason: PolicyDeletionReason | string) => {
+  return apiPost<{
+    success: boolean;
+    message: string;
+    data: { sale_id: number; case_id: number; deletion_reason: string; is_deleted: boolean };
+  }>(`/sales/${saleId}/soft-delete`, { reason });
 };
 
 

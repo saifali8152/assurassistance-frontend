@@ -46,6 +46,8 @@ export interface CertificatePageData {
     total: number;
     storedPlanPrice: number;
     pricingNote: string | null;
+    showPremium?: boolean;
+    fixedDurationPremiums?: boolean;
   };
   benefits: {
     category: string;
@@ -549,12 +551,26 @@ const CertificatePrint: React.FC = () => {
                 <FieldInline label={t("certificatePrint.currency")}>{cur}</FieldInline>
               </td>
             </tr>
+            {data.pricing.showPremium && (
+              <tr>
+                <td colSpan={2}>
+                  <FieldInline label={t("certificatePrint.premium", "Premium")}>
+                    {`${Number(data.pricing.planPremium || 0).toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })} ${cur}`}
+                  </FieldInline>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 
-        {/* Age rating only (no premium amounts on certificate) */}
+        {/* Age rating — same bands for all plans (including fixed-duration tables) */}
         {(data.pricing.ageMultiplier != null ||
-          (data.pricing.ageBand != null && String(data.pricing.ageBand).trim() !== "")) && (
+          (data.pricing.ageBand != null && String(data.pricing.ageBand).trim() !== "")) &&
+          data.pricing.ageBand !== "standard" &&
+          data.pricing.ageBand !== "unknown" && (
           <>
             <h2 className="cert-section-title cert-section-title--spaced">
               {t("certificatePrint.ageSectionTitle")}

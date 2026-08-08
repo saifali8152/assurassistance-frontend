@@ -28,6 +28,12 @@ interface Plan {
   themeColor?: string;
   /** When true, certificate shows "N° Passport / N° Laissez-passer / N° GPGL". */
   extraIdFields?: boolean;
+  /**
+   * When true (e.g. Agico Retail / Road Travel Burundi):
+   * use the plan's own duration rows as tiers, take the table price as-is (no age multipliers),
+   * and print the premium on the certificate.
+   */
+  fixedDurationPremiums?: boolean;
 }
 
 interface PricingRow {
@@ -58,6 +64,7 @@ interface FormData {
   pricingTables?: PricingTables;
   themeColor: string;
   extraIdFields: boolean;
+  fixedDurationPremiums: boolean;
 }
 
 const DEFAULT_THEME_COLOR = "#E4590F";
@@ -217,7 +224,8 @@ const CreatePlan: React.FC = () => {
     routeType: "",
     pricingTables: undefined,
     themeColor: DEFAULT_THEME_COLOR,
-    extraIdFields: false
+    extraIdFields: false,
+    fixedDurationPremiums: false
   });
   const [previewData, setPreviewData] = useState<Partial<FormData>>({});
 
@@ -246,7 +254,8 @@ const CreatePlan: React.FC = () => {
     routeType: t("plan.routeType"),
     pricingTables: t("plan.pricingTables"),
     themeColor: t("plan.themeColor", "Certificate / invoice color"),
-    extraIdFields: t("plan.extraIdFields", "Show extended ID labels")
+    extraIdFields: t("plan.extraIdFields", "Show extended ID labels"),
+    fixedDurationPremiums: t("plan.fixedDurationPremiums", "Fixed duration premiums")
   };
 
   const fieldOrder: (keyof FormData)[] = [
@@ -279,7 +288,8 @@ const CreatePlan: React.FC = () => {
           currency: plan.currency || 'XOF', // Load currency from database, default to XOF
           partnerInsurerLogo: plan.partner_insurer_logo || undefined,
           themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
-          extraIdFields: !!plan.extra_id_fields
+          extraIdFields: !!plan.extra_id_fields,
+          fixedDurationPremiums: !!plan.fixed_duration_premiums
         }));
         setPlans(plans);
       } catch (err) {
@@ -517,7 +527,8 @@ const CreatePlan: React.FC = () => {
       route_type: routeValue,
       currency: currency, // Save the current currency from context
       theme_color: themeColorValue,
-      extra_id_fields: !!formData.extraIdFields
+      extra_id_fields: !!formData.extraIdFields,
+      fixed_duration_premiums: !!formData.fixedDurationPremiums
     };
     
     console.log('Payload being sent:', payload);
@@ -547,7 +558,8 @@ const CreatePlan: React.FC = () => {
         currency: plan.currency || 'XOF',
         partnerInsurerLogo: plan.partner_insurer_logo || undefined,
         themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
-        extraIdFields: !!plan.extra_id_fields
+        extraIdFields: !!plan.extra_id_fields,
+        fixedDurationPremiums: !!plan.fixed_duration_premiums
       }));
       setPlans(plans);
 
@@ -564,7 +576,8 @@ const CreatePlan: React.FC = () => {
             routeType: np.routeType || "",
             pricingTables: pricingTables,
             themeColor: np.themeColor || DEFAULT_THEME_COLOR,
-            extraIdFields: !!np.extraIdFields
+            extraIdFields: !!np.extraIdFields,
+            fixedDurationPremiums: !!np.fixedDurationPremiums
           });
           setPreviewData({
             name: np.name,
@@ -574,7 +587,8 @@ const CreatePlan: React.FC = () => {
             routeType: np.routeType || "",
             pricingTables: pricingTables,
             themeColor: np.themeColor || DEFAULT_THEME_COLOR,
-            extraIdFields: !!np.extraIdFields
+            extraIdFields: !!np.extraIdFields,
+            fixedDurationPremiums: !!np.fixedDurationPremiums
           });
           return;
         }
@@ -589,7 +603,8 @@ const CreatePlan: React.FC = () => {
         routeType: "",
         pricingTables: undefined,
         themeColor: DEFAULT_THEME_COLOR,
-        extraIdFields: false
+        extraIdFields: false,
+        fixedDurationPremiums: false
       });
       setPreviewData({});
     } catch (err) {
@@ -665,7 +680,8 @@ const CreatePlan: React.FC = () => {
       routeType: plan.routeType || "",
       pricingTables: pricingTables,
       themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
-      extraIdFields: !!plan.extraIdFields
+      extraIdFields: !!plan.extraIdFields,
+      fixedDurationPremiums: !!plan.fixedDurationPremiums
     });
     setPreviewData({
       name: plan.name,
@@ -675,7 +691,8 @@ const CreatePlan: React.FC = () => {
       routeType: plan.routeType || "",
       pricingTables: pricingTables,
       themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
-      extraIdFields: !!plan.extraIdFields
+      extraIdFields: !!plan.extraIdFields,
+      fixedDurationPremiums: !!plan.fixedDurationPremiums
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -690,7 +707,8 @@ const CreatePlan: React.FC = () => {
       routeType: "",
       pricingTables: undefined,
       themeColor: DEFAULT_THEME_COLOR,
-      extraIdFields: false
+      extraIdFields: false,
+      fixedDurationPremiums: false
     });
     setPreviewData({});
   };
@@ -982,6 +1000,31 @@ const CreatePlan: React.FC = () => {
                   {formData.extraIdFields
                     ? t("plan.extraIdFieldsOn", "Enabled — passport label shows all three IDs")
                     : t("plan.extraIdFieldsOff", "Disabled — only N° Passport (default)")}
+                </span>
+              </label>
+            </div>
+
+            <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
+              <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
+                {t("plan.fixedDurationPremiums", "Fixed duration premiums")}
+              </h3>
+              <p className="text-xs text-[#2B2B2B]/70 mb-3">
+                {t(
+                  "plan.fixedDurationPremiumsHint",
+                  "Enable for Agico Retail Burundi and Agico Road Travel Burundi. Uses this plan's duration rows (10 / 32 / 45 / 63 / 93 / 180 / 365 days) as the price table and prints the premium on the certificate. Standard age multipliers still apply (same rules for all packages)."
+                )}
+              </p>
+              <label className="inline-flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!formData.fixedDurationPremiums}
+                  onChange={(e) => handleInputChange("fixedDurationPremiums", e.target.checked)}
+                  className="h-4 w-4 rounded border-[#D9D9D9] text-[#E4590F] focus:ring-[#E4590F]"
+                />
+                <span className="text-sm text-[#2B2B2B]">
+                  {formData.fixedDurationPremiums
+                    ? t("plan.fixedDurationPremiumsOn", "Enabled — plan duration table + premium on certificate (age rules apply)")
+                    : t("plan.fixedDurationPremiumsOff", "Disabled — standard GNA-style pricing")}
                 </span>
               </label>
             </div>
@@ -1355,7 +1398,7 @@ const CreatePlan: React.FC = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-[#E4590F] truncate mb-2">{plan.name}</h3>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-normal ${plan.active
                         ? 'bg-green-500/20 text-green-600 border border-green-500/30'
                         : 'bg-red-500/20 text-red-600 border border-red-500/30'
@@ -1363,6 +1406,11 @@ const CreatePlan: React.FC = () => {
                         {plan.active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                         {plan.active ? t("plan.active") : t("plan.inactive")}
                       </span>
+                      {plan.fixedDurationPremiums && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-normal bg-[#E4590F]/10 text-[#E4590F] border border-[#E4590F]/30">
+                          {t("plan.fixedDurationPremiumsBadge", "Fixed premiums")}
+                        </span>
+                      )}
                     </div>
                   </div>
 

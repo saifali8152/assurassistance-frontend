@@ -28,6 +28,9 @@ export type PartnerInvoiceLine = {
   created_by_name: string;
   /** Invoice-only commission, deducted from the premium total. */
   commission: number;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
+  deletion_reason?: string | null;
 };
 
 export type PartnerInvoiceTotals = {
@@ -35,6 +38,9 @@ export type PartnerInvoiceTotals = {
   totalCommissions: number;
   totalReceived: number;
   netToTransfer: number;
+  discountPct?: number;
+  totalPremiumsGross?: number;
+  totalCommissionsGross?: number;
 };
 
 export type PartnerInvoiceData = {
@@ -64,13 +70,50 @@ export type PartnerInvoiceSummary = {
   endDate: string;
 };
 
+export type PartnerDocumentType = "invoice" | "receipt";
+export type PartnerReceiptStamp = "none" | "paid" | "settled";
+
+export type PartnerInvoiceQueryOptions = {
+  saleIds?: number[];
+  discountPct?: number;
+  documentType?: PartnerDocumentType;
+  stamp?: PartnerReceiptStamp;
+};
+
+function buildInvoiceQuery(
+  startDate: string,
+  endDate: string,
+  opts: PartnerInvoiceQueryOptions = {},
+  extra: Record<string, string> = {}
+): string {
+  const params = new URLSearchParams({ startDate, endDate, ...extra });
+  if (opts.saleIds != null) {
+    params.set("saleIds", opts.saleIds.join(","));
+  }
+  if (opts.discountPct != null && opts.discountPct > 0) {
+    params.set("discountPct", String(opts.discountPct));
+  }
+  if (opts.documentType && opts.documentType !== "invoice") {
+    params.set("documentType", opts.documentType);
+  }
+  if (opts.stamp && opts.stamp !== "none") {
+    params.set("stamp", opts.stamp);
+  }
+  return params.toString();
+}
+
 /** Partners the caller may invoice (sub-admins only see their supervised agencies). */
 export const getInvoicePartnersApi = async () =>
   apiGet<{ success: boolean; data: InvoicePartner[] }>("/partner-invoices/partners");
 
-export const getPartnerInvoiceApi = async (partnerId: number, startDate: string, endDate: string) =>
+export const getPartnerInvoiceApi = async (
+  partnerId: number,
+  startDate: string,
+  endDate: string,
+  opts: PartnerInvoiceQueryOptions = {}
+) =>
   apiGet<{ success: boolean; data: PartnerInvoiceData }>(
-    `/partner-invoices/${partnerId}?startDate=${startDate}&endDate=${endDate}`
+    `/partner-invoices/${partnerId}?${buildInvoiceQuery(startDate, endDate, opts)}`
   );
 
 export const getPartnerInvoiceSummaryApi = async (startDate: string, endDate: string) =>
@@ -83,9 +126,12 @@ export const downloadPartnerInvoicePdfApi = (
   partnerId: number,
   startDate: string,
   endDate: string,
-  currency: string = "XOF"
+  currency: string = "XOF",
+  opts: PartnerInvoiceQueryOptions = {}
 ) =>
   api.get(
-    `/partner-invoices/${partnerId}/pdf?startDate=${startDate}&endDate=${endDate}&currency=${encodeURIComponent(currency)}`,
+    `/partner-invoices/${partnerId}/pdf?${buildInvoiceQuery(startDate, endDate, opts, {
+      currency,
+    })}`,
     { responseType: "blob" }
   );

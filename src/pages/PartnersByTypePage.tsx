@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  History,
+  UserCog,
   Users
 } from "lucide-react";
 import {
@@ -20,6 +22,7 @@ import {
   type PartnerRow,
   type PartnerTypeSummary
 } from "../api/adminApi";
+import AgencyReassignModal from "../components/AgencyReassignModal";
 import { getCountryLabel } from "../utils/countryLabels";
 
 const ITEMS_PER_PAGE = 25;
@@ -54,6 +57,11 @@ const PartnersByTypePage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [reassignModal, setReassignModal] = useState<{
+    open: boolean;
+    partner: PartnerRow | null;
+    tab: "reassign" | "history";
+  }>({ open: false, partner: null, tab: "reassign" });
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedSearch(searchTerm.trim()), 400);
@@ -280,6 +288,7 @@ const PartnersByTypePage: React.FC = () => {
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colCompany", "Partner / company")}</th>
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colType", "Type")}</th>
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colContact", "Primary contact")}</th>
+                <th className="px-4 py-3 font-medium">{t("partnersByType.colManagedBy", "Managed by")}</th>
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colCountry", "Country")}</th>
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colAccounts", "Agent accounts")}</th>
                 <th className="px-4 py-3 font-medium">{t("partnersByType.colCases", "Cases")}</th>
@@ -291,13 +300,13 @@ const PartnersByTypePage: React.FC = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-text-secondary">
+                  <td colSpan={10} className="px-4 py-10 text-center text-text-secondary">
                     {t("partnersByType.loading", "Loading partners…")}
                   </td>
                 </tr>
               ) : partners.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-text-secondary">
+                  <td colSpan={10} className="px-4 py-10 text-center text-text-secondary">
                     <p>{t("partnersByType.empty", "No partners match the current filters.")}</p>
                     <p className="mt-1 text-xs">
                       {t(
@@ -332,6 +341,20 @@ const PartnersByTypePage: React.FC = () => {
                       <div className="text-xs text-text-secondary">{p.email}</div>
                     </td>
                     <td className="px-4 py-3">
+                      <div className="text-sm">
+                        {p.supervisor_name || t("agencyReassign.unassigned", "Unassigned")}
+                      </div>
+                      {p.supervisor_role ? (
+                        <div className="text-xs text-text-secondary">
+                          {p.supervisor_role === "sub_admin"
+                            ? t("role.subAdmin", "Sub-administrator")
+                            : p.supervisor_role === "admin"
+                              ? t("role.admin", "Admin")
+                              : p.supervisor_role}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3">
                       {p.country_of_residence
                         ? getCountryLabel(p.country_of_residence, i18n.language)
                         : "—"}
@@ -363,15 +386,37 @@ const PartnersByTypePage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">{formatDate(p.created_at)}</td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/admin/supervisors/${p.id}`)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9D9D9] px-2.5 py-1.5 text-xs hover:border-[#E4590F] hover:text-[#E4590F]"
-                        title={t("partnersByType.viewPartner", "View partner & agents")}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        {t("partnersByType.view", "View")}
-                      </button>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/supervisors/${p.id}`)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9D9D9] px-2.5 py-1.5 text-xs hover:border-[#E4590F] hover:text-[#E4590F]"
+                          title={t("partnersByType.viewPartner", "View partner & agents")}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          {t("partnersByType.view", "View")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setReassignModal({ open: true, partner: p, tab: "reassign" })
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9D9D9] px-2.5 py-1.5 text-xs hover:border-[#E4590F] hover:text-[#E4590F]"
+                          title={t("agencyReassign.reassignAction", "Reassign supervisor")}
+                        >
+                          <UserCog className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setReassignModal({ open: true, partner: p, tab: "history" })
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9D9D9] px-2.5 py-1.5 text-xs hover:border-[#E4590F] hover:text-[#E4590F]"
+                          title={t("agencyReassign.tabHistory", "Management history")}
+                        >
+                          <History className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -418,6 +463,23 @@ const PartnersByTypePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <AgencyReassignModal
+        open={reassignModal.open}
+        agency={
+          reassignModal.partner
+            ? {
+                id: reassignModal.partner.id,
+                name: reassignModal.partner.name,
+                companyName: reassignModal.partner.company_name,
+                currentSupervisorName: reassignModal.partner.supervisor_name,
+              }
+            : null
+        }
+        initialTab={reassignModal.tab}
+        onClose={() => setReassignModal({ open: false, partner: null, tab: "reassign" })}
+        onReassigned={() => load()}
+      />
     </div>
   );
 };

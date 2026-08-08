@@ -1,5 +1,5 @@
 // src/api/caseApi.ts
-import { apiGet, apiPost, apiPatch, apiPut } from "../lib/api";
+import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from "../lib/api";
 import api from "../lib/api";
 import type { CreateCaseResponse, CreateGroupCasesResponse } from "./interfaces";
 
@@ -58,6 +58,10 @@ export const confirmSaleApi = (caseId: number, data: { premium_amount: number; t
 export const cancelCaseApi = (caseId: number) =>
   apiPost(`/cases/${caseId}/cancel`, {});
 
+/** Permanently delete a case — superadmin (admin) only. */
+export const deleteCaseApi = (caseId: number) =>
+  apiDelete<{ success: boolean; message: string }>(`/cases/${caseId}`);
+
 // Generate and download invoice (id = sale id)
 export const generateInvoiceApi = (saleId: number) =>
   api.get(`/sales/invoice/${saleId}`, { responseType: 'blob' });
@@ -67,8 +71,23 @@ export const generateCertificateApi = (saleId: number) =>
   api.get(`/sales/certificate/${saleId}`, { responseType: 'blob' });
 
 // Update case
+export type UpdateCaseResponse = {
+  message: string;
+  policyEditCount?: number;
+  policyEditsRemaining?: number;
+  pricing?: {
+    plan_price: number;
+    premium_amount: number;
+    tax: number;
+    total: number;
+    validityDays?: number | null;
+    ageBand?: string | null;
+    commission?: number;
+  };
+};
+
 export const updateCaseApi = (caseId: number, data: any) =>
-  apiPut(`/cases/${caseId}/update`, data);
+  apiPut<UpdateCaseResponse>(`/cases/${caseId}/update`, data);
 
 export interface PolicyEditMeta {
   hasSale: boolean;

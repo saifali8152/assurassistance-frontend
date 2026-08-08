@@ -47,6 +47,7 @@ import SubAdminManagement from './pages/SubAdminManagement'
 import InvoicesByRegionPage from './pages/InvoicesByRegionPage'
 import PartnersByTypePage from './pages/PartnersByTypePage'
 import PartnerInvoicesPage from './pages/PartnerInvoicesPage'
+import ContractualDocsPage from './pages/ContractualDocsPage'
 
 
 // User Layout and Pages
@@ -218,6 +219,7 @@ function App() {
                 </AuthGuard>
               }
             />
+            <Route path="contractual-docs" element={<ContractualDocsPage />} />
             <Route path='profile' element={<AdminEditProfile />} />
             <Route path='change-password' element={<AdminChangePassword />} />
           </Route>
@@ -236,6 +238,7 @@ function App() {
             <Route path="createGroupCase" element={<CreateGroupCase />} />
             <Route path="cases" element={<CasesManagement />} />
             <Route path='ledger' element={<LedgerPage />} />
+            <Route path="contractual-docs" element={<ContractualDocsPage />} />
             <Route path='profile' element={<EditProfile />} />
             <Route path='edit-password' element={<EditPassword />} />
           </Route>

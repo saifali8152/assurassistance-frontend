@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Menu,
-  // X,
+  X,
   ChevronDown,
   User,
   Lock,
@@ -11,7 +11,8 @@ import {
   BarChart3,
   Layers,
   Activity,
-  UsersRound
+  UsersRound,
+  ScrollText,
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -42,18 +43,30 @@ const UserLayout: React.FC = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sidebarOpen]);
+
   const NavLink = ({ to, icon: Icon, children }: { to: string, icon: React.ElementType, children: React.ReactNode }) => {
-    const isActive = location.pathname === to;
+    const isActive =
+      location.pathname === to ||
+      (to !== "/user" && location.pathname.startsWith(`${to}/`));
     return (
       <Link
         to={to}
-        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors w-full text-left ${isActive
+        onClick={() => setSidebarOpen(false)}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors w-full text-left text-sm ${isActive
           ? 'bg-[#E4590F]/10 text-[#E4590F] border border-[#E4590F]/30 font-medium'
-          : 'hover:bg-secondary/30 text-text-secondary hover:text-[#E4590F]'
+          : 'hover:bg-secondary/30 text-text-secondary hover:text-[#E4590F] border border-transparent'
           }`}
       >
-        <Icon className="w-5 h-5" />
-        <span className="font-normal">{children}</span>
+        <Icon className="w-4 h-4 shrink-0" />
+        <span className="font-normal leading-snug">{children}</span>
       </Link>
     );
   };
@@ -66,10 +79,17 @@ const UserLayout: React.FC = () => {
           {/* Left side - Logo and Menu */}
           <div className="flex items-center space-x-4">
             <button
+              type="button"
               onClick={toggleSidebar}
+              aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={sidebarOpen}
               className="lg:hidden p-2 rounded-lg bg-[#D9D9D9] border border-[#D9D9D9] hover:bg-[#B8B8B8] transition-colors"
             >
-              <Menu className="w-5 h-5 text-text-secondary" />
+              {sidebarOpen ? (
+                <X className="w-5 h-5 text-text-secondary" />
+              ) : (
+                <Menu className="w-5 h-5 text-text-secondary" />
+              )}
             </button>
             <div className="flex items-center">
               <img src='/full-logo.png' alt="AssureAssistance" className="h-8 sm:h-10 object-contain" />
@@ -151,35 +171,85 @@ const UserLayout: React.FC = () => {
         </div>
       </nav>
 
-      <div className="flex h-[calc(100vh-73px)] relative">
-        {/* Left Sidebar */}
-        <aside className={`fixed lg:relative z-40 w-64 h-full transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-          <div className="h-full bg-white border-r border-[#D9D9D9] p-4">
-            {/* <div className="lg:hidden flex justify-between items-center mb-4">
-              <div className="flex items-center space-x-3">
-                <div>
-                  <p className="text-text-secondary text-sm font-normal">{user?.name || t("user.name", "Name")}</p>
+      <div className="flex h-[calc(100vh-4.5rem)] sm:h-[calc(100vh-4.75rem)] relative">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 top-[4.5rem] sm:top-[4.75rem] z-30 lg:hidden bg-black/40"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        <aside
+          className={`
+            fixed lg:relative z-40
+            top-[4.5rem] sm:top-[4.75rem] lg:top-0
+            bottom-0 left-0
+            w-[min(18rem,85vw)] lg:w-64
+            transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          `}
+        >
+          <div className="h-full flex flex-col bg-white border-r border-[#D9D9D9]">
+            <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#EEEEEE] shrink-0">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-[#1A1A1A] truncate">
+                  {user?.name || t("user.name", "Name")}
+                </p>
+                <p className="text-xs text-text-secondary truncate capitalize">{user?.role || "Agent"}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg hover:bg-secondary/30 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5 text-text-secondary" />
+              </button>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-6 space-y-2">
+              <div className="space-y-1">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-secondary/70">
+                  {t("sidebar.sectionOverview", "Overview")}
+                </p>
+                <div className="space-y-0.5">
+                  <NavLink to="/user" icon={BarChart3}>{t("userLayout.dashboard", "Dashboard")}</NavLink>
                 </div>
               </div>
-              <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-secondary/30 transition-colors"><X className="w-5 h-5 text-text-secondary" /></button>
-            </div> */}
-            <nav className="space-y-2">
-              <NavLink to="/user" icon={BarChart3}>{t("userLayout.dashboard", "Dashboard")}</NavLink>
-              <NavLink to="/user/createCase" icon={Layers}>{t("userLayout.createCase", "Create Case")}</NavLink>
-              <NavLink to="/user/createGroupCase" icon={UsersRound}>{t("userLayout.createGroupCase", "Create group case")}</NavLink>
-              <NavLink to="/user/cases" icon={Layers}>{t("userLayout.myCases", "My Cases")}</NavLink>
-              <NavLink to="/user/ledger" icon={Activity}>{t("userLayout.salesLedger", "Sales Ledger")}</NavLink>
+              <div className="space-y-1">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-secondary/70">
+                  {t("sidebar.sectionOperations", "Operations")}
+                </p>
+                <div className="space-y-0.5">
+                  <NavLink to="/user/createCase" icon={Layers}>{t("userLayout.createCase", "Create Case")}</NavLink>
+                  <NavLink to="/user/createGroupCase" icon={UsersRound}>{t("userLayout.createGroupCase", "Create group case")}</NavLink>
+                  <NavLink to="/user/cases" icon={Layers}>{t("userLayout.myCases", "My Cases")}</NavLink>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-secondary/70">
+                  {t("sidebar.sectionFinance", "Finance & reports")}
+                </p>
+                <div className="space-y-0.5">
+                  <NavLink to="/user/ledger" icon={Activity}>{t("userLayout.salesLedger", "Sales Ledger")}</NavLink>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-secondary/70">
+                  {t("sidebar.sectionSystem", "System")}
+                </p>
+                <div className="space-y-0.5">
+                  <NavLink to="/user/contractual-docs" icon={ScrollText}>
+                    {t("sidebar.contractualDocs", "Contractual Documentation Download")}
+                  </NavLink>
+                </div>
+              </div>
             </nav>
           </div>
         </aside>
 
-        {/* Mobile sidebar overlay */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-30 lg:hidden bg-black/20" onClick={toggleSidebar}></div>
-        )}
-
-        {/* Main Content Rendered by the Router */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-white">
+        <main className="flex-1 min-w-0 overflow-auto p-4 lg:p-6 bg-white">
           <Outlet />
         </main>
       </div>

@@ -152,6 +152,77 @@ export const deleteSubAdminApi = async (id: number) => {
   return apiDelete<{ success: boolean; message: string }>(`/admin/sub-admins/${id}`);
 };
 
+export type SupervisionHistoryItem = {
+  id: number;
+  agency_user_id: number;
+  supervisor_user_id: number | null;
+  supervisor_name: string | null;
+  supervisor_email: string | null;
+  supervisor_role: string | null;
+  effective_from: string;
+  effective_to: string | null;
+  changed_by_user_id: number;
+  changed_by_name: string | null;
+  changed_by_email: string | null;
+  reason: string | null;
+  created_at: string;
+  is_current: boolean;
+};
+
+export type ReassignSupervisorPayload = {
+  supervisor_user_id: number;
+  effective_from?: string;
+  reason?: string;
+};
+
+/** Admin-only: reassign top-level agency to another supervising account. */
+export const reassignAgentSupervisorApi = async (
+  agencyId: string,
+  data: ReassignSupervisorPayload
+) => {
+  return apiPatch<{
+    success: boolean;
+    message: string;
+    data: {
+      agency: {
+        id: number;
+        name: string;
+        company_name: string | null;
+        supervisor_user_id: number | null;
+        supervisor_name: string | null;
+      };
+      history: SupervisionHistoryItem[];
+    };
+  }>(`/admin/agents/${agencyId}/supervisor`, data);
+};
+
+/** Admin-only: management periods for a partner / travel agency. */
+export const getAgentSupervisionHistoryApi = async (agencyId: string) => {
+  const res = await apiGet<{
+    success: boolean;
+    data: {
+      agency: {
+        id: number;
+        name: string;
+        company_name: string | null;
+        supervisor_user_id: number | null;
+        supervisor_name: string | null;
+      };
+      history: SupervisionHistoryItem[];
+    };
+  }>(`/admin/agents/${agencyId}/supervision-history`);
+  return (res as any).data as {
+    agency: {
+      id: number;
+      name: string;
+      company_name: string | null;
+      supervisor_user_id: number | null;
+      supervisor_name: string | null;
+    };
+    history: SupervisionHistoryItem[];
+  };
+};
+
 export const getAgentDashboardApi = async () => {
   const res = await apiGet("/users/dashboard");
   return (res as any).data;
