@@ -11,12 +11,15 @@ import {
   updateUserStatusApi,
   sendPasswordResetLinkApi,
   deleteAgentHierarchyApi,
+  checkEmailAvailableApi,
   type AgentProfile,
   type SubAgentItem,
 } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
+import { isValidLoginEmail, normalizeLoginEmail } from "../utils/loginEmail";
 
 const PARTNERSHIP_TYPES = [
   "Insurance company",
@@ -48,6 +51,8 @@ const SupervisorView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { user: authUser } = useAuth();
+  const isAdmin = authUser?.role === "admin";
   const [supervisor, setSupervisor] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<{ id: number; name: string }[]>([]);
@@ -167,13 +172,17 @@ const SupervisorView: React.FC = () => {
       toast.error(t("agent.allFieldsRequired", "Name and email are required!"));
       return;
     }
+    if (!isValidLoginEmail(supervisorForm.email)) {
+      toast.error(t("agent.invalidEmail", "Enter a valid email address."));
+      return;
+    }
     if (!supervisorForm.companyName?.trim() || !supervisorForm.partnershipType || !supervisorForm.countryOfResidence?.trim() || !supervisorForm.whatsappPhone?.trim()) {
       toast.error(t("agent.requiredFields", "Company name, type of partnership, country of residence and WhatsApp phone are required."));
       return;
     }
     setSavingSupervisor(true);
     try {
-      await updateAgentApi(String(supervisor.id), {
+      const payload: Parameters<typeof updateAgentApi>[1] = {
         name,
         company_name: supervisorForm.companyName.trim(),
         partnership_type: supervisorForm.partnershipType,
@@ -183,7 +192,22 @@ const SupervisorView: React.FC = () => {
         geographical_location: supervisorForm.geographicalLocation.trim() || undefined,
         work_phone: supervisorForm.workPhone.trim() || undefined,
         assigned_plan_ids: supervisorForm.assignedPlanIds,
-      });
+      };
+      const nextEmail = normalizeLoginEmail(supervisorForm.email);
+      const currentEmail = normalizeLoginEmail(supervisor.email || "");
+      if (isAdmin && nextEmail !== currentEmail) {
+        const check = await checkEmailAvailableApi(nextEmail, supervisor.id);
+        if (!check.available) {
+          toast.error(
+            check.message ||
+              t("agent.emailTaken", "This email is already used by another account.")
+          );
+          setSavingSupervisor(false);
+          return;
+        }
+        payload.email = nextEmail;
+      }
+      await updateAgentApi(String(supervisor.id), payload);
       toast.success(t("agent.updated", "Supervisor updated successfully"));
       setEditSupervisorOpen(false);
       await loadSupervisor();
@@ -212,12 +236,26 @@ const SupervisorView: React.FC = () => {
       toast.error(t("agent.subAgentPlansRequired", "At least one assigned plan is required."));
       return;
     }
+    if (!isValidLoginEmail(email)) {
+      toast.error(t("agent.invalidEmail", "Enter a valid email address."));
+      return;
+    }
     setCreatingChild(true);
     try {
+      const createEmail = normalizeLoginEmail(email);
+      const check = await checkEmailAvailableApi(createEmail);
+      if (!check.available) {
+        toast.error(
+          check.message ||
+            t("agent.emailTaken", "This email is already used by another account.")
+        );
+        setCreatingChild(false);
+        return;
+      }
       const res = await createSubAgentApi(String(addChildParentId), {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        email: email.trim(),
+        email: createEmail,
         work_phone: workPhone?.trim() || undefined,
         whatsapp_phone: whatsappPhone.trim(),
         assigned_plan_ids: assignedPlanIds,
@@ -599,7 +637,19 @@ const SupervisorView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField type="text" placeholder={t("agent.firstName", "First Name") + " *"} value={supervisorForm.firstName} onChange={(v) => setSupervisorForm((p) => ({ ...p, firstName: v }))} />
               <InputField type="text" placeholder={t("agent.lastName", "Last Name") + " *"} value={supervisorForm.lastName} onChange={(v) => setSupervisorForm((p) => ({ ...p, lastName: v }))} />
-              <InputField type="email" placeholder={t("agent.email", "Email") + " *"} value={supervisorForm.email} onChange={(v) => setSupervisorForm((p) => ({ ...p, email: v }))} readOnly />
+              <InputField
+                type="email"
+                placeholder={t("agent.email", "Email") + " *"}
+                value={supervisorForm.email}
+                onChange={(v) => setSupervisorForm((p) => ({ ...p, email: v }))}
+                readOnly={!isAdmin}
+                validationType="email"
+              />
+              {!isAdmin && (
+                <p className="md:col-span-2 -mt-2 text-xs text-text-secondary">
+                  {t("agent.emailLockedHint", "Only the main administrator can change a login email.")}
+                </p>
+              )}
               <InputField type="text" placeholder={t("agent.companyName", "Partner's company name") + " *"} value={supervisorForm.companyName} onChange={(v) => setSupervisorForm((p) => ({ ...p, companyName: v }))} />
               <div className="relative" ref={partnershipRef}>
                 <button type="button" onClick={() => setPartnershipOpen(!partnershipOpen)} className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-left">

@@ -78,7 +78,20 @@ export const getAgentApi = async (id: string) => {
 };
 
 export const updateAgentApi = async (id: string, data: Partial<CreateAgentPayload>) => {
-  return apiPatch<{ success: boolean; message: string }>(`/admin/agents/${id}`, data);
+  return apiPatch<{ success: boolean; message: string; code?: string }>(`/admin/agents/${id}`, data);
+};
+
+export const checkEmailAvailableApi = async (email: string, excludeUserId?: string | number) => {
+  const params = new URLSearchParams({ email: email.trim() });
+  if (excludeUserId != null && String(excludeUserId).trim() !== "") {
+    params.set("excludeUserId", String(excludeUserId));
+  }
+  return apiGet<{
+    success: boolean;
+    available: boolean;
+    message?: string;
+    code?: string;
+  }>(`/admin/email-available?${params.toString()}`);
 };
 
 /** Deletes supervisor + all agents + sub-agents, or agent + sub-agents, or a single sub-agent. Removes their cases (and linked sales). */

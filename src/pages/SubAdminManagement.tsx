@@ -6,9 +6,11 @@ import {
   listSubAdminsApi,
   createSubAdminApi,
   deleteSubAdminApi,
+  checkEmailAvailableApi,
   type SubAdminItem
 } from "../api/agentApi";
 import { formatDateTime } from "../utils/dateUtils";
+import { isValidLoginEmail, normalizeLoginEmail } from "../utils/loginEmail";
 
 type FormState = {
   first_name: string;
@@ -71,12 +73,26 @@ const SubAdminManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
+    if (!isValidLoginEmail(form.email)) {
+      toast.error(t("agent.invalidEmail", "Enter a valid email address."));
+      return;
+    }
     setCreating(true);
     try {
+      const createEmail = normalizeLoginEmail(form.email);
+      const check = await checkEmailAvailableApi(createEmail);
+      if (!check.available) {
+        toast.error(
+          check.message ||
+            t("agent.emailTaken", "This email is already used by another account.")
+        );
+        setCreating(false);
+        return;
+      }
       const res = await createSubAdminApi({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        email: form.email.trim(),
+        email: createEmail,
         work_phone: form.work_phone.trim() || undefined,
         whatsapp_phone: form.whatsapp_phone.trim() || undefined,
         tempPassword: form.tempPassword.trim() || undefined

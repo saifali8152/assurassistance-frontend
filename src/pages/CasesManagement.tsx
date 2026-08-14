@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { getAllCasesApi, getMyCasesWithPaginationApi, cancelCaseApi, deleteCaseApi, generateInvoiceApi, type CaseListFilters } from '../api/caseApi';
-import { createSaleApi } from '../api/salesApi';
+import {
+  createSaleApi,
+  softDeleteSaleApi,
+  POLICY_DELETION_REASONS,
+  type PolicyDeletionReason,
+} from '../api/salesApi';
 import { ChevronLeft, ChevronRight, Download, CheckCircle, XCircle, Eye, Calendar, Phone, MapPin, FileText, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -80,6 +85,12 @@ const CasesManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; caseItem: Case | null }>({
+    open: false,
+    caseItem: null,
+  });
+  const [deletionReason, setDeletionReason] = useState<PolicyDeletionReason | "">("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const itemsPerPage = 25;
 
@@ -287,12 +298,33 @@ const CasesManagement: React.FC = () => {
     }
   };
 
+  const reasonLabel = (r: string) => {
+    if (r === "Test policy") return t("ledger.reason.test", "Test policy");
+    if (r === "Customer desistement") return t("ledger.reason.desistement", "Customer desistement");
+    if (r === "Error or duplicate") return t("ledger.reason.duplicate", "Error or duplicate");
+    if (r === "Cancellation before reversal")
+      return t("ledger.reason.cancellation", "Cancellation before reversal");
+    return r;
+  };
+
+  /** Open soft-delete reason modal for a confirmed policy; hard-delete drafts without a sale. */
   const handleDeleteCase = async (caseItem: Case) => {
+    if (caseItem.sale_deleted_at) {
+      toast.error(t("cases.alreadyDeleted", "This policy is already deleted."));
+      return;
+    }
+
+    if (caseItem.sale_id) {
+      setDeletionReason("");
+      setDeleteModal({ open: true, caseItem });
+      return;
+    }
+
     const label = caseItem.full_name || `#${caseItem.id}`;
     const confirmed = window.confirm(
       t(
-        "cases.deleteConfirm",
-        "Permanently delete case #{{id}} ({{name}})? This also removes any linked sale, invoice, and certificate. This cannot be undone.",
+        "cases.deleteDraftConfirm",
+        "Permanently delete draft case #{{id}} ({{name}})? This cannot be undone.",
         { id: caseItem.id, name: label }
       )
     );
@@ -305,12 +337,44 @@ const CasesManagement: React.FC = () => {
       await refreshList();
       setShowModal(false);
     } catch (error: any) {
-      console.error('Failed to delete case:', error);
+      console.error("Failed to delete case:", error);
       toast.error(
         error?.response?.data?.message ||
           t("cases.deleteFailed", "Failed to delete case")
       );
     } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const confirmSoftDeletePolicy = async () => {
+    const caseItem = deleteModal.caseItem;
+    if (!caseItem?.sale_id || !deletionReason) {
+      toast.error(t("ledger.deleteReasonRequired", "Select a deletion reason"));
+      return;
+    }
+    try {
+      setIsDeleting(true);
+      setActionLoading(caseItem.id);
+      await softDeleteSaleApi(caseItem.sale_id, deletionReason);
+      toast.success(
+        t(
+          "ledger.deleteSuccess",
+          "Policy deleted. It remains visible with premium and commission at 0."
+        )
+      );
+      setDeleteModal({ open: false, caseItem: null });
+      setDeletionReason("");
+      setShowModal(false);
+      await refreshList();
+    } catch (error: any) {
+      console.error("Failed to soft-delete policy:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          t("ledger.deleteFailed", "Could not delete policy")
+      );
+    } finally {
+      setIsDeleting(false);
       setActionLoading(null);
     }
   };
@@ -485,8 +549,17 @@ const CasesManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cases.map((caseItem) => (
-                    <tr key={caseItem.id} className="border-b border-[#D9D9D9] hover:bg-[#D9D9D9]/30 transition-colors">
+                  {cases.map((caseItem) => {
+                    const deleted = !!caseItem.sale_deleted_at;
+                    return (
+                    <tr
+                      key={caseItem.id}
+                      className={`border-b border-[#D9D9D9] transition-colors ${
+                        deleted
+                          ? "bg-gray-100/90 text-gray-400"
+                          : "hover:bg-[#D9D9D9]/30"
+                      }`}
+                    >
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-3">
                           <div>
@@ -519,7 +592,11 @@ const CasesManagement: React.FC = () => {
                       </td>
                       <td className="py-4 px-2">
                         <div className="flex justify-center">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(caseItem.status)}`}>
+                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                            deleted
+                              ? "bg-gray-200 text-gray-500 border border-gray-300"
+                              : getStatusColor(caseItem.status)
+                          }`}>
                             {caseItem.status}
                           </span>
                         </div>
@@ -531,8 +608,11 @@ const CasesManagement: React.FC = () => {
                           >
                             Sale #{caseItem.sale_id}
                             {caseItem.sale_deleted_at ? (
-                              <span className="block uppercase text-[10px] tracking-wide">
+                              <span className="block uppercase text-[10px] tracking-wide text-gray-500 mt-0.5">
                                 {t("ledger.deletedBadge", "Deleted")}
+                                {caseItem.sale_deletion_reason
+                                  ? ` · ${reasonLabel(caseItem.sale_deletion_reason)}`
+                                  : ""}
                               </span>
                             ) : null}
                           </div>
@@ -564,7 +644,7 @@ const CasesManagement: React.FC = () => {
                       )}
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-2">
-                          {caseItem.status !== 'Cancelled' && (
+                          {caseItem.status !== 'Cancelled' && !caseItem.sale_deleted_at && (
                             <button
                               type="button"
                               onClick={() => goEditCase(caseItem)}
@@ -639,13 +719,17 @@ const CasesManagement: React.FC = () => {
                             </>
                           )}
 
-                          {user?.role === 'admin' && (
+                          {user?.role === 'admin' && !caseItem.sale_deleted_at && (
                             <button
                               type="button"
                               onClick={() => handleDeleteCase(caseItem)}
                               disabled={actionLoading === caseItem.id}
                               className="p-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-700 hover:text-red-800 transition-colors disabled:opacity-50 border border-red-600/25"
-                              title={t("cases.deleteCase", "Delete case permanently")}
+                              title={
+                                caseItem.sale_id
+                                  ? t("ledger.deletePolicy", "Delete policy")
+                                  : t("cases.deleteCase", "Delete case")
+                              }
                             >
                               {actionLoading === caseItem.id ? (
                                 <div className="w-4 h-4 border-2 border-red-700/30 border-t-red-700 rounded-full animate-spin"></div>
@@ -657,7 +741,8 @@ const CasesManagement: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
 
@@ -749,9 +834,21 @@ const CasesManagement: React.FC = () => {
                 <div className="text-left"><span className="text-[#2B2B2B] font-medium">#{selectedCase.id}</span></div>
                 <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("cases.status")}:</span></div>
                 <div className="text-left">
-                  <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedCase.status)}`}>
+                  <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                    selectedCase.sale_deleted_at
+                      ? "bg-gray-200 text-gray-500 border border-gray-300"
+                      : getStatusColor(selectedCase.status)
+                  }`}>
                     {selectedCase.status}
                   </span>
+                  {selectedCase.sale_deleted_at && (
+                    <div className="mt-1 text-xs text-gray-500 uppercase tracking-wide">
+                      {t("ledger.deletedBadge", "Deleted")}
+                      {selectedCase.sale_deletion_reason
+                        ? ` · ${reasonLabel(selectedCase.sale_deletion_reason)}`
+                        : ""}
+                    </div>
+                  )}
                 </div>
                 <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("cases.traveller")}:</span></div>
                 <div className="text-left"><span className="text-[#2B2B2B]">{selectedCase.full_name}</span></div>
@@ -975,7 +1072,7 @@ const CasesManagement: React.FC = () => {
                   </button>
                 </>
               )}
-              {user?.role === 'admin' && (
+              {user?.role === 'admin' && !selectedCase.sale_deleted_at && (
                 <button
                   type="button"
                   onClick={() => handleDeleteCase(selectedCase)}
@@ -987,11 +1084,91 @@ const CasesManagement: React.FC = () => {
                   ) : (
                     <>
                       <Trash2 className="w-4 h-4" />
-                      {t("cases.deleteCase", "Delete case")}
+                      {selectedCase.sale_id
+                        ? t("ledger.deletePolicy", "Delete policy")
+                        : t("cases.deleteCase", "Delete case")}
                     </>
                   )}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModal.open && deleteModal.caseItem && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[#E4590F] text-xl font-semibold">
+                {t("ledger.deletePolicy", "Delete policy")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteModal({ open: false, caseItem: null });
+                  setDeletionReason("");
+                }}
+                className="p-2 rounded-lg bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B]"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-[#2B2B2B]/80 mb-2">
+              Case #{deleteModal.caseItem.id}
+              {deleteModal.caseItem.sale_id
+                ? ` · Sale #${deleteModal.caseItem.sale_id}`
+                : ""}
+              {deleteModal.caseItem.full_name
+                ? ` · ${deleteModal.caseItem.full_name}`
+                : ""}
+            </p>
+            <p className="text-sm text-[#2B2B2B]/60 mb-4">
+              {t(
+                "ledger.deleteHelp",
+                "The policy stays visible (gray) with premium and commission set to 0 FCFA. Choose a reason:"
+              )}
+            </p>
+            <label className="block text-xs font-medium text-[#2B2B2B]/70 mb-1">
+              {t("ledger.deleteReason", "Reason")} *
+            </label>
+            <select
+              value={deletionReason}
+              onChange={(e) =>
+                setDeletionReason(e.target.value as PolicyDeletionReason | "")
+              }
+              className="w-full rounded-xl border border-[#D9D9D9] px-3 py-2.5 text-sm mb-6 outline-none focus:ring-2 focus:ring-[#E4590F]"
+            >
+              <option value="">
+                {t("ledger.deleteReasonPlaceholder", "Select a reason…")}
+              </option>
+              {POLICY_DELETION_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {reasonLabel(r)}
+                </option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteModal({ open: false, caseItem: null });
+                  setDeletionReason("");
+                }}
+                className="px-4 py-2 rounded-xl bg-[#D9D9D9] hover:bg-[#B8B8B8] text-[#2B2B2B] font-medium"
+              >
+                {t("ledger.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmSoftDeletePolicy}
+                disabled={isDeleting || !deletionReason}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
+              >
+                {isDeleting
+                  ? t("ledger.deleting", "Deleting…")
+                  : t("ledger.confirmDelete", "Delete policy")}
+              </button>
             </div>
           </div>
         </div>

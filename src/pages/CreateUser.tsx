@@ -4,12 +4,13 @@ import { Check, Clock, Lock, Unlock, Key, Shield, ShieldCheck, ChevronDown, Filt
 import CountrySearchSelect from "../components/CountrySearchSelect";
 import InputField from "../components/InputFields";
 import AgencyReassignModal from "../components/AgencyReassignModal";
-import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, deleteAgentHierarchyApi } from "../api/agentApi";
+import { createAgentApi, getAgentApi, updateAgentApi, listAgentsApi, updateUserStatusApi, sendPasswordResetLinkApi, deleteAgentHierarchyApi, checkEmailAvailableApi } from "../api/agentApi";
 import { getAllCataloguesApi } from "../api/catalogueApi";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { formatDateTime, formatFullDateTime, getPasswordChangeStatus } from "../utils/dateUtils";
+import { isValidLoginEmail, normalizeLoginEmail } from "../utils/loginEmail";
 
 const PARTNERSHIP_TYPES = [
   "Insurance company",
@@ -220,6 +221,10 @@ const CreateUser: React.FC = () => {
       toast.error(t("agent.allFieldsRequired", "Name and email are required!"));
       return;
     }
+    if (!isValidLoginEmail(formData.email)) {
+      toast.error(t("agent.invalidEmail", "Enter a valid email address."));
+      return;
+    }
     if (!editingUser) {
       if (!formData.companyName?.trim() || !formData.partnershipType || !formData.countryOfResidence?.trim() || !formData.whatsappPhone?.trim()) {
         toast.error(t("agent.requiredFields", "Company name, type of partnership, country of residence and WhatsApp phone are required."));
@@ -230,7 +235,7 @@ const CreateUser: React.FC = () => {
     if (editingUser) {
       setIsUpdating(true);
       try {
-        await updateAgentApi(editingUser.id, {
+        const payload: Parameters<typeof updateAgentApi>[1] = {
           name,
           company_name: formData.companyName.trim() || undefined,
           partnership_type: formData.partnershipType || undefined,
@@ -240,7 +245,22 @@ const CreateUser: React.FC = () => {
           geographical_location: formData.geographicalLocation.trim() || undefined,
           work_phone: formData.workPhone.trim() || undefined,
           assigned_plan_ids: formData.assignedPlanIds,
-        });
+        };
+        const nextEmail = normalizeLoginEmail(formData.email);
+        const currentEmail = normalizeLoginEmail(editingUser.email || "");
+        if (isAdmin && nextEmail !== currentEmail) {
+          const check = await checkEmailAvailableApi(nextEmail, editingUser.id);
+          if (!check.available) {
+            toast.error(
+              check.message ||
+                t("agent.emailTaken", "This email is already used by another account.")
+            );
+            setIsUpdating(false);
+            return;
+          }
+          payload.email = nextEmail;
+        }
+        await updateAgentApi(editingUser.id, payload);
         toast.success(t("agent.updated", "Agent updated successfully"));
         await fetchUsers();
         resetForm();
@@ -254,9 +274,19 @@ const CreateUser: React.FC = () => {
 
     setIsCreating(true);
     try {
+      const createEmail = normalizeLoginEmail(formData.email);
+      const taken = await checkEmailAvailableApi(createEmail);
+      if (!taken.available) {
+        toast.error(
+          taken.message ||
+            t("agent.emailTaken", "This email is already used by another account.")
+        );
+        setIsCreating(false);
+        return;
+      }
       const res = await createAgentApi({
         name,
-        email: formData.email.trim(),
+        email: createEmail,
         company_name: formData.companyName.trim(),
         partnership_type: formData.partnershipType,
         country_of_residence: formData.countryOfResidence.trim(),
@@ -744,7 +774,8 @@ const CreateUser: React.FC = () => {
                   placeholder={t("agent.email", "Email") + " *"}
                   value={formData.email}
                   onChange={(value) => handleInputChange('email', value)}
-                  readOnly={!!editingUser}
+                  readOnly={!!editingUser && !isAdmin}
+                  validationType="email"
                 />
                 <InputField
                   type="text"
