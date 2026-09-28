@@ -30,7 +30,7 @@ function CreateCaseRoute() {
 
 function AdminLandingRoute() {
   const { user } = useAuth()
-  if (user?.role === 'sub_admin') {
+  if (user?.role === 'sub_admin' || user?.role === 'insurer_supervisor') {
     return <Navigate to="/admin/cases" replace />
   }
   return <AdminDashboard />
@@ -44,10 +44,14 @@ import Reconciliation from './pages/ReconciliationTable'
 import ActivityLogPage from './pages/ActivityLogPage'
 import AgentHierarchyPage from './pages/AgentHierarchyPage'
 import SubAdminManagement from './pages/SubAdminManagement'
+import InsurerSupervisorManagement from './pages/InsurerSupervisorManagement'
 import InvoicesByRegionPage from './pages/InvoicesByRegionPage'
 import PartnersByTypePage from './pages/PartnersByTypePage'
 import PartnerInvoicesPage from './pages/PartnerInvoicesPage'
 import ContractualDocsPage from './pages/ContractualDocsPage'
+import WhatsAppSettings from './pages/WhatsAppSettings'
+import WhatsAppConversations from './pages/WhatsAppConversations'
+import DestinationZones from './pages/DestinationZones'
 
 
 // User Layout and Pages
@@ -138,11 +142,11 @@ function App() {
             } 
           />
 
-          {/* Admin routes (shared with sub-administrators); sensitive sub-routes are gated below. */}
+          {/* Admin routes (shared with sub-administrators and insurer supervisors); sensitive sub-routes are gated below. */}
           <Route
             path="/admin"
             element={
-              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin']}>
+              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin', 'insurer_supervisor']}>
                 <Layout />
               </AuthGuard>
             }
@@ -154,6 +158,14 @@ function App() {
               element={
                 <AuthGuard requireAuth={true} allowedRoles={['admin']}>
                   <SubAdminManagement />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="insurer-supervisors"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <InsurerSupervisorManagement />
                 </AuthGuard>
               }
             />
@@ -220,6 +232,30 @@ function App() {
               }
             />
             <Route path="contractual-docs" element={<ContractualDocsPage />} />
+            <Route
+              path="destination-zones"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <DestinationZones />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="whatsapp-conversations"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <WhatsAppConversations />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="whatsapp-settings"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <WhatsAppSettings />
+                </AuthGuard>
+              }
+            />
             <Route path='profile' element={<AdminEditProfile />} />
             <Route path='change-password' element={<AdminChangePassword />} />
           </Route>
@@ -248,7 +284,7 @@ function App() {
           <Route
             path="/certificate/:saleId"
             element={
-              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin', 'agent']}>
+              <AuthGuard requireAuth={true} allowedRoles={['admin', 'sub_admin', 'insurer_supervisor', 'agent']}>
                 <CertificatePrint />
               </AuthGuard>
             }

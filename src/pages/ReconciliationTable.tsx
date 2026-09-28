@@ -8,6 +8,8 @@ import { useCurrency } from '../context/CurrencyContext';
 interface ReconciliationData {
   user_id: number;
   agent_name: string;
+  agency_name?: string | null;
+  sub_admin_name?: string | null;
   month: string;
   total_sales: number;
   total_amount: number;
@@ -56,10 +58,14 @@ function Reconciliation() {
       .finally(() => setLoading(false));
   }, [selectedMonth, selectedYear]);
 
-  // Only filter by agent name (backend already filters by month/year)
+  // Filter by agent, travel agency, or supervising sub-admin
   const filteredData = useMemo(() => {
-    return data.filter(item =>
-      item.agent_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return data;
+    return data.filter((item) =>
+      [item.agent_name, item.agency_name, item.sub_admin_name]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q))
     );
   }, [searchTerm, data]);
 
@@ -73,6 +79,8 @@ function Reconciliation() {
     };
 
     const headers = [
+      "Travel Agency",
+      "Sub-admin (Sales Rep)",
       "Agent Name",
       "Month",
       "Total Sales",
@@ -89,6 +97,8 @@ function Reconciliation() {
       headers.map(csvEscape).join(","),
       ...filteredData.map((row) =>
         [
+          row.agency_name || "",
+          row.sub_admin_name || "",
           row.agent_name,
           row.month,
           row.total_sales ?? "",
@@ -221,7 +231,15 @@ function Reconciliation() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#D9D9D9]">
-                    <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm">{t('reconciliation.agentName')}</th>
+                    <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm text-left">
+                      {t("reconciliation.agencyName", "Travel agency")}
+                    </th>
+                    <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm text-left">
+                      {t("reconciliation.subAdminName", "Sub-admin (sales rep)")}
+                    </th>
+                    <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm text-left">
+                      {t("reconciliation.agentName")}
+                    </th>
                     <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm">{t('reconciliation.totalSales')}</th>
                     <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm">{t('reconciliation.totalAmount')}</th>
                     <th className="py-4 px-2 text-[#2B2B2B]/70 font-normal text-sm">{t('reconciliation.paidAmount')}</th>
@@ -232,6 +250,16 @@ function Reconciliation() {
                 <tbody>
                   {filteredData.map((row, index) => (
                     <tr key={row.user_id} className={`border-b border-[#D9D9D9] hover:bg-[#D9D9D9]/30 transition-colors ${index % 2 === 0 ? 'bg-[#D9D9D9]/10' : ''}`}>
+                      <td className="py-4 px-2">
+                        <div className="text-[#2B2B2B] font-semibold">
+                          {row.agency_name || "—"}
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div className="text-[#2B2B2B] font-medium">
+                          {row.sub_admin_name || "—"}
+                        </div>
+                      </td>
                       <td className="py-4 px-2">
                         <div className="text-[#2B2B2B] font-semibold">{row.agent_name}</div>
                       </td>

@@ -67,6 +67,7 @@ export interface CertificatePageData {
   contact?: {
     emergencyHelpline: string;
     generalLine: string;
+    centralAfricaLine?: string;
     whatsapp: string;
     websiteUrl: string;
   };
@@ -264,6 +265,7 @@ const CertificatePrint: React.FC = () => {
   const contact = data.contact ?? {
     emergencyHelpline: "+91 62916 62954",
     generalLine: "+225 27 22 22 82 60",
+    centralAfricaLine: "+(242)061603452",
     whatsapp: "+225 07 18 92 31 94",
     websiteUrl: "https://www.assurassistance.org"
   };
@@ -642,6 +644,12 @@ const CertificatePrint: React.FC = () => {
           </p>
           <p className="cert-contact-line">
             - {t("certificatePrint.contactGeneral", { phone: contact.generalLine || "—" })}
+          </p>
+          <p className="cert-contact-line">
+            -{" "}
+            {t("certificatePrint.contactCentralAfrica", {
+              phone: contact.centralAfricaLine || "+(242)061603452",
+            })}
           </p>
           <p className="cert-contact-line">
             - {t("certificatePrint.contactWhatsapp", { phone: contact.whatsapp || "—" })}

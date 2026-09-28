@@ -24,6 +24,8 @@ interface Plan {
   currency?: string; // Currency code (XOF, USD, EUR)
   /** Relative path e.g. /uploads/plan-logos/... */
   partnerInsurerLogo?: string;
+  /** Owning insurer key for scoping (e.g. gna, agico). */
+  partnerInsurer?: string;
   /** "#RRGGBB" applied to certificate/invoice accents. Default brand orange. */
   themeColor?: string;
   /** When true, certificate shows "N° Passport / N° Laissez-passer / N° GPGL". */
@@ -34,6 +36,8 @@ interface Plan {
    * and print the premium on the certificate.
    */
   fixedDurationPremiums?: boolean;
+  /** Sellable through the WhatsApp purchase flow. */
+  whatsappEnabled?: boolean;
 }
 
 interface PricingRow {
@@ -65,6 +69,8 @@ interface FormData {
   themeColor: string;
   extraIdFields: boolean;
   fixedDurationPremiums: boolean;
+  whatsappEnabled: boolean;
+  partnerInsurer: string;
 }
 
 const DEFAULT_THEME_COLOR = "#E4590F";
@@ -225,7 +231,9 @@ const CreatePlan: React.FC = () => {
     pricingTables: undefined,
     themeColor: DEFAULT_THEME_COLOR,
     extraIdFields: false,
-    fixedDurationPremiums: false
+    fixedDurationPremiums: false,
+    whatsappEnabled: false,
+    partnerInsurer: ""
   });
   const [previewData, setPreviewData] = useState<Partial<FormData>>({});
 
@@ -255,7 +263,9 @@ const CreatePlan: React.FC = () => {
     pricingTables: t("plan.pricingTables"),
     themeColor: t("plan.themeColor", "Certificate / invoice color"),
     extraIdFields: t("plan.extraIdFields", "Show extended ID labels"),
-    fixedDurationPremiums: t("plan.fixedDurationPremiums", "Fixed duration premiums")
+    fixedDurationPremiums: t("plan.fixedDurationPremiums", "Fixed duration premiums"),
+    whatsappEnabled: t("plan.whatsappEnabled", "Sellable on WhatsApp"),
+    partnerInsurer: t("plan.partnerInsurer", "Partner insurer key")
   };
 
   const fieldOrder: (keyof FormData)[] = [
@@ -287,9 +297,11 @@ const CreatePlan: React.FC = () => {
           pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
           currency: plan.currency || 'XOF', // Load currency from database, default to XOF
           partnerInsurerLogo: plan.partner_insurer_logo || undefined,
+          partnerInsurer: plan.partner_insurer || "",
           themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
           extraIdFields: !!plan.extra_id_fields,
-          fixedDurationPremiums: !!plan.fixed_duration_premiums
+          fixedDurationPremiums: !!plan.fixed_duration_premiums,
+          whatsappEnabled: !!plan.whatsapp_enabled
         }));
         setPlans(plans);
       } catch (err) {
@@ -528,7 +540,9 @@ const CreatePlan: React.FC = () => {
       currency: currency, // Save the current currency from context
       theme_color: themeColorValue,
       extra_id_fields: !!formData.extraIdFields,
-      fixed_duration_premiums: !!formData.fixedDurationPremiums
+      fixed_duration_premiums: !!formData.fixedDurationPremiums,
+      whatsapp_enabled: !!formData.whatsappEnabled,
+      partner_insurer: formData.partnerInsurer.trim() || null
     };
     
     console.log('Payload being sent:', payload);
@@ -557,9 +571,11 @@ const CreatePlan: React.FC = () => {
         pricingTables: plan.pricing_rules ? (typeof plan.pricing_rules === 'string' ? JSON.parse(plan.pricing_rules) : plan.pricing_rules) : null,
         currency: plan.currency || 'XOF',
         partnerInsurerLogo: plan.partner_insurer_logo || undefined,
+        partnerInsurer: plan.partner_insurer || "",
         themeColor: plan.theme_color || DEFAULT_THEME_COLOR,
         extraIdFields: !!plan.extra_id_fields,
-        fixedDurationPremiums: !!plan.fixed_duration_premiums
+        fixedDurationPremiums: !!plan.fixed_duration_premiums,
+        whatsappEnabled: !!plan.whatsapp_enabled
       }));
       setPlans(plans);
 
@@ -577,7 +593,9 @@ const CreatePlan: React.FC = () => {
             pricingTables: pricingTables,
             themeColor: np.themeColor || DEFAULT_THEME_COLOR,
             extraIdFields: !!np.extraIdFields,
-            fixedDurationPremiums: !!np.fixedDurationPremiums
+            fixedDurationPremiums: !!np.fixedDurationPremiums,
+            whatsappEnabled: !!np.whatsappEnabled,
+            partnerInsurer: np.partnerInsurer || ""
           });
           setPreviewData({
             name: np.name,
@@ -588,7 +606,9 @@ const CreatePlan: React.FC = () => {
             pricingTables: pricingTables,
             themeColor: np.themeColor || DEFAULT_THEME_COLOR,
             extraIdFields: !!np.extraIdFields,
-            fixedDurationPremiums: !!np.fixedDurationPremiums
+            fixedDurationPremiums: !!np.fixedDurationPremiums,
+            whatsappEnabled: !!np.whatsappEnabled,
+            partnerInsurer: np.partnerInsurer || ""
           });
           return;
         }
@@ -604,7 +624,9 @@ const CreatePlan: React.FC = () => {
         pricingTables: undefined,
         themeColor: DEFAULT_THEME_COLOR,
         extraIdFields: false,
-        fixedDurationPremiums: false
+        fixedDurationPremiums: false,
+        whatsappEnabled: false,
+        partnerInsurer: ""
       });
       setPreviewData({});
     } catch (err) {
@@ -681,7 +703,9 @@ const CreatePlan: React.FC = () => {
       pricingTables: pricingTables,
       themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
       extraIdFields: !!plan.extraIdFields,
-      fixedDurationPremiums: !!plan.fixedDurationPremiums
+      fixedDurationPremiums: !!plan.fixedDurationPremiums,
+      whatsappEnabled: !!plan.whatsappEnabled,
+      partnerInsurer: plan.partnerInsurer || ""
     });
     setPreviewData({
       name: plan.name,
@@ -692,7 +716,9 @@ const CreatePlan: React.FC = () => {
       pricingTables: pricingTables,
       themeColor: plan.themeColor || DEFAULT_THEME_COLOR,
       extraIdFields: !!plan.extraIdFields,
-      fixedDurationPremiums: !!plan.fixedDurationPremiums
+      fixedDurationPremiums: !!plan.fixedDurationPremiums,
+      whatsappEnabled: !!plan.whatsappEnabled,
+      partnerInsurer: plan.partnerInsurer || ""
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -708,7 +734,9 @@ const CreatePlan: React.FC = () => {
       pricingTables: undefined,
       themeColor: DEFAULT_THEME_COLOR,
       extraIdFields: false,
-      fixedDurationPremiums: false
+      fixedDurationPremiums: false,
+      whatsappEnabled: false,
+      partnerInsurer: ""
     });
     setPreviewData({});
   };
@@ -979,6 +1007,25 @@ const CreatePlan: React.FC = () => {
               )}
             </div>
 
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#2B2B2B] mb-2">
+                {t("plan.partnerInsurer", "Partner insurer key")}
+              </label>
+              <input
+                type="text"
+                value={formData.partnerInsurer}
+                onChange={(e) => handleInputChange("partnerInsurer", e.target.value.toLowerCase())}
+                placeholder={t("plan.partnerInsurerPlaceholder", "e.g. gna, agico")}
+                className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-xl text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#E4590F] focus:border-transparent"
+              />
+              <p className="text-xs text-[#2B2B2B]/60 mt-1">
+                {t(
+                  "plan.partnerInsurerHint",
+                  "Used to scope insurer supervisors (e.g. GNA supervisors only see plans tagged gna)."
+                )}
+              </p>
+            </div>
+
             <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
               <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
                 {t("plan.extraIdFields", "Show extended ID labels")}
@@ -1025,6 +1072,30 @@ const CreatePlan: React.FC = () => {
                   {formData.fixedDurationPremiums
                     ? t("plan.fixedDurationPremiumsOn", "Enabled — plan duration table + premium on certificate (age rules apply)")
                     : t("plan.fixedDurationPremiumsOff", "Disabled — standard GNA-style pricing")}
+                </span>
+              </label>
+            </div>
+            <div className="mb-6 p-4 border border-[#D9D9D9] rounded-xl bg-[#fafafa]/80">
+              <h3 className="text-sm font-semibold text-[#E4590F] mb-1">
+                {t("plan.whatsappEnabled", "Sellable on WhatsApp")}
+              </h3>
+              <p className="text-xs text-[#2B2B2B]/70 mb-3">
+                {t(
+                  "plan.whatsappEnabledHint",
+                  "Customers can buy this plan through the WhatsApp conversation. Coverage highlights are taken from this plan's guarantees automatically, in French and English. Leave off for plans that should only be sold by an agent."
+                )}
+              </p>
+              <label className="inline-flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!formData.whatsappEnabled}
+                  onChange={(e) => handleInputChange("whatsappEnabled", e.target.checked)}
+                  className="h-4 w-4 rounded border-[#D9D9D9] text-[#E4590F] focus:ring-[#E4590F]"
+                />
+                <span className="text-sm text-[#2B2B2B]">
+                  {formData.whatsappEnabled
+                    ? t("plan.whatsappEnabledOn", "Enabled — offered in the WhatsApp purchase flow")
+                    : t("plan.whatsappEnabledOff", "Disabled — not offered on WhatsApp")}
                 </span>
               </label>
             </div>

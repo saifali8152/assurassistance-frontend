@@ -19,6 +19,10 @@ import {
   Globe2,
   Building2,
   ScrollText,
+  Landmark,
+  MessageCircle,
+  Map,
+  MessagesSquare,
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -37,11 +41,17 @@ const Layout: React.FC = () => {
 
   const isAdmin = user?.role === "admin";
   const isSubAdmin = user?.role === "sub_admin";
-  const isStaff = isAdmin || isSubAdmin;
+  const isInsurerSupervisor = user?.role === "insurer_supervisor";
+  const isStaff = isAdmin || isSubAdmin || isInsurerSupervisor;
 
   const roleLabel = (() => {
     if (!user?.role) return t("role.admin", "Admin");
     if (user.role === "sub_admin") return t("role.subAdmin", "Sub-administrator");
+    if (user.role === "insurer_supervisor") {
+      const key = (user as { partner_insurer?: string | null }).partner_insurer;
+      const base = t("role.insurerSupervisor", "Insurer supervisor");
+      return key ? `${base} (${String(key).toUpperCase()})` : base;
+    }
     if (user.role === "admin") return t("role.admin", "Admin");
     return t("role.agent", "Agent");
   })();
@@ -305,6 +315,11 @@ const Layout: React.FC = () => {
                   </NavLink>
                 )}
                 {isAdmin && (
+                  <NavLink to="/admin/insurer-supervisors" icon={Landmark}>
+                    {t("sidebar.insurerSupervisors", "Insurer supervisors")}
+                  </NavLink>
+                )}
+                {isAdmin && (
                   <NavLink to="/admin/agent-hierarchy" icon={GitBranch}>
                     {t("sidebar.agentHierarchy", "Agent hierarchy")}
                   </NavLink>
@@ -344,7 +359,7 @@ const Layout: React.FC = () => {
                 <NavLink to="/admin/invoices-by-region" icon={Globe2}>
                   {t("sidebar.invoicesByRegion", "Invoices by region")}
                 </NavLink>
-                {isStaff && (
+                {(isAdmin || isSubAdmin) && (
                   <NavLink to="/admin/partner-invoices" icon={ReceiptText}>
                     {t("sidebar.partnerInvoices", "Partner invoices")}
                   </NavLink>
@@ -363,6 +378,21 @@ const Layout: React.FC = () => {
                 {isAdmin && (
                   <NavLink to="/admin/activity-log" icon={Activity}>
                     {t("sidebar.activityLog", "Activity Log")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/whatsapp-settings" icon={MessageCircle}>
+                    {t("sidebar.whatsappSettings", "WhatsApp Settings")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/whatsapp-conversations" icon={MessagesSquare}>
+                    {t("sidebar.whatsappConversations", "WhatsApp Conversations")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/destination-zones" icon={Map}>
+                    {t("sidebar.destinationZones", "Destination Zones")}
                   </NavLink>
                 )}
               </NavSection>

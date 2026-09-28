@@ -10,8 +10,9 @@ export interface LoginResponse {
     id: number;
     name: string;
     email: string;
-    role: "admin" | "sub_admin" | "agent";
+    role: "admin" | "sub_admin" | "insurer_supervisor" | "agent";
     force_password_change?: boolean;
+    partner_insurer?: string | null;
   };
 }
 
@@ -21,8 +22,9 @@ export interface ChangePasswordResponse {
     id: number;
     name: string;
     email: string;
-    role: "admin" | "sub_admin" | "agent";
+    role: "admin" | "sub_admin" | "insurer_supervisor" | "agent";
     force_password_change?: boolean;
+    partner_insurer?: string | null;
   };
 }
   export interface CreateCaseResponse {

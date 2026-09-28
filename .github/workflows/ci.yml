@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc -b
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  translations:
+    name: Translation parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      # A key present in English but missing in French means a customer or an
+      # operator sees a raw key like "whatsappSettings.title" in production.
+      - name: French and English must define the same keys
+        run: |
+          node -e "
+            const fs = require('fs');
+            const flat = (o, p='') => Object.entries(o).reduce((acc,[k,v]) => {
+              const key = p ? p+'.'+k : k;
+              return Object.assign(acc, v && typeof v === 'object' && !Array.isArray(v) ? flat(v, key) : {[key]: v});
+            }, {});
+            const en = flat(JSON.parse(fs.readFileSync('src/locales/en/translation.json','utf8')));
+            const fr = flat(JSON.parse(fs.readFileSync('src/locales/fr/translation.json','utf8')));
+            const missingFr = Object.keys(en).filter(k => !(k in fr));
+            const missingEn = Object.keys(fr).filter(k => !(k in en));
+            if (missingFr.length || missingEn.length) {
+              console.error('Missing in fr:', missingFr);
+              console.error('Missing in en:', missingEn);
+              process.exit(1);
+            }
+            console.log('Translation parity OK —', Object.keys(en).length, 'keys');
+          "

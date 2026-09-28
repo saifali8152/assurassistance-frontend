@@ -375,7 +375,7 @@ const CreateGroupCase: React.FC = () => {
         await changeCaseStatusApi(id, "Cancelled");
       }
       toast.success(t("groupCase.cancelled"));
-      navigate((user?.role === "admin" || user?.role === "sub_admin") ? "/admin/cases" : "/user/cases");
+      navigate((user?.role === 'admin' || user?.role === 'sub_admin' || user?.role === 'insurer_supervisor') ? "/admin/cases" : "/user/cases");
     } catch {
       toast.error(t("groupCase.cancelError"));
     }

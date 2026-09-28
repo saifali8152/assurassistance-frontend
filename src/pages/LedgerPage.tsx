@@ -30,8 +30,15 @@ interface LedgerEntry {
   case_id: number;
   agent_id: number;
   created_by_name: string;
+  first_name?: string;
+  last_name?: string;
   traveller_name: string;
   traveller_phone: string;
+  date_of_birth?: string | null;
+  destination?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  duration_days?: number | null;
   plan_name: string;
   product_type: string;
   policy_number: string;
@@ -41,7 +48,9 @@ interface LedgerEntry {
   premium_amount: number;
   tax: number;
   total: number;
+  premium_including_tax?: number;
   commission?: number;
+  agency_commission?: number;
   net_to_transfer?: number;
   currency?: string;
   received_amount: number;
@@ -75,15 +84,6 @@ function billableTotal(entry: LedgerEntry): number {
   return Number(entry.total) || 0;
 }
 
-function linePremium(entry: LedgerEntry): number {
-  if (entry.plan_premium != null && Number.isFinite(Number(entry.plan_premium))) {
-    return Number(entry.plan_premium);
-  }
-  const pp = Number(entry.plan_price);
-  if (Number.isFinite(pp) && pp > 0) return pp;
-  return Number(entry.premium_amount) || 0;
-}
-
 const LedgerPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -111,20 +111,24 @@ const LedgerPage: React.FC = () => {
 
   const itemsPerPage = 25;
   const isAdmin = user?.role === "admin";
-  const showCreatedBy = user?.role === "admin" || user?.role === "sub_admin";
+  const showCreatedBy = user?.role === "admin" || user?.role === "sub_admin" || user?.role === "insurer_supervisor";
 
   const titleKey =
     user?.role === "admin"
       ? "ledger.allSales"
       : user?.role === "sub_admin"
         ? "ledger.networkSales"
-        : "ledger.mySales";
+        : user?.role === "insurer_supervisor"
+          ? "ledger.insurerSales"
+          : "ledger.mySales";
   const titleDefault =
     user?.role === "admin"
       ? "All Sales"
       : user?.role === "sub_admin"
         ? "Network sales"
-        : "My Sales";
+        : user?.role === "insurer_supervisor"
+          ? "Insurer plan sales"
+          : "My Sales";
 
   const fetchLedger = async (
     page: number = 1,
@@ -553,29 +557,32 @@ const LedgerPage: React.FC = () => {
                     <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2">
                       {t("ledger.saleId", "Sale")}
                     </th>
+                    <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2">
+                      {t("ledger.lastName", "Last name")}
+                    </th>
                     <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden sm:table-cell">
-                      {t("ledger.traveller", "Traveller")}
+                      {t("ledger.firstName", "First name")}
+                    </th>
+                    <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden md:table-cell">
+                      {t("ledger.dateOfBirth", "Date of birth")}
+                    </th>
+                    <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden lg:table-cell">
+                      {t("ledger.travelDates", "Travel dates")}
+                    </th>
+                    <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden xl:table-cell">
+                      {t("ledger.destination", "Destination(s)")}
                     </th>
                     <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden lg:table-cell">
                       {t("ledger.plan", "Plan")}
                     </th>
-                    <th className="text-left text-[#2B2B2B]/70 font-normal py-4 px-2 hidden xl:table-cell">
-                      {t("ledger.certificate", "Certificate")}
-                    </th>
                     <th className="text-right text-[#2B2B2B]/70 font-normal py-4 px-2 hidden md:table-cell">
-                      {t("ledger.premium", "Premium")}
-                    </th>
-                    <th className="text-right text-[#2B2B2B]/70 font-normal py-4 px-2 hidden lg:table-cell">
-                      {t("ledger.tax", "Tax")}
+                      {t("ledger.premiumInclTax", "Premium incl. tax")}
                     </th>
                     <th className="text-right text-[#2B2B2B]/70 font-normal py-4 px-2">
-                      {t("ledger.total", "Total")}
+                      {t("ledger.agencyCommission", "Agency commission")}
                     </th>
                     <th className="text-right text-[#2B2B2B]/70 font-normal py-4 px-2">
-                      {t("ledger.commission", "Commission")}
-                    </th>
-                    <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2 hidden sm:table-cell">
-                      {t("ledger.confirmedAt", "Confirmed")}
+                      {t("ledger.netToTransfer", "Net to transfer")}
                     </th>
                     <th className="text-center text-[#2B2B2B]/70 font-normal py-4 px-2">
                       {t("ledger.paymentStatus", "Payment")}
@@ -595,7 +602,12 @@ const LedgerPage: React.FC = () => {
                 <tbody>
                   {rows.map((entry) => {
                     const currency = entry.currency || "XOF";
-                    const commission = Number(entry.commission) || 0;
+                    const commission =
+                      Number(entry.agency_commission ?? entry.commission) || 0;
+                    const net =
+                      entry.net_to_transfer != null
+                        ? Number(entry.net_to_transfer)
+                        : billableTotal(entry) - commission;
                     const deleted = !!entry.is_deleted;
                     const canReverse =
                       entry.payment_status === "Paid" &&
@@ -604,6 +616,14 @@ const LedgerPage: React.FC = () => {
                     const rowMuted = deleted
                       ? "text-gray-400 bg-gray-50/80"
                       : "text-[#2B2B2B]";
+                    const lastName =
+                      entry.last_name ||
+                      entry.traveller_name?.split(/\s+/).slice(-1)[0] ||
+                      "—";
+                    const firstName =
+                      entry.first_name ||
+                      entry.traveller_name?.split(/\s+/).slice(0, -1).join(" ") ||
+                      "—";
                     return (
                       <tr
                         key={entry.sale_id}
@@ -618,7 +638,7 @@ const LedgerPage: React.FC = () => {
                             #{entry.sale_id}
                           </div>
                           <div className="text-xs font-normal opacity-80">
-                            Case #{entry.case_id}
+                            {entry.policy_number || `Case #${entry.case_id}`}
                           </div>
                           {deleted && (
                             <div className="text-[10px] uppercase tracking-wide mt-1 text-gray-500">
@@ -629,25 +649,42 @@ const LedgerPage: React.FC = () => {
                             </div>
                           )}
                         </td>
-                        <td className={`py-4 px-2 hidden sm:table-cell ${rowMuted}`}>
-                          <div className="font-semibold">{entry.traveller_name}</div>
-                          <div className="text-xs opacity-80">{entry.traveller_phone}</div>
+                        <td className={`py-4 px-2 font-semibold ${rowMuted}`}>{lastName}</td>
+                        <td className={`py-4 px-2 hidden sm:table-cell ${rowMuted}`}>{firstName}</td>
+                        <td className={`py-4 px-2 hidden md:table-cell text-xs ${rowMuted}`}>
+                          {entry.date_of_birth
+                            ? formatDate(entry.date_of_birth)
+                            : "—"}
+                        </td>
+                        <td className={`py-4 px-2 hidden lg:table-cell text-xs ${rowMuted}`}>
+                          {entry.start_date || entry.end_date ? (
+                            <>
+                              <div>{entry.start_date ? formatDate(entry.start_date) : "—"}</div>
+                              <div className="opacity-70">
+                                → {entry.end_date ? formatDate(entry.end_date) : "—"}
+                              </div>
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td
+                          className={`py-4 px-2 hidden xl:table-cell text-xs max-w-[10rem] truncate ${rowMuted}`}
+                          title={entry.destination || ""}
+                        >
+                          {entry.destination || "—"}
                         </td>
                         <td className={`py-4 px-2 hidden lg:table-cell ${rowMuted}`}>
                           <div className="font-semibold">{entry.plan_name}</div>
                           <div className="text-xs opacity-80">{entry.product_type}</div>
                         </td>
-                        <td className={`py-4 px-2 hidden xl:table-cell text-xs ${rowMuted}`}>
-                          {entry.certificate_number || "—"}
-                        </td>
-                        <td className={`py-4 px-2 text-right hidden md:table-cell ${rowMuted}`}>
-                          {amount(linePremium(entry), currency)}
-                        </td>
-                        <td className={`py-4 px-2 text-right hidden lg:table-cell ${rowMuted}`}>
-                          {amount(Number(entry.tax) || 0, currency)}
-                        </td>
-                        <td className={`py-4 px-2 text-right font-semibold ${rowMuted}`}>
-                          {amount(billableTotal(entry), currency)}
+                        <td className={`py-4 px-2 text-right hidden md:table-cell font-semibold ${rowMuted}`}>
+                          {amount(
+                            entry.premium_including_tax != null
+                              ? Number(entry.premium_including_tax)
+                              : billableTotal(entry),
+                            currency
+                          )}
                         </td>
                         <td
                           className={`py-4 px-2 text-right font-semibold ${
@@ -656,10 +693,8 @@ const LedgerPage: React.FC = () => {
                         >
                           {amount(commission, currency)}
                         </td>
-                        <td className={`py-4 px-2 hidden sm:table-cell text-center text-xs ${rowMuted}`}>
-                          {entry.confirmed_at
-                            ? formatDate(entry.confirmed_at)
-                            : "—"}
+                        <td className={`py-4 px-2 text-right font-semibold ${rowMuted}`}>
+                          {amount(net, currency)}
                         </td>
                         <td className="py-4 px-2">
                           <div className="flex justify-center">

@@ -7,7 +7,7 @@ interface AuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   requirePasswordChange?: boolean;
-  allowedRoles?: ('admin' | 'sub_admin' | 'agent')[];
+  allowedRoles?: ('admin' | 'sub_admin' | 'insurer_supervisor' | 'agent')[];
   redirectTo?: string;
 }
 
@@ -45,7 +45,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     }
     
     // Otherwise redirect to appropriate dashboard
-    if (user.role === 'admin' || user.role === 'sub_admin') {
+    if (user.role === 'admin' || user.role === 'sub_admin' || user.role === 'insurer_supervisor') {
       return <Navigate to="/admin" replace />;
     } else if (user.role === 'agent') {
       return <Navigate to="/user" replace />;
@@ -55,7 +55,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   // If password change is required but user doesn't need to change password
   if (requirePasswordChange && !needsPasswordChange) {
     // Redirect to appropriate dashboard
-    if (user?.role === 'admin' || user?.role === 'sub_admin') {
+    if (user?.role === 'admin' || user?.role === 'sub_admin' || user?.role === 'insurer_supervisor') {
       return <Navigate to="/admin" replace />;
     } else if (user?.role === 'agent') {
       return <Navigate to="/user" replace />;

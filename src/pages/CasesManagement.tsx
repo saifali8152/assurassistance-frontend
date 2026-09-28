@@ -156,7 +156,7 @@ const CasesManagement: React.FC = () => {
   ) => {
     try {
       setLoading(true);
-      const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin';
+      const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin' || user?.role === 'insurer_supervisor';
       const filters: CaseListFilters = {
         page,
         limit: itemsPerPage,
@@ -409,7 +409,7 @@ const CasesManagement: React.FC = () => {
     window.open(`/certificate/${saleId}`, "_blank", "noopener,noreferrer");
   };
 
-  const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin';
+  const isPrivileged = user?.role === 'admin' || user?.role === 'sub_admin' || user?.role === 'insurer_supervisor';
   const casesBasePath = isPrivileged ? '/admin' : '/user';
 
   const goEditCase = (caseItem: Case) => {
@@ -457,7 +457,7 @@ const CasesManagement: React.FC = () => {
       <div className="bg-white border border-[#D9D9D9] rounded-2xl p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 className="text-2xl font-semibold text-[#E4590F]">
-            {(user?.role === 'admin' || user?.role === 'sub_admin') ? t("cases.allCases") : t("cases.myCases")}
+            {(user?.role === 'admin' || user?.role === 'sub_admin' || user?.role === 'insurer_supervisor') ? t("cases.allCases") : t("cases.myCases")}
           </h2>
           
           {/* Search and Filter Controls — server-side (Ledger theme) */}
@@ -529,7 +529,9 @@ const CasesManagement: React.FC = () => {
                   ? t("cases.noCasesAdmin")
                   : user?.role === 'sub_admin'
                     ? t("cases.noCasesSubAdmin", "No cases in your assigned agencies.")
-                    : t("cases.noCasesAgent")}
+                    : user?.role === 'insurer_supervisor'
+                      ? t("cases.noCasesInsurer", "No policies found for your insurer's plans.")
+                      : t("cases.noCasesAgent")}
               </p>
             </div>
           ) : (
@@ -542,9 +544,7 @@ const CasesManagement: React.FC = () => {
                     <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("cases.plan")}</th>
                     <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden sm:table-cell">{t("cases.status")}</th>
                     <th className="text-right text-[#2B2B2B]/70 font-medium py-4 px-2 hidden lg:table-cell">{t("cases.price")}</th>
-                    {isPrivileged && (
-                      <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden md:table-cell">{t("cases.createdBy")}</th>
-                    )}
+                    <th className="text-center text-[#2B2B2B]/70 font-medium py-4 px-2 hidden md:table-cell">{t("cases.createdBy")}</th>
                     <th className="text-left text-[#2B2B2B]/70 font-medium py-4 px-2">{t("cases.actions")}</th>
                   </tr>
                 </thead>
@@ -633,15 +633,13 @@ const CasesManagement: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      {isPrivileged && (
-                        <td className="py-4 px-2 text-[#2B2B2B]/80 hidden md:table-cell">
-                          <div className="text-center">
-                            <div className="text-[#2B2B2B] font-medium">
-                              {caseItem.created_by_name || 'Unknown'}
-                            </div>
+                      <td className="py-4 px-2 text-[#2B2B2B]/80 hidden md:table-cell">
+                        <div className="text-center">
+                          <div className="text-[#2B2B2B] font-medium">
+                            {caseItem.created_by_name || 'Unknown'}
                           </div>
-                        </td>
-                      )}
+                        </div>
+                      </td>
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-2">
                           {caseItem.status !== 'Cancelled' && !caseItem.sale_deleted_at && (
@@ -930,12 +928,10 @@ const CasesManagement: React.FC = () => {
                     <div className="text-left"><span className="text-[#2B2B2B]/80">{selectedCase.currency}</span></div>
                   </>
                 )}
-                {isPrivileged && (
-                  <>
-                    <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("cases.createdBy")}:</span></div>
-                    <div className="text-left"><span className="text-[#2B2B2B]">{selectedCase.created_by_name || 'Unknown'}</span></div>
-                  </>
-                )}
+                <>
+                  <div className="text-left"><span className="font-semibold text-[#2B2B2B]">{t("cases.createdBy")}:</span></div>
+                  <div className="text-left"><span className="text-[#2B2B2B]">{selectedCase.created_by_name || 'Unknown'}</span></div>
+                </>
               </div>
             </div>
 

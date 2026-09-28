@@ -165,6 +165,54 @@ export const deleteSubAdminApi = async (id: number) => {
   return apiDelete<{ success: boolean; message: string }>(`/admin/sub-admins/${id}`);
 };
 
+export type InsurerSupervisorItem = {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  force_password_change: boolean;
+  last_login: string | null;
+  created_at: string;
+  work_phone: string | null;
+  whatsapp_phone: string | null;
+  partner_insurer: string | null;
+  owned_agency_count: number;
+};
+
+export type CreateInsurerSupervisorPayload = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  partner_insurer: string;
+  work_phone?: string;
+  whatsapp_phone?: string;
+  tempPassword?: string;
+};
+
+export const listPartnerInsurersApi = async () => {
+  const res = await apiGet<{ success: boolean; data: string[] }>("/admin/partner-insurers");
+  return (res as any).data as string[];
+};
+
+export const listInsurerSupervisorsApi = async () => {
+  const res = await apiGet<{ success: boolean; data: InsurerSupervisorItem[] }>(
+    "/admin/insurer-supervisors"
+  );
+  return (res as any).data as InsurerSupervisorItem[];
+};
+
+export const createInsurerSupervisorApi = async (data: CreateInsurerSupervisorPayload) => {
+  return apiPost<{
+    success: boolean;
+    data: { id: number; email: string; partner_insurer: string; tempPassword: string };
+    message: string;
+  }>("/admin/create-insurer-supervisor", data);
+};
+
+export const deleteInsurerSupervisorApi = async (id: number) => {
+  return apiDelete<{ success: boolean; message: string }>(`/admin/insurer-supervisors/${id}`);
+};
+
 export type SupervisionHistoryItem = {
   id: number;
   agency_user_id: number;
