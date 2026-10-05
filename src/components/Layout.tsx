@@ -23,6 +23,7 @@ import {
   MessageCircle,
   Map,
   MessagesSquare,
+  KeyRound,
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -393,6 +394,11 @@ const Layout: React.FC = () => {
                 {isAdmin && (
                   <NavLink to="/admin/destination-zones" icon={Map}>
                     {t("sidebar.destinationZones", "Destination Zones")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/api-keys" icon={KeyRound}>
+                    {t("sidebar.apiKeys", "API Keys")}
                   </NavLink>
                 )}
               </NavSection>

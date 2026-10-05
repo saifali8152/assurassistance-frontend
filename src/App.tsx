@@ -52,6 +52,7 @@ import ContractualDocsPage from './pages/ContractualDocsPage'
 import WhatsAppSettings from './pages/WhatsAppSettings'
 import WhatsAppConversations from './pages/WhatsAppConversations'
 import DestinationZones from './pages/DestinationZones'
+import ApiKeys from './pages/ApiKeys'
 
 
 // User Layout and Pages
@@ -253,6 +254,14 @@ function App() {
               element={
                 <AuthGuard requireAuth={true} allowedRoles={['admin']}>
                   <WhatsAppSettings />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="api-keys"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <ApiKeys />
                 </AuthGuard>
               }
             />

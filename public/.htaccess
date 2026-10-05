@@ -1,0 +1,76 @@
+# Apache config for the AssurAssistance admin app (single-page React build).
+#
+# Vite copies everything in public/ into dist/, so this ships with every build.
+# Upload it alongside index.html — in FileZilla enable
+# Server -> Force showing hidden files, or this file is silently skipped.
+
+# ---------------------------------------------------------------------------
+# 1. Single-page routing
+#
+# The build is one index.html plus assets. Routes like /admin/whatsapp-settings
+# exist only inside React Router, not on disk, so without this rewrite typing or
+# REFRESHING any URL other than "/" makes Apache look for a folder of that name,
+# find nothing, and return 404 or a blank page.
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve real files and directories untouched (assets, images, favicon).
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else goes to the app.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+  ErrorDocument 404 /index.html
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 2. Caching
+#
+# This build uses FIXED asset filenames (assets/index.js, assets/index.css) so
+# that an FTP deploy is a simple overwrite. The cost of stable names is that the
+# filename no longer tells the browser the content changed — so these files must
+# be revalidated on every load instead of cached blindly.
+#
+# "no-cache" does NOT mean "never cache". The browser keeps its copy and asks the
+# server whether it is still current; unchanged files come back as an empty 304,
+# which is a few hundred bytes. Changed files are re-downloaded immediately. That
+# is what makes a deploy show up without anyone pressing Ctrl+Shift+R.
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # Images and fonts keep their names and change rarely — safe to cache hard.
+  <FilesMatch "\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 3. Compression — a 1.7 MB bundle is roughly 400 KB gzipped.
+# ---------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 4. Don't serve source maps or stray config to the public.
+# ---------------------------------------------------------------------------
+<FilesMatch "\.(map|env|json~|bak)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
