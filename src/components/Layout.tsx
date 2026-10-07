@@ -24,6 +24,8 @@ import {
   Map,
   MessagesSquare,
   KeyRound,
+  Wallet,
+  Receipt,
 } from "lucide-react";
 import LanguageSelector from "./LanguageSelector";
 import CurrencySelector from "./CurrencySelector";
@@ -399,6 +401,16 @@ const Layout: React.FC = () => {
                 {isAdmin && (
                   <NavLink to="/admin/api-keys" icon={KeyRound}>
                     {t("sidebar.apiKeys", "API Keys")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/payments" icon={Receipt}>
+                    {t("sidebar.payments", "Payments")}
+                  </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/payment-settings" icon={Wallet}>
+                    {t("sidebar.paymentSettings", "Payment Settings")}
                   </NavLink>
                 )}
               </NavSection>

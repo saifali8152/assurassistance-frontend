@@ -53,6 +53,8 @@ import WhatsAppSettings from './pages/WhatsAppSettings'
 import WhatsAppConversations from './pages/WhatsAppConversations'
 import DestinationZones from './pages/DestinationZones'
 import ApiKeys from './pages/ApiKeys'
+import PaymentSettings from './pages/PaymentSettings'
+import Payments from './pages/Payments'
 
 
 // User Layout and Pages
@@ -262,6 +264,22 @@ function App() {
               element={
                 <AuthGuard requireAuth={true} allowedRoles={['admin']}>
                   <ApiKeys />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="payment-settings"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <PaymentSettings />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="payments"
+              element={
+                <AuthGuard requireAuth={true} allowedRoles={['admin']}>
+                  <Payments />
                 </AuthGuard>
               }
             />

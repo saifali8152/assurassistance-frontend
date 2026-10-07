@@ -6,7 +6,7 @@
 //   "A customer says the bot stopped replying — what happened?"  → open the
 //   conversation and read the transcript, including sends that FAILED, which is
 //   the part a customer cannot tell you about.
-//   "Are we hitting the 6–8 message target?"                     → the tiles.
+//   "Are we hitting the message budget?"                          → the tiles.
 //
 // Read-only on purpose. Replying by hand from here would put a human halfway
 // into a state machine that assumes it owns the conversation.
