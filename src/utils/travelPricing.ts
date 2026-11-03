@@ -90,21 +90,31 @@ export function getAgeFromDateString(dobStr: string | undefined, refDate = new D
   return age;
 }
 
+/**
+ * A traveller younger than this is a minor: half premium, half commission.
+ * Raised from 16 to 18 at the client's request (Nov 2026) — half price now
+ * applies to travellers aged 17 and under.
+ *
+ * Mirrors MINOR_AGE_LIMIT in backend/utils/travelPricing.js. Change both together,
+ * or the quote preview and the stored price will differ.
+ */
+export const MINOR_AGE_LIMIT = 18;
+
 export function getAgePremiumMultiplier(age: number | null): {
   multiplier: number;
   eligible: boolean;
   band: string;
 } {
   // Shared rules for every plan (existing and future):
-  // • 1 day – under 16: premium ÷ 2
-  // • 16 – 75: standard premium
+  // • 1 day – 17 years: premium ÷ 2 (minor — see MINOR_AGE_LIMIT)
+  // • 18 – 75: standard premium
   // • over 75 – 80: premium × 2
   // • 81 – 85: premium × 4 (senior surcharge; commission stays standard)
   // • over 85: not eligible — customer must request a specific exemption
   if (age === null || age === undefined) {
     return { multiplier: 1, eligible: true, band: "unknown" };
   }
-  if (age < 16) return { multiplier: 0.5, eligible: true, band: "child" };
+  if (age < MINOR_AGE_LIMIT) return { multiplier: 0.5, eligible: true, band: "child" };
   if (age <= 75) return { multiplier: 1, eligible: true, band: "standard" };
   if (age <= 80) return { multiplier: 2, eligible: true, band: "senior76_80" };
   if (age <= 85) return { multiplier: 4, eligible: true, band: "senior81_85" };
@@ -113,12 +123,12 @@ export function getAgePremiumMultiplier(age: number | null): {
 
 /**
  * Commission age factor (partner invoices):
- * • under 16 → commission ÷ 2
+ * • 17 and under (below MINOR_AGE_LIMIT) → commission ÷ 2
  * • all other eligible ages → standard commission (senior premium surcharges do NOT increase commission)
  */
 export function getAgeCommissionMultiplier(age: number | null): number {
   if (age === null || age === undefined) return 1;
-  if (age < 16) return 0.5;
+  if (age < MINOR_AGE_LIMIT) return 0.5;
   return 1;
 }
 
